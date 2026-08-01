@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest'
+import { createHash } from 'crypto'
 import { app } from '../src/app.js'
 import { prisma } from '../src/db.js'
 
@@ -43,5 +44,36 @@ describe('auth', () => {
       body: { email: testUser.email, password: 'wrongpass1' },
     })
     expect(bad.status).toBe(401)
+  })
+
+  it('resets a password via forgot + reset', async () => {
+    const forgot = await json('/api/auth/forgot', {
+      method: 'POST',
+      body: { email: testUser.email },
+    })
+    expect(forgot.status).toBe(200)
+
+    const user = await prisma.user.findUnique({ where: { email: testUser.email } })
+    // We only store the hash of the emailed token, so create a token we know:
+    const raw = 'manual-test-token'
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: createHash('sha256').update(raw).digest('hex'),
+        expiresAt: new Date(Date.now() + 60000),
+      },
+    })
+
+    const reset = await json('/api/auth/reset', {
+      method: 'POST',
+      body: { userId: user.id, token: raw, newPassword: 'brandnewpass1' },
+    })
+    expect(reset.status).toBe(200)
+
+    const login = await json('/api/auth/login', {
+      method: 'POST',
+      body: { email: testUser.email, password: 'brandnewpass1' },
+    })
+    expect(login.status).toBe(200)
   })
 })
