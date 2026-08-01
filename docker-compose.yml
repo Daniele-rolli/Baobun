@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: baobun
+      POSTGRES_PASSWORD: baobun_dev
+      POSTGRES_DB: baobun
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U baobun"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: baobun
+      MINIO_ROOT_PASSWORD: baobun_dev
+    volumes:
+      - miniodata:/data
+    ports:
+      - "9100:9000"
+      - "9101:9001"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: ./apps/api/.env
+    environment:
+      DATABASE_URL: postgresql://baobun:baobun_dev@postgres:5432/baobun
+      S3_ENDPOINT: http://minio:9000
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    ports:
+      - "3001:3001"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+volumes:
+  pgdata:
+  miniodata:
