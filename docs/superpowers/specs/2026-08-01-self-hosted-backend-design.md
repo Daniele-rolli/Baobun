@@ -131,10 +131,13 @@ Endpoints under `/api/auth`:
   - If `user.needs_password_set` is true, verification fails; the API lazily emails a one-time set-password link (see section 8) and returns a 401 with `code: "password_set_required"`.
 - `POST /auth/logout` — delete session row, clear cookie.
 - `GET /auth/me` — read session cookie, join user, return.
-- `POST /auth/forgot {email}` — create `password_reset_tokens` row, send email with link `${WEB_ORIGIN}/reset-password?id=<userId>&token=<raw>`. Always returns 200 (no user enumeration).
-- `POST /auth/reset {id, token, newPassword}` — hash incoming token, look up valid row, set new password, mark used, delete other rows for the user. If the user was `needs_password_set`, clear that flag.
+- `POST /auth/forgot {email}` — create `password_reset_tokens` row, send email with link `${WEB_ORIGIN}/reset-password?userId=<userId>&token=<raw>`. Always returns 200 (no user enumeration).
+- `POST /auth/reset {userId, token, newPassword}` — hash incoming token, look up valid row, set new password, mark used, delete other rows for the user. If the user was `needs_password_set`, clear that flag. Query params match what `ResetPassword.vue` already reads (`userId`, `token`).
 
 Cookie: `HttpOnly; Secure; SameSite=Lax; Path=/;` name `baobun_sid`. Secure off in dev.
+
+`packages/shared` holds the constants the API and the frontend share: the cookie name
+(`baobun_sid`) and the error-code strings (`unauthorized`, `forbidden`, etc.).
 
 Authorization: every handler touching a group/event/tag/member verifies the requesting user
 is a `group_members` row for the group. Owner-only endpoints (group edit/delete, member
@@ -292,7 +295,6 @@ S3_BUCKET_TAG_ICONS=tag-icons
 S3_BUCKET_CALENDAR_FEEDS=calendar-feeds
 S3_PUBLIC_ENDPOINT=http://localhost:9000
 
-COOKIE_SECRET=<32B random>
 WEB_ORIGIN=http://localhost:4173
 
 MAIL_DEBUG=true
@@ -380,7 +382,8 @@ domain), Appwrite-internal auth rate-limits.
    `packages/shared`, `infra/`.
 2. `docker-compose.yml`, `apps/api/Dockerfile`, dev `.env`.
 3. Rewritten `apps/web/src/lib/api.js`, `src/lib/services/*`, five Pinia stores, `Join.vue`,
-   `liveCalendarFeed.js`, `useSession.js`, Login.vue handling for `password_set_required`.
+   `liveCalendarFeed.js`, `useSession.js`, `ResetPassword.vue` (param names `userId`/`token`),
+   Login.vue handling for `password_set_required`.
 4. `vite.config.js` cache-rule updates.
 5. `apps/api/scripts/migrate-from-appwrite.ts`.
 6. `docs/runbooks/cutover.md`.
