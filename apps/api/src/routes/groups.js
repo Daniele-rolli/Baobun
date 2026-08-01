@@ -5,6 +5,8 @@ import { requireAuth, requireMember, requireOwner } from '../middleware/auth.js'
 import { notFound, conflict, validationError } from '../errors.js'
 import { avatarUrlFor } from './auth.js'
 import { eventToJson, eventSchema } from './events.js'
+import { tagToJson } from './tags.js'
+import { putObject, BUCKETS } from '../s3.js'
 
 const generateInviteCode = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -194,6 +196,38 @@ groups.post('/:id/events', requireMember('id'), async (c) => {
     },
   })
   return c.json({ event: eventToJson(event) }, 201)
+})
+
+groups.get('/:id/tags', requireMember('id'), async (c) => {
+  const groupId = c.req.param('id')
+  const items = await prisma.tag.findMany({ where: { groupId }, orderBy: { name: 'asc' } })
+  return c.json({ tags: await Promise.all(items.map(tagToJson)) })
+})
+
+groups.post('/:id/tags', requireMember('id'), async (c) => {
+  const groupId = c.req.param('id')
+  const form = await c.req.formData().catch(() => null)
+  const name = String(form?.get('name') ?? '').trim()
+  if (!name) throw validationError('Tag name is required.')
+  const color = String(form?.get('color') ?? '#6B7280').trim() || '#6B7280'
+  const icon = form?.get('icon') ? String(form.get('icon')) : null
+
+  const tag = await prisma.tag.create({ data: { groupId, name, color, icon } })
+
+  const image = form?.get('image')
+  if (image instanceof File && image.size > 0) {
+    const key = `tag-${tag.id}`
+    await putObject(
+      BUCKETS.tagIcons,
+      key,
+      Buffer.from(await image.arrayBuffer()),
+      image.type || 'application/octet-stream',
+    )
+    await prisma.tag.update({ where: { id: tag.id }, data: { imageObjectKey: key } })
+  }
+
+  const fresh = await prisma.tag.findUnique({ where: { id: tag.id } })
+  return c.json({ tag: await tagToJson(fresh) }, 201)
 })
 
 export default groups
