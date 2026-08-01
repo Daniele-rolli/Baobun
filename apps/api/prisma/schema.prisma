@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  passwordHash     String   @map("password_hash")
+  name             String
+  avatarObjectKey  String?  @map("avatar_object_key")
+  needsPasswordSet Boolean  @default(false) @map("needs_password_set")
+  createdAt        DateTime @default(now()) @map("created_at")
+  sessions         Session[]
+  resetTokens      PasswordResetToken[]
+  ownedGroups      Group[]  @relation("Owner")
+  memberships      GroupMember[]
+  eventsCreated    Event[]  @relation("Creator")
+}
+
+model Session {
+  id        String   @id
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+  userAgent String?
+  ip        String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+
+  @@index([userId])
+}
+
+model Group {
+  id          String   @id @default(uuid())
+  name        String
+  color       String   @default("#f43f5e")
+  ownerUserId String   @map("owner_user_id")
+  owner       User     @relation("Owner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  inviteCode  String   @unique @map("invite_code")
+  createdAt   DateTime @default(now()) @map("created_at")
+  members     GroupMember[]
+  events      Event[]
+  tags        Tag[]
+}
+
+model GroupMember {
+  id       String   @id @default(uuid())
+  groupId  String   @map("group_id")
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   String?  @map("user_id")
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email    String
+  name     String
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  @@unique([groupId, userId])
+  @@unique([groupId, email])
+}
+
+model Event {
+  id        String   @id @default(uuid())
+  groupId   String   @map("group_id")
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  title     String
+  notes     String   @default("")
+  start     DateTime
+  end       DateTime
+  people    Json     @default("[]")
+  tagId     String   @default("") @map("tag_id")
+  userId    String   @map("user_id")
+  user      User     @relation("Creator", fields: [userId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([groupId])
+}
+
+model Tag {
+  id             String   @id @default(uuid())
+  groupId        String   @map("group_id")
+  group          Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name           String
+  color          String   @default("#6B7280")
+  icon           String?
+  imageObjectKey String?  @map("image_object_key")
+
+  @@index([groupId])
+}
