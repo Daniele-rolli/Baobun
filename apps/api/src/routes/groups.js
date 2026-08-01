@@ -4,6 +4,7 @@ import { prisma } from '../db.js'
 import { requireAuth, requireMember, requireOwner } from '../middleware/auth.js'
 import { notFound, conflict, validationError } from '../errors.js'
 import { avatarUrlFor } from './auth.js'
+import { eventToJson, eventSchema } from './events.js'
 
 const generateInviteCode = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -160,6 +161,39 @@ groups.delete('/:id/members/:memberId', requireOwner('id'), async (c) => {
   if (!member) throw notFound('Member not found.')
   await prisma.groupMember.delete({ where: { id: member.id } })
   return c.json({ ok: true })
+})
+
+groups.get('/:id/events', requireMember('id'), async (c) => {
+  const groupId = c.req.param('id')
+  const from = c.req.query('from')
+  const to = c.req.query('to')
+  const where = { groupId }
+  if (from) where.start = { ...(where.start || {}), gte: new Date(from) }
+  if (to) where.start = { ...(where.start || {}), lte: new Date(to) }
+  const items = await prisma.event.findMany({ where, orderBy: { start: 'asc' } })
+  return c.json({ events: items.map(eventToJson) })
+})
+
+groups.post('/:id/events', requireMember('id'), async (c) => {
+  const groupId = c.req.param('id')
+  const user = c.get('user')
+  const body = await c.req.json().catch(() => ({}))
+  const parsed = eventSchema.safeParse(body)
+  if (!parsed.success) throw validationError('Event title, start and end are required.')
+
+  const event = await prisma.event.create({
+    data: {
+      groupId,
+      userId: user.id,
+      title: parsed.data.title,
+      start: new Date(parsed.data.start),
+      end: new Date(parsed.data.end),
+      notes: parsed.data.notes,
+      people: parsed.data.people,
+      tagId: parsed.data.tagId,
+    },
+  })
+  return c.json({ event: eventToJson(event) }, 201)
 })
 
 export default groups
