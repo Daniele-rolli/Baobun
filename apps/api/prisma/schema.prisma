@@ -84,7 +84,7 @@ model Event {
   people    Json     @default("[]")
   tagId     String   @default("") @map("tag_id")
   userId    String   @map("user_id")
-  user      User     @relation("Creator", fields: [userId], references: [id])
+  user      User     @relation("Creator", fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([groupId])

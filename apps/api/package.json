@@ -9,7 +9,7 @@
     "start": "node --env-file=.env src/index.js",
     "migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "test": "node --env-file=.env.test node_modules/vitest/vitest.mjs run"
+    "test": "node --env-file=.env.test node_modules/.bin/vitest run"
   },
   "dependencies": {
     "@baobun/shared": "*",
