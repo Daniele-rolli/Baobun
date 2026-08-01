@@ -24,10 +24,10 @@ export default {
       return
     }
 
-    await this.joinGroup(inviteCode, authStore)
+    await this.joinGroup(inviteCode)
   },
   methods: {
-    async joinGroup(inviteCode, authStore) {
+    async joinGroup(inviteCode) {
       try {
         const { group } = await joinByCode(inviteCode)
         if (!group) {

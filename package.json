@@ -3,7 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "workspaces": ["apps/api", "packages/shared"],
+  "workspaces": [
+    "apps/api",
+    "packages/shared"
+  ],
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
@@ -20,7 +23,6 @@
     "@lucide/vue": "^1.28.0",
     "@tailwindcss/vite": "^4.1.11",
     "@vueuse/core": "^14.4.0",
-    "appwrite": "18.1.1",
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
