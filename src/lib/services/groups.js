@@ -2,7 +2,6 @@ import { apiFetch } from '@/lib/api'
 
 export const list = () => apiFetch('/api/groups')
 export const create = (payload) => apiFetch('/api/groups', { method: 'POST', json: true, body: payload })
-export const get = (id) => apiFetch(`/api/groups/${id}`)
 export const update = (id, patch) => apiFetch(`/api/groups/${id}`, { method: 'PATCH', json: true, body: patch })
 export const remove = (id) => apiFetch(`/api/groups/${id}`, { method: 'DELETE' })
 export const joinByCode = (inviteCode) => apiFetch(`/api/groups/join?inviteCode=${encodeURIComponent(inviteCode)}`)

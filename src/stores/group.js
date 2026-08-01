@@ -64,14 +64,8 @@ export const useGroupsStore = defineStore('groups', () => {
     return res.member
   }
 
-  async function removeMember(memberId) {
-    const member = items.value.flatMap((g) => g.members || []).find((m) => m.$id === memberId)
-    return await groupService.removeMember(member?.groupId || '', memberId)
-  }
-
-  async function getInviteCode(code) {
-    void code
-    return null
+  async function removeMember(groupId, memberId) {
+    return await groupService.removeMember(groupId, memberId)
   }
 
   return {
@@ -86,7 +80,6 @@ export const useGroupsStore = defineStore('groups', () => {
     deleteGroup,
     listMembers,
     addMember,
-    getInviteCode,
     removeMember,
   }
 })
