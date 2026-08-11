@@ -3,32 +3,34 @@
     <div class="max-w-xl mx-auto px-4 py-6 space-y-6">
 
       <!-- ── Profile card ── -->
-      <div class="card p-5">
-        <div class="flex items-center gap-4">
-          <img
-            :src="authStore.user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'U')}&background=random&size=96`"
-            alt="Avatar"
-            class="w-16 h-16 rounded-2xl object-cover flex-shrink-0 shadow-sm"
-          />
-          <div class="flex-1 min-w-0">
-            <p class="font-semibold text-neutral-900 dark:text-white truncate">{{ authStore.user?.name || '—' }}</p>
-            <p class="text-sm text-neutral-500 truncate mt-0.5">{{ authStore.user?.email }}</p>
+      <Card class="p-5">
+        <CardContent>
+          <div class="flex items-center gap-4">
+            <img
+              :src="authStore.user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'U')}&background=random&size=96`"
+              alt="Avatar"
+              class="w-16 h-16 rounded-2xl object-cover flex-shrink-0 shadow-sm"
+            />
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-neutral-900 dark:text-white truncate">{{ authStore.user?.name || '—' }}</p>
+              <p class="text-sm text-neutral-500 truncate mt-0.5">{{ authStore.user?.email }}</p>
+            </div>
+            <router-link
+              to="/profile"
+              class="flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 text-sm font-medium hover:bg-rose-100 dark:hover:bg-rose-500/25 transition-colors"
+              style="min-height:0"
+            >
+              Edit
+              <ChevronRightIcon class="w-4 h-4" />
+            </router-link>
           </div>
-          <router-link
-            to="/profile"
-            class="flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 text-sm font-medium hover:bg-rose-100 dark:hover:bg-rose-500/25 transition-colors"
-            style="min-height:0"
-          >
-            Edit
-            <ChevronRightIcon class="w-4 h-4" />
-          </router-link>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <!-- ── Appearance ── -->
       <div class="space-y-2">
         <p class="section-label px-1">Appearance</p>
-        <div class="card overflow-hidden">
+        <Card class="overflow-hidden">
           <!-- Theme row -->
           <div class="px-4 py-3.5 border-b border-neutral-100 dark:border-neutral-700/50">
             <p class="text-sm font-medium mb-3">Theme</p>
@@ -100,13 +102,13 @@
               </option>
             </select>
           </div>
-        </div>
+        </Card>
       </div>
 
       <!-- ── Groups ── -->
       <div class="space-y-2">
         <p class="section-label px-1">Groups</p>
-        <div class="card overflow-hidden">
+        <Card class="overflow-hidden">
           <router-link to="/groupSettings" class="list-row">
             <span class="row-icon bg-violet-50 dark:bg-violet-500/15 text-violet-500">
               <Users class="w-[1.125rem] h-[1.125rem]" />
@@ -128,13 +130,13 @@
             </div>
             <ChevronRightIcon class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0" />
           </router-link>
-        </div>
+        </Card>
       </div>
 
       <!-- ── Notifications ── -->
       <div class="space-y-2">
         <p class="section-label px-1">Notifications</p>
-        <div class="card overflow-hidden">
+        <Card class="overflow-hidden">
           <div class="list-row cursor-default">
             <span class="row-icon bg-rose-50 dark:bg-rose-500/15 text-rose-500">
               <Bell class="w-[1.125rem] h-[1.125rem]" />
@@ -146,20 +148,11 @@
               </p>
             </div>
             <!-- toggle -->
-            <button
-              class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors touch-exempt"
-              style="min-height:0;min-width:0"
-              :class="notificationsStore.enabled ? 'bg-rose-500' : 'bg-neutral-200 dark:bg-neutral-700'"
-              @click="toggleNotifications"
-              :aria-checked="notificationsStore.enabled"
+            <Switch
+              :model-value="notificationsStore.enabled"
               :disabled="notificationsStore.unsupported"
-              role="switch"
-            >
-              <span
-                class="inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition-transform mt-0.5"
-                :class="notificationsStore.enabled ? 'translate-x-5' : 'translate-x-0.5'"
-              ></span>
-            </button>
+              @update:model-value="toggleNotifications"
+            />
           </div>
           <div class="list-row">
             <span class="row-icon bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-300">
@@ -178,13 +171,13 @@
               <option :value="0">Same day</option>
             </select>
           </div>
-        </div>
+        </Card>
       </div>
 
       <!-- ── Account ── -->
       <div class="space-y-2">
         <p class="section-label px-1">Account</p>
-        <div class="card overflow-hidden">
+        <Card class="overflow-hidden">
           <router-link to="/profile" class="list-row">
             <span class="row-icon bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-300">
               <UserCircle class="w-[1.125rem] h-[1.125rem]" />
@@ -202,7 +195,7 @@
             </span>
             <span class="flex-1 text-sm font-medium text-red-500">Log Out</span>
           </div>
-        </div>
+        </Card>
       </div>
 
       <!-- ── App info ── -->
@@ -235,6 +228,8 @@ import {
   Calendar,
   Clock3,
 } from 'lucide-vue-next'
+import { Card, CardContent } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
 
 export default {
   name: 'Settings',
@@ -251,6 +246,9 @@ export default {
     CalendarDays,
     Calendar,
     Clock3,
+    Card,
+    CardContent,
+    Switch,
   },
   setup() {
     const authStore = useAuthStore()
@@ -326,8 +324,8 @@ export default {
       router.push('/login')
     }
 
-    const toggleNotifications = async () => {
-      await notificationsStore.setEnabled(!notificationsStore.enabled)
+    const toggleNotifications = async (value) => {
+      await notificationsStore.setEnabled(value)
     }
 
     onMounted(() => {
