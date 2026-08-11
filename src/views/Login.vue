@@ -18,7 +18,8 @@
       </transition>
 
       <!-- Card -->
-      <div class="card p-6 sm:p-8">
+      <Card class="p-6 sm:p-8">
+        <CardContent>
         <div class="text-center mb-8">
           <img class="h-16 w-auto mx-auto mb-4" src="../../public/baobun.png" alt="Baobun" />
           <h1 class="text-2xl font-bold text-neutral-900 dark:text-white">Welcome back</h1>
@@ -50,17 +51,17 @@
           </div>
 
           <div class="pt-1">
-            <button
+            <Button
               type="submit"
               :disabled="authStore.loading"
-              class="btn-primary w-full"
+              class="w-full"
             >
               <svg v-if="authStore.loading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
               </svg>
               {{ authStore.loading ? 'Signing in…' : 'Sign In' }}
-            </button>
+            </Button>
           </div>
 
           <p class="text-center text-sm text-neutral-500 mt-1">
@@ -69,7 +70,8 @@
             </router-link>
           </p>
         </form>
-      </div>
+        </CardContent>
+      </Card>
 
       <p class="text-center text-sm text-neutral-500">
         Don't have an account?
@@ -86,9 +88,11 @@ import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import { HeartCrack } from 'lucide-vue-next'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 export default {
-  components: { HeartCrack },
+  components: { HeartCrack, Card, CardContent, Button },
   setup() {
     const authStore = useAuthStore()
     const router = useRouter()
