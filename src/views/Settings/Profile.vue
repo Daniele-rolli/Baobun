@@ -38,126 +38,135 @@
 
       <div class="space-y-2">
         <p class="section-label px-1">Profile</p>
-        <div class="card p-5">
-          <div class="flex items-center gap-4">
-            <div class="relative group flex-shrink-0">
-              <img
-                :src="previewAvatar || avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'User')}&background=random`"
-                alt="Profile Avatar"
-                class="h-20 w-20 rounded-2xl object-cover border border-neutral-200 dark:border-neutral-700 shadow-sm"
-              />
-              <button
-                @click="triggerAvatarUpload"
-                class="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity touch-exempt"
-              >
-                Change
-              </button>
-              <button
-                v-if="previewAvatar || avatarUrl"
-                @click="removeAvatar"
-                type="button"
-                class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-red-600 transition-colors touch-exempt"
-                title="Remove avatar"
-              >
-                <X class="w-3.5 h-3.5" />
-              </button>
+        <Card class="p-5">
+          <CardContent>
+            <div class="flex items-center gap-4">
+              <div class="relative group flex-shrink-0">
+                <img
+                  :src="previewAvatar || avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'User')}&background=random`"
+                  alt="Profile Avatar"
+                  class="h-20 w-20 rounded-2xl object-cover border border-neutral-200 dark:border-neutral-700 shadow-sm"
+                />
+                <button
+                  @click="triggerAvatarUpload"
+                  class="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity touch-exempt"
+                >
+                  Change
+                </button>
+                <button
+                  v-if="previewAvatar || avatarUrl"
+                  @click="removeAvatar"
+                  type="button"
+                  class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-red-600 transition-colors touch-exempt"
+                  title="Remove avatar"
+                >
+                  <X class="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-neutral-900 dark:text-white truncate">{{ authStore.user?.name }}</p>
+                <p class="text-sm text-neutral-500 truncate">{{ authStore.user?.email }}</p>
+                <button @click="triggerAvatarUpload" class="mt-1.5 text-sm text-rose-600 hover:text-rose-700 font-medium touch-exempt">
+                  Upload photo
+                </button>
+              </div>
+              <input ref="avatarInput" type="file" accept="image/*" class="hidden" @change="handleAvatarChange" />
             </div>
-            <div class="flex-1 min-w-0">
-              <p class="font-semibold text-neutral-900 dark:text-white truncate">{{ authStore.user?.name }}</p>
-              <p class="text-sm text-neutral-500 truncate">{{ authStore.user?.email }}</p>
-              <button @click="triggerAvatarUpload" class="mt-1.5 text-sm text-rose-600 hover:text-rose-700 font-medium touch-exempt">
-                Upload photo
-              </button>
-            </div>
-            <input ref="avatarInput" type="file" accept="image/*" class="hidden" @change="handleAvatarChange" />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div class="space-y-2">
         <p class="section-label px-1">Account</p>
-        <div class="card p-5 space-y-4">
-          <div>
-            <label class="block text-sm font-medium mb-1.5">Full Name</label>
-            <input
-              v-model="form.name"
-              type="text"
-              class="input-base"
-              placeholder="Your full name"
-            />
-          </div>
+        <Card class="p-5">
+          <CardContent class="space-y-4">
+            <div>
+              <Label class="text-sm font-medium">Full Name</Label>
+              <Input
+                v-model="form.name"
+                type="text"
+                placeholder="Your full name"
+                class="mt-1.5"
+              />
+            </div>
 
-          <div>
-            <label class="block text-sm font-medium mb-1.5">Email</label>
-            <input
-              v-model="form.email"
-              type="email"
-              class="input-base"
-              placeholder="your@email.com"
-            />
-          </div>
-        </div>
+            <div>
+              <Label class="text-sm font-medium">Email</Label>
+              <Input
+                v-model="form.email"
+                type="email"
+                placeholder="your@email.com"
+                class="mt-1.5"
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div class="space-y-2">
         <p class="section-label px-1">Security</p>
-        <div class="card p-5 space-y-4">
-          <div>
-            <label class="block text-sm font-medium mb-1.5">
-              Current Password
-              <span class="text-neutral-400 font-normal ml-1">(required to change email or password)</span>
-            </label>
-            <input
-              v-model="form.currentPassword"
-              type="password"
-              class="input-base"
-              placeholder="Enter current password"
-              autocomplete="current-password"
-            />
-          </div>
+        <Card class="p-5">
+          <CardContent class="space-y-4">
+            <div>
+              <Label class="text-sm font-medium">
+                Current Password
+                <span class="text-neutral-400 font-normal ml-1">(required to change email or password)</span>
+              </Label>
+              <Input
+                v-model="form.currentPassword"
+                type="password"
+                placeholder="Enter current password"
+                autocomplete="current-password"
+                class="mt-1.5"
+              />
+            </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium mb-1.5">New Password</label>
-              <input
-                v-model="form.password"
-                type="password"
-                class="input-base"
-                placeholder="Leave blank to keep"
-                autocomplete="new-password"
-              />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label class="text-sm font-medium">New Password</Label>
+                <Input
+                  v-model="form.password"
+                  type="password"
+                  placeholder="Leave blank to keep"
+                  autocomplete="new-password"
+                  class="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label class="text-sm font-medium">Confirm Password</Label>
+                <Input
+                  v-model="form.confirmPassword"
+                  type="password"
+                  placeholder="Confirm new password"
+                  autocomplete="new-password"
+                  class="mt-1.5"
+                />
+              </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium mb-1.5">Confirm Password</label>
-              <input
-                v-model="form.confirmPassword"
-                type="password"
-                class="input-base"
-                placeholder="Confirm new password"
-                autocomplete="new-password"
-              />
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div class="space-y-2">
         <p class="section-label px-1">Actions</p>
-        <div class="card p-4 space-y-2">
-          <button
-            @click="submitProfile"
-            :disabled="authStore.loading"
-            class="btn-primary w-full"
-          >
-            {{ authStore.loading ? 'Saving…' : 'Save Changes' }}
-          </button>
-          <button
-            @click="authStore.logout()"
-            class="btn-secondary w-full"
-          >
-            Log Out
-          </button>
-        </div>
+        <Card class="p-4">
+          <CardContent class="space-y-2">
+            <Button
+              @click="submitProfile"
+              :disabled="authStore.loading"
+              class="w-full"
+            >
+              {{ authStore.loading ? 'Saving…' : 'Save Changes' }}
+            </Button>
+            <Button
+              @click="authStore.logout()"
+              variant="secondary"
+              class="w-full"
+            >
+              Log Out
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   </div>
@@ -167,9 +176,13 @@
 import { ref, reactive } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { X, ChevronLeft } from 'lucide-vue-next'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export default {
-  components: { X, ChevronLeft },
+  components: { X, ChevronLeft, Card, CardContent, Button, Input, Label },
   name: 'Profile',
   setup() {
     const authStore = useAuthStore()
