@@ -11,10 +11,15 @@ import calendarFeedsRoutes from './routes/calendarFeeds.js'
 
 export const app = new Hono()
 
+const origins = config.webOrigin
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean)
+
 app.use(
   '*',
   cors({
-    origin: [config.webOrigin],
+    origin: origins.length === 1 ? origins[0] : origins,
     credentials: true,
   }),
 )

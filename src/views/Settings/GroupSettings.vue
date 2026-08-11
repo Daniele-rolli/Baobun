@@ -6,14 +6,22 @@
         Back to Settings
       </router-link>
 
-      <ui-select
-        v-model="selectedGroupId"
-        :options="groups.map((g) => ({ value: g.$id, text: g.name }))"
-        placeholder="Select a group..."
-        block
-        class="p-2 flex top-0 inset-x-0 z-40 bg-rose-500 rounded-xl"
-        @change="changeGroup"
-      />
+      <UiSelect v-model="selectedGroupId" @update:model-value="changeGroup">
+        <UiSelectTrigger
+          class="w-full h-auto rounded-xl bg-rose-500 py-2 px-3 text-white border-transparent hover:bg-rose-600 focus-visible:ring-rose-300 data-placeholder:text-white/80 [&_svg]:text-white/80"
+        >
+          <UiSelectValue placeholder="Select a group..." />
+        </UiSelectTrigger>
+        <UiSelectContent>
+          <UiSelectItem
+            v-for="g in groups"
+            :key="g.$id"
+            :value="g.$id"
+          >
+            {{ g.name }}
+          </UiSelectItem>
+        </UiSelectContent>
+      </UiSelect>
 
       <!-- Header with Save Button -->
       <header class="flex items-center justify-between">
@@ -86,7 +94,7 @@
 
       <div v-else class="space-y-6">
         <!-- Group Info & Invite -->
-        <ui-card class="p-6">
+        <UiCard class="p-6">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Group Info Section -->
             <div>
@@ -102,7 +110,7 @@
                     class="block text-sm font-medium text-neutral-700 dark:text-white mb-2"
                     >Group Name</label
                   >
-                  <ui-input
+                  <UiInput
                     id="group-name"
                     v-model="groupForm.name"
                     @input="dirty = true"
@@ -129,7 +137,7 @@
                       ></span>
                     </label>
                     <div class="flex-1">
-                      <ui-input
+                      <UiInput
                         v-model="groupForm.color"
                         @input="dirty = true"
                         placeholder="#000000"
@@ -258,10 +266,10 @@
               </div>
             </div>
           </div>
-        </ui-card>
+        </UiCard>
 
         <!-- Members & Tags -->
-        <ui-card class="p-6">
+        <UiCard class="p-6">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Members Section -->
             <div>
@@ -364,7 +372,7 @@
                         class="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1"
                         >Tag Name</label
                       >
-                      <ui-input
+                      <UiInput
                         v-model="newTagName"
                         placeholder="e.g., Important, Urgent"
                         @keydown.enter.prevent="addTag"
@@ -479,10 +487,10 @@
               <p v-if="tagError" class="text-sm text-red-600 mt-3">{{ tagError }}</p>
             </div>
           </div>
-        </ui-card>
+        </UiCard>
 
         <!-- Delete Group -->
-        <ui-card class="p-6">
+        <UiCard class="p-6">
           <div class="flex flex-col md:flex-row items-start gap-4">
             <div class="flex-1">
               <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-1">
@@ -500,7 +508,7 @@
               {{ deleting ? 'Deleting…' : 'Delete Group' }}
             </button>
           </div>
-        </ui-card>
+        </UiCard>
       </div>
     </div>
   </div>

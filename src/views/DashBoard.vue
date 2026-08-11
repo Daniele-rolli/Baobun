@@ -68,7 +68,7 @@
             <form @submit.prevent="createGroup" class="space-y-3">
               <div class="flex gap-2 items-start">
                 <div class="flex-1">
-                  <ui-input
+                  <UiInput
                     id="group-name"
                     v-model="newGroupName"
                     type="text"
@@ -103,7 +103,7 @@
               <h3 class="font-semibold text-neutral-800 dark:text-white">Join with Code</h3>
             </div>
             <form @submit.prevent="joinGroup" class="space-y-3">
-              <ui-input
+              <UiInput
                 id="invite-code"
                 v-model="inviteCode"
                 type="text"

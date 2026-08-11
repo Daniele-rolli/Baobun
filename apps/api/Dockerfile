@@ -12,7 +12,9 @@ RUN yarn install --frozen-lockfile
 RUN yarn workspace @baobun/api prisma generate
 
 COPY apps/api/src apps/api/src
+COPY apps/api/scripts apps/api/scripts
+COPY apps/api/entrypoint.sh apps/api/entrypoint.sh
 ENV NODE_ENV=production
 WORKDIR /app/apps/api
 EXPOSE 3001
-CMD ["node", "src/index.js"]
+CMD ["sh", "entrypoint.sh"]

@@ -1,12 +1,10 @@
 # Cutover: Appwrite Cloud → self-hosted Baobun
 
 1. **Freeze writes**: In Appwrite console, set the project to read-only.
-2. **Run the migration** (from `apps/api`, with env set per `scripts/migrate-README.md`):
-   - `node --env-file=.env scripts/migrate-from-appwrite.js --dry-run` — verify counts match.
-   - `node --env-file=.env scripts/migrate-from-appwrite.js` — writes Postgres + MinIO; check `migration-report.json`.
-3. **Deploy**:
-   - `docker compose up -d --build` (backend: postgres, minio, api, mailpit).
-   - Build + serve the frontend with `VITE_API_URL` pointing at the API.
+2. **Run the migration** — see `apps/api/scripts/migrate-README.md` for both local and Docker (`docker compose run api node scripts/migrate-from-appwrite.js`) execution:
+   - `--dry-run` first — verify counts match.
+   - Then the real run — writes Postgres + MinIO; check the printed report.
+3. **Deploy**: `docker compose build --pull && docker compose up -d` (postgres, minio, api, frontend, mailpit). See `docs/deploy.md` for `.env` and reverse-proxy setup.
 4. **Verify**:
    - `curl localhost:3001/api/auth/me` → 401.
    - Register a fresh user; create a group; add an event; confirm it appears.

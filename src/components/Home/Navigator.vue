@@ -67,8 +67,8 @@
 
     <!-- Profile Popover -->
     <div class="p-3 flex border-t border-neutral-200 dark:border-neutral-700 w-full">
-      <Popover position="top-start" @show="avatarActive = true" @hide="avatarActive = false">
-        <template #trigger>
+      <UiPopover v-model:open="avatarActive">
+        <UiPopoverTrigger as-child>
           <button
             class="flex items-center focus:outline-none w-full rounded-md px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
             :class="collapsed ? 'justify-center' : 'justify-start space-x-2'"
@@ -87,35 +87,37 @@
               authStore.user?.name
             }}</span>
           </button>
-        </template>
+        </UiPopoverTrigger>
 
-        <div class="dark:text-white">
-          <div class="px-3 py-2">
-            <p class="font-semibold">{{ authStore.user?.name }}</p>
-            <p class="text-sm text-neutral-500">{{ authStore.user?.email }}</p>
+        <UiPopoverContent side="top" align="start" class="w-64 p-2">
+          <div class="dark:text-white">
+            <div class="px-3 py-2">
+              <p class="font-semibold">{{ authStore.user?.name }}</p>
+              <p class="text-sm text-neutral-500">{{ authStore.user?.email }}</p>
+            </div>
+            <div class="py-1">
+              <router-link
+                to="/profile"
+                class="block px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"
+                >Profile</router-link
+              >
+              <router-link
+                to="/settings"
+                class="block px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"
+                >Settings</router-link
+              >
+            </div>
+            <div class="py-1">
+              <button
+                @click="logout"
+                class="w-full text-left px-3 py-2 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 rounded-md"
+              >
+                Logout
+              </button>
+            </div>
           </div>
-          <div class="py-1">
-            <router-link
-              to="/profile"
-              class="block px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"
-              >Profile</router-link
-            >
-            <router-link
-              to="/settings"
-              class="block px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"
-              >Settings</router-link
-            >
-          </div>
-          <div class="py-1">
-            <button
-              @click="logout"
-              class="w-full text-left px-3 py-2 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 rounded-md"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </Popover>
+        </UiPopoverContent>
+      </UiPopover>
     </div>
   </aside>
 
@@ -228,7 +230,6 @@ import { ref, computed, onMounted, defineProps, defineEmits } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useGroupsStore } from '@/stores/group'
-import Popover from '@/components/ui/Popover.vue'
 import { Home, Users, ChevronLeft, ChevronRight, Plus, CalendarDays } from 'lucide-vue-next'
 
 const props = defineProps({

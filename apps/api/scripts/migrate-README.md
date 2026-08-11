@@ -1,6 +1,8 @@
 # Appwrite → Baobun migration
 
-Run against Appwrite Cloud with a project owner API key:
+Run against Appwrite Cloud with a project owner API key.
+
+## Local (dev)
 
 ```bash
 cd apps/api
@@ -21,7 +23,57 @@ node --env-file=.env scripts/migrate-from-appwrite.js --dry-run
 node --env-file=.env scripts/migrate-from-appwrite.js
 ```
 
-- dry-run prints counts without writing.
-- Real run writes Postgres + MinIO and `migration-report.json`.
+## Docker (compose stack)
+
+The `baobun-api` image includes the migration script. Run it from the repo root
+with the stack up; `docker compose run api` inherits the API service's
+environment, so `DATABASE_URL` and the S3 variables already point at the
+`postgres`/`minio` services on the compose network. Only the Appwrite variables
+need to be passed in:
+
+```bash
+docker compose build api
+
+# Dry run — prints counts, writes nothing
+docker compose run --rm --no-deps \
+  -e APPWRITE_ENDPOINT=https://cloud.appwrite.io \
+  -e APPWRITE_PROJECT_ID=... \
+  -e APPWRITE_API_KEY=... \
+  -e APPWRITE_DB_ID=... \
+  -e APPWRITE_USERS_COLLECTION=... \
+  -e APPWRITE_GROUPS_COLLECTION=... \
+  -e APPWRITE_MEMBERS_COLLECTION=... \
+  -e APPWRITE_EVENTS_COLLECTION=... \
+  -e APPWRITE_TAGS_COLLECTION=... \
+  -e APPWRITE_AVATAR_BUCKET=... \
+  -e APPWRITE_TAG_ICONS_BUCKET=... \
+  -e APPWRITE_CALENDAR_FEEDS_BUCKET=... \
+  api node scripts/migrate-from-appwrite.js --dry-run
+
+# Real run — writes Postgres + MinIO
+docker compose run --rm --no-deps \
+  -e APPWRITE_ENDPOINT=https://cloud.appwrite.io \
+  -e APPWRITE_PROJECT_ID=... \
+  -e APPWRITE_API_KEY=... \
+  -e APPWRITE_DB_ID=... \
+  -e APPWRITE_USERS_COLLECTION=... \
+  -e APPWRITE_GROUPS_COLLECTION=... \
+  -e APPWRITE_MEMBERS_COLLECTION=... \
+  -e APPWRITE_EVENTS_COLLECTION=... \
+  -e APPWRITE_TAGS_COLLECTION=... \
+  -e APPWRITE_AVATAR_BUCKET=... \
+  -e APPWRITE_TAG_ICONS_BUCKET=... \
+  -e APPWRITE_CALENDAR_FEEDS_BUCKET=... \
+  api node scripts/migrate-from-appwrite.js
+```
+
+`--no-deps` avoids starting (or re-creating) the stack; `docker compose run`
+does not publish the service ports, so the running `api` container is unaffected.
+The report is printed to stdout (in Docker, `migration-report.json` is written
+inside the ephemeral container and discarded with `--rm` — copy the printed
+report if you want to keep it).
+
+## Notes
+
 - Migrated users get `needsPasswordSet=true`; they'll receive a set-password email on first login.
 - Calendar-feed object keys are reproduced so existing webcal subscriptions keep working.

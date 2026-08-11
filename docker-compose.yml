@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: baobun
-      POSTGRES_PASSWORD: baobun_dev
-      POSTGRES_DB: baobun
+      POSTGRES_USER: ${POSTGRES_USER:-baobun}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-baobun_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-baobun}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U baobun"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-baobun}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -19,37 +19,56 @@ services:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: baobun
-      MINIO_ROOT_PASSWORD: baobun_dev
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-baobun}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-baobun_dev}
     volumes:
       - miniodata:/data
     ports:
-      - "9100:9000"
-      - "9101:9001"
+      - "${MINIO_API_PORT:-9100}:9000"
+      - "${MINIO_CONSOLE_PORT:-9101}:9001"
 
   api:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-    env_file: ./apps/api/.env
     environment:
-      DATABASE_URL: postgresql://baobun:baobun_dev@postgres:5432/baobun
+      DATABASE_URL: postgresql://${POSTGRES_USER:-baobun}:${POSTGRES_PASSWORD:-baobun_dev}@postgres:5432/${POSTGRES_DB:-baobun}
       S3_ENDPOINT: http://minio:9000
-      MAIL_HOST: mailpit
-      MAIL_PORT: "1025"
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-baobun}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-baobun_dev}
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://localhost:9100}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:4173}
+      MAIL_DEBUG: ${MAIL_DEBUG:-true}
+      MAIL_SENDER: ${MAIL_SENDER:-"Baobun <no-reply@baobun.local>"}
+      MAIL_HOST: ${MAIL_HOST:-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_USER: ${MAIL_USER:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      PORT: 3001
     depends_on:
       postgres:
         condition: service_healthy
       minio:
         condition: service_started
     ports:
-      - "3001:3001"
+      - "${API_PORT:-3001}:3001"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-}
+    ports:
+      - "${FRONTEND_PORT:-4173}:4173"
+    depends_on:
+      - api
 
   mailpit:
     image: axllent/mailpit:latest
     ports:
-      - "8025:8025"
-      - "1025:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
 
 volumes:
   pgdata:

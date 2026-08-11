@@ -3,14 +3,22 @@
     <div class="w-full max-w-full p-3 sm:p-4 md:max-w-7xl md:mx-auto space-y-3 sm:space-y-4">
       <!-- Group selector bar -->
       <div class="flex items-center gap-2">
-        <ui-select
-          v-model="selectedGroupId"
-          :options="groupsStore.items.map((g) => ({ value: g.$id, text: g.name }))"
-          placeholder="Select a group..."
-          block
-          class="flex-1 p-1.5 bg-rose-500 rounded-2xl text-white"
-          @change="changeGroup"
-        />
+        <UiSelect v-model="selectedGroupId" @update:model-value="changeGroup">
+          <UiSelectTrigger
+            class="w-full h-auto flex-1 rounded-2xl bg-rose-500 py-2.5 text-white border-transparent hover:bg-rose-600 focus-visible:ring-rose-300 data-placeholder:text-white/80 [&_svg]:text-white/80"
+          >
+            <UiSelectValue placeholder="Select a group..." />
+          </UiSelectTrigger>
+          <UiSelectContent>
+            <UiSelectItem
+              v-for="g in groupsStore.items"
+              :key="g.$id"
+              :value="g.$id"
+            >
+              {{ g.name }}
+            </UiSelectItem>
+          </UiSelectContent>
+        </UiSelect>
         <button
           @click="showCalendarIntegrations = true"
           class="touch-exempt flex-shrink-0 flex items-center justify-center w-10 h-10 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 dark:text-white rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
@@ -45,10 +53,11 @@
 
     <!-- Modals -->
     <InviteModal v-if="showInviteModal" :inviteCode="inviteCode" @close="showInviteModal = false" />
-    <ui-modal :model-value="showCalendarIntegrations" @update:modelValue="showCalendarIntegrations = false" content-max-width="34rem">
-      <template #header>
-        <h3 class="font-semibold text-lg dark:text-white">Calendar Integrations</h3>
-      </template>
+    <UiDialog :open="showCalendarIntegrations" @update:open="showCalendarIntegrations = false">
+      <UiDialogContent class="sm:max-w-md">
+        <UiDialogHeader>
+          <UiDialogTitle class="dark:text-white">Calendar Integrations</UiDialogTitle>
+        </UiDialogHeader>
 
       <div class="space-y-4">
         <p class="text-sm text-neutral-600 dark:text-neutral-300">
@@ -114,7 +123,8 @@
           </p>
         </div>
       </div>
-    </ui-modal>
+      </UiDialogContent>
+    </UiDialog>
     <EventModal
       v-if="showEventModal"
       :visible="showEventModal"
