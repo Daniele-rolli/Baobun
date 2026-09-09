@@ -9,6 +9,7 @@ import calendarFeedsRoutes from './routes/calendarFeeds.js'
 import filesRoutes from './routes/files.js'
 import tokensRoutes from './routes/tokens.js'
 import publicApiRoutes from './routes/publicApi.js'
+import { serveStaticApp } from './staticApp.js'
 
 export const app = new Hono()
 
@@ -23,6 +24,8 @@ app.route('/api/events', eventsRoutes)
 app.route('/api/tags', tagsRoutes)
 app.route('/api/calendar-feeds', calendarFeedsRoutes)
 app.route('/api/v1', publicApiRoutes)
+app.route('/feeds/calendar-feeds', calendarFeedsRoutes)
 
+app.get('*', serveStaticApp)
 app.notFound(notFoundHandler)
 app.onError(errorHandler)

@@ -3,64 +3,38 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-baobun}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-baobun_dev}
-      POSTGRES_DB: ${POSTGRES_DB:-baobun}
+      POSTGRES_USER: baobun
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: baobun
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-baobun}']
+      test: ['CMD-SHELL', 'pg_isready -U baobun']
       interval: 5s
       timeout: 5s
       retries: 10
 
-  minio:
-    image: minio/minio:latest
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-baobun}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-baobun_dev}
-    volumes:
-      - miniodata:/data
-
-  api:
-    image: ghcr.io/daniele-rolli/baobun-api:latest
+  app:
+    image: ghcr.io/daniele-rolli/baobun:latest
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-baobun}:${POSTGRES_PASSWORD:-baobun_dev}@postgres:5432/${POSTGRES_DB:-baobun}
-      S3_ENDPOINT: http://minio:9000
-      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-baobun}
-      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-baobun_dev}
-      PUBLIC_URL: ${PUBLIC_URL:-}
+      DATABASE_URL: postgresql://baobun:${POSTGRES_PASSWORD}@postgres:5432/baobun
+      PUBLIC_URL: ${PUBLIC_URL:?Set PUBLIC_URL in .env}
       MAIL_DEBUG: ${MAIL_DEBUG:-true}
       MAIL_SENDER: ${MAIL_SENDER:-"Baobun <no-reply@baobun.local>"}
-      MAIL_HOST: ${MAIL_HOST:-mailpit}
-      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_SECURE: ${MAIL_SECURE:-false}
       MAIL_USER: ${MAIL_USER:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      PORT: 3001
+    volumes:
+      - appdata:/data
     depends_on:
       postgres:
         condition: service_healthy
-      minio:
-        condition: service_started
-    expose:
-      - '3001'
-
-  frontend:
-    image: ghcr.io/daniele-rolli/baobun-frontend:latest
-    restart: unless-stopped
     ports:
       - '${FRONTEND_PORT:-4173}:4173'
-    depends_on:
-      api:
-        condition: service_started
-
-  mailpit:
-    image: axllent/mailpit:latest
-    restart: unless-stopped
 
 volumes:
   pgdata:
-  miniodata:
+  appdata:

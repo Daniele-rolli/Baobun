@@ -3,7 +3,7 @@ import { getLiveFeedFileId, buildIcsContent } from '@baobun/shared'
 import { prisma } from '../db.js'
 import { requireAuth } from '../middleware/auth.js'
 import { forbidden, notFound } from '../errors.js'
-import { getObject, putObject, BUCKETS } from '../s3.js'
+import { getObject, putObject, BUCKETS } from '../storage.js'
 import { absoluteUrl } from '../publicUrl.js'
 import { eventToJson } from './events.js'
 

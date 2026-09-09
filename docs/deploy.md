@@ -1,8 +1,8 @@
 # Baobun self-hosted deployment
 
-Single-host deployment: frontend (static) + API (Hono/Node) + Postgres + MinIO + SMTP.
-The frontend container also proxies `/api` and `/feeds`, so only one app port needs to be
-published through your reverse proxy.
+The production stack has two containers: Baobun and PostgreSQL. The Baobun container serves
+the frontend, API, uploads, and calendar feeds on one port. Uploaded files are stored in a
+Docker volume; SMTP is optional.
 
 ## Quick start (pre-built images)
 
@@ -13,8 +13,8 @@ No repo needed on the server. Pull pre-built images from GitHub Container Regist
 mkdir -p ~/baobun && cd ~/baobun
 
 # Download the prod compose file and env template
-curl -fsSL https://raw.githubusercontent.com/Daniele-rolli/Baobun/master/docker-compose.prod.yml -o docker-compose.yml
-curl -fsSL https://raw.githubusercontent.com/Daniele-rolli/Baobun/master/.env.example -o .env
+curl -fsSL https://raw.githubusercontent.com/Daniele-rolli/Baobun/main/docker-compose.prod.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/Daniele-rolli/Baobun/main/.env.example -o .env
 
 # Edit .env with your settings (see table below)
 nano .env
@@ -45,21 +45,20 @@ docker compose up -d
 
 ## Configuration
 
-| Variable              | Default                          | Purpose                                                                                            |
-| --------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `POSTGRES_USER`       | `baobun`                         | Postgres user                                                                                      |
-| `POSTGRES_PASSWORD`   | `change_me`                      | **Set a strong password**                                                                          |
-| `POSTGRES_DB`         | `baobun`                         | Postgres database                                                                                  |
-| `MINIO_ROOT_USER`     | `baobun`                         | MinIO admin user                                                                                   |
-| `MINIO_ROOT_PASSWORD` | `change_me`                      | **Set a strong password**                                                                          |
-| `PUBLIC_URL`          | _(derived)_                      | Optional canonical app URL. Normally derived from standard `Host` and `X-Forwarded-Proto` headers. |
-| `FRONTEND_PORT`       | `4173`                           | The only host port published by the production stack                                               |
-| `MAIL_DEBUG`          | `true`                           | `true` = print previews. **In production set `false`** and configure real SMTP.                    |
-| `MAIL_SENDER`         | `Baobun <no-reply@baobun.local>` | From-address for emails                                                                            |
-| `MAIL_HOST`           | `mailpit`                        | SMTP host (in production, use a real relay)                                                        |
-| `MAIL_PORT`           | `1025`                           | SMTP port                                                                                          |
-| `MAIL_USER`           | _(empty)_                        | SMTP username                                                                                      |
-| `MAIL_PASSWORD`       | _(empty)_                        | SMTP password                                                                                      |
+Only the first two values are required:
+
+| Variable            | Default                          | Purpose                                                                         |
+| ------------------- | -------------------------------- | ------------------------------------------------------------------------------- |
+| `POSTGRES_PASSWORD` | —                                | **Required.** PostgreSQL password; use a long URL-safe value.                   |
+| `PUBLIC_URL`        | —                                | **Required.** Public HTTPS URL, for example `https://baobun.example.com`.        |
+| `FRONTEND_PORT`     | `4173`                           | The only host port published by the stack.                                      |
+| `MAIL_DEBUG`        | `true`                           | Log messages instead of sending them. Set `false` when SMTP is configured.      |
+| `MAIL_SENDER`       | `Baobun <no-reply@baobun.local>` | From-address for email.                                                         |
+| `MAIL_HOST`         | _(empty)_                        | Optional SMTP host.                                                             |
+| `MAIL_PORT`         | `587`                            | SMTP port.                                                                      |
+| `MAIL_SECURE`       | `false`                          | Use implicit TLS, normally for port 465. STARTTLS on port 587 does not need it. |
+| `MAIL_USER`         | _(empty)_                        | SMTP username.                                                                  |
+| `MAIL_PASSWORD`     | _(empty)_                        | SMTP password.                                                                  |
 
 Event reminders are delivered through this SMTP configuration. Set `PUBLIC_URL` to include
 direct Baobun links in reminder messages. With `MAIL_DEBUG=true`, messages are logged instead
@@ -69,9 +68,6 @@ Production quick start (edit `.env`):
 
 ```env
 POSTGRES_PASSWORD=<strong-password>
-MINIO_ROOT_USER=<minio-user>
-MINIO_ROOT_PASSWORD=<strong-password>
-# Optional; forwarded headers are used when omitted.
 PUBLIC_URL=https://baobun.example.com
 MAIL_DEBUG=false
 MAIL_HOST=smtp.example.com
@@ -82,15 +78,13 @@ MAIL_PASSWORD=<smtp-password>
 
 ## Reverse proxy routing
 
-Point your domain to the frontend container. It serves the SPA and proxies API and feed
-traffic internally, keeping authentication and calendar feeds on one origin:
+Point your domain to the Baobun application:
 
 | Path                                               | Upstream             |
 | -------------------------------------------------- | -------------------- |
 | `/` (all paths, including `/api/*` and `/feeds/*`) | `http://<host>:4173` |
 
-No CORS allowlist or path-specific reverse-proxy rules are needed. The frontend container
-forwards `/api` and `/feeds` internally. Postgres, the API, MinIO, and Mailpit are not
+No CORS allowlist or path-specific reverse-proxy rules are needed. PostgreSQL is not
 published by the production Compose file.
 
 Example nginx snippets:
@@ -118,9 +112,9 @@ The API sets a `secure`, `httpOnly`, `SameSite=Lax` session cookie (`baobun_sid`
 - Create a token under **Settings → API Access** and call `GET /api/v1/groups` using the
   example in [`api.md`](api.md).
 
-The API applies compatible Prisma schema updates before starting. If that update fails, the
+The app applies compatible Prisma schema updates before starting. If that update fails, the
 container stops rather than running against an incompatible database; inspect
-`docker compose logs api`, correct the database issue, and restart it.
+`docker compose logs app`, correct the database issue, and restart it.
 
 ## Migrating from Appwrite
 
@@ -130,8 +124,7 @@ If you are migrating an existing Appwrite dataset, run the one-shot ETL before g
 
 ```sh
 docker compose ps          # status
-docker compose logs -f api # API logs
-docker compose logs -f frontend
+docker compose logs -f app # application logs
 docker compose down        # stop (data persists)
 docker compose down -v     # stop + wipe volumes (destructive!)
 ```

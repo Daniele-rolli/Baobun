@@ -3,7 +3,7 @@ import { prisma } from '../db.js'
 import { verifyPassword, hashPassword } from '../password.js'
 import { requireAuth } from '../middleware/auth.js'
 import { validationError, unauthorized, conflict } from '../errors.js'
-import { putObject, deleteObject, BUCKETS } from '../s3.js'
+import { putObject, deleteObject, BUCKETS } from '../storage.js'
 import { serializeUser, avatarUrlFor } from './auth.js'
 
 const users = new Hono()

@@ -7,23 +7,18 @@ change shared data.
 
 ## Run with Docker Compose
 
-Docker Compose is the recommended local and self-hosted setup. It starts the web app, API,
-Postgres, MinIO object storage, and a Mailpit development inbox.
+Docker Compose is the recommended local and self-hosted setup. It starts only two containers:
+the complete Baobun application and PostgreSQL. Uploaded files and feeds live in a persistent
+application volume.
 
 ```sh
 cp .env.example .env
 docker compose up --build
 ```
 
-Open:
-
-- App: http://localhost:4173
-- Mailpit inbox: http://localhost:8025
-- MinIO console: http://localhost:9101
-
-The app uses one browser-facing origin: the frontend container serves the Vue SPA and
-proxies `/api` to the API and `/feeds` to MinIO. No separate frontend API URL is required.
-Data is kept in named Docker volumes across restarts.
+Open the app at http://localhost:4173. The application container serves the Vue SPA, API,
+uploads, and calendar feeds from that one origin. Data is kept in named Docker volumes
+across restarts.
 
 Stop the app with `docker compose down`. Avoid `docker compose down -v` unless you intend to
 delete all Baobun data.
@@ -35,7 +30,7 @@ Requirements: Node.js 22.12+ and Yarn 1.
 ```sh
 yarn install --frozen-lockfile
 cp apps/api/.env.example apps/api/.env
-docker compose up -d postgres minio mailpit
+docker compose up -d postgres
 yarn api:dev
 ```
 

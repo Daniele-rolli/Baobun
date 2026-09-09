@@ -1,11 +1,11 @@
 import { serve } from '@hono/node-server'
 import { app } from './app.js'
 import { config } from './config.js'
-import { ensureBuckets } from './s3.js'
+import { ensureStorage } from './storage.js'
 import { startReminderWorker } from './reminders.js'
 
-await ensureBuckets().catch((err) => {
-  console.error('Failed to ensure buckets:', err)
+await ensureStorage().catch((err) => {
+  console.error('Failed to initialize storage:', err)
   process.exit(1)
 })
 

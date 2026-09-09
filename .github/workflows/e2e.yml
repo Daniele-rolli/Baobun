@@ -12,7 +12,6 @@ jobs:
     timeout-minutes: 20
     env:
       POSTGRES_PASSWORD: e2e-postgres-password
-      MINIO_ROOT_PASSWORD: e2e-minio-password
       MAIL_DEBUG: 'true'
 
     steps:

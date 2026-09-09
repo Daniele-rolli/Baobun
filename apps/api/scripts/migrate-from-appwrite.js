@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { randomBytes } from 'crypto'
 import { getLiveFeedFileId } from '@baobun/shared'
-import { ensureBuckets, putObject, BUCKETS } from '../src/s3.js'
+import { ensureStorage, putObject, BUCKETS } from '../src/storage.js'
 
 const prisma = new PrismaClient()
 
@@ -89,7 +89,7 @@ const main = async () => {
   console.log('[validate] Checking collections exist...')
   await Promise.all(Object.entries(collections).map(([k, v]) => checkCollection(k, v)))
 
-  await ensureBuckets()
+  await ensureStorage()
   const dry = dryRun ? ' (dry run)' : ''
 
   // Fetch auth users first (needed for per-user event fetching)

@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { prisma } from '../db.js'
 import { requireAuth } from '../middleware/auth.js'
 import { notFound, forbidden } from '../errors.js'
-import { deleteObject, getObject, BUCKETS } from '../s3.js'
+import { deleteObject, getObject, BUCKETS } from '../storage.js'
 
 export const tagToJson = async (tag) => {
   let imageUrl = null

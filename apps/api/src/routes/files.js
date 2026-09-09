@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { requireAuthOrToken } from '../middleware/auth.js'
 import { notFound } from '../errors.js'
-import { BUCKETS, getObjectWithMetadata } from '../s3.js'
+import { BUCKETS, getObjectWithMetadata } from '../storage.js'
 
 const readableBuckets = new Set([BUCKETS.avatars, BUCKETS.tagIcons])
 const files = new Hono()

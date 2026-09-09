@@ -25,14 +25,12 @@ node --env-file=.env scripts/migrate-from-appwrite.js
 
 ## Docker (compose stack)
 
-The `baobun-api` image includes the migration script. Run it from the repo root
-with the stack up; `docker compose run api` inherits the API service's
-environment, so `DATABASE_URL` and the S3 variables already point at the
-`postgres`/`minio` services on the compose network. Only the Appwrite variables
-need to be passed in:
+The Baobun image includes the migration script. Run it from the repo root with
+the stack up; `docker compose run app` inherits the database and local-storage
+configuration. Only the Appwrite variables need to be passed in:
 
 ```bash
-docker compose build api
+docker compose build app
 
 # Dry run — prints counts, writes nothing
 docker compose run --rm --no-deps \
@@ -48,9 +46,9 @@ docker compose run --rm --no-deps \
   -e APPWRITE_AVATAR_BUCKET=... \
   -e APPWRITE_TAG_ICONS_BUCKET=... \
   -e APPWRITE_CALENDAR_FEEDS_BUCKET=... \
-  api node scripts/migrate-from-appwrite.js --dry-run
+  app node scripts/migrate-from-appwrite.js --dry-run
 
-# Real run — writes Postgres + MinIO
+# Real run — writes PostgreSQL + the Baobun data volume
 docker compose run --rm --no-deps \
   -e APPWRITE_ENDPOINT=https://cloud.appwrite.io \
   -e APPWRITE_PROJECT_ID=... \
@@ -64,11 +62,11 @@ docker compose run --rm --no-deps \
   -e APPWRITE_AVATAR_BUCKET=... \
   -e APPWRITE_TAG_ICONS_BUCKET=... \
   -e APPWRITE_CALENDAR_FEEDS_BUCKET=... \
-  api node scripts/migrate-from-appwrite.js
+  app node scripts/migrate-from-appwrite.js
 ```
 
 `--no-deps` avoids starting (or re-creating) the stack; `docker compose run`
-does not publish the service ports, so the running `api` container is unaffected.
+does not publish the service ports, so the running `app` container is unaffected.
 The report is printed to stdout (in Docker, `migration-report.json` is written
 inside the ephemeral container and discarded with `--rm` — copy the printed
 report if you want to keep it).

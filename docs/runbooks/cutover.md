@@ -3,8 +3,8 @@
 1. **Freeze writes**: In Appwrite console, set the project to read-only.
 2. **Run the migration** — see `apps/api/scripts/migrate-README.md` for both local and Docker (`docker compose run api node scripts/migrate-from-appwrite.js`) execution:
    - `--dry-run` first — verify counts match.
-   - Then the real run — writes Postgres + MinIO; check the printed report.
-3. **Deploy**: `docker compose build --pull && docker compose up -d` (postgres, minio, api, frontend, mailpit). See `docs/deploy.md` for `.env` and reverse-proxy setup.
+   - Then the real run — writes PostgreSQL and the Baobun data volume; check the printed report.
+3. **Deploy**: `docker compose build --pull && docker compose up -d` (app + PostgreSQL). See `docs/deploy.md` for `.env` and reverse-proxy setup.
 4. **Verify**:
    - `curl localhost:3001/api/auth/me` → 401.
    - Register a fresh user; create a group; add an event; confirm it appears.
