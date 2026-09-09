@@ -58,13 +58,18 @@ test('single-origin API supports groups, recurrence, import, and pull tokens', a
   expect(recurring.status()).toBe(201)
   expect((await recurring.json()).occurrenceCount).toBe(3)
 
+  const toIcsDate = (date) =>
+    date
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .replace(/\.\d{3}Z$/, 'Z')
   const calendar = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'BEGIN:VEVENT',
     `UID:import-${unique}`,
-    `DTSTART:${start.toISOString().replace(/[-:]/g, '').replace('.000', '')}`,
-    `DTEND:${end.toISOString().replace(/[-:]/g, '').replace('.000', '')}`,
+    `DTSTART:${toIcsDate(start)}`,
+    `DTEND:${toIcsDate(end)}`,
     'SUMMARY:Imported event',
     'END:VEVENT',
     'END:VCALENDAR',
@@ -79,8 +84,9 @@ test('single-origin API supports groups, recurrence, import, and pull tokens', a
       },
     },
   })
-  expect(imported.ok()).toBeTruthy()
-  expect((await imported.json()).imported).toBe(1)
+  const importResult = await imported.json()
+  expect(imported.ok(), JSON.stringify(importResult)).toBeTruthy()
+  expect(importResult.imported).toBe(1)
 
   const tokenResponse = await request.post('/api/tokens', {
     headers: { Cookie: sessionCookie },
