@@ -30,7 +30,7 @@ delete all Baobun data.
 
 ## Local development
 
-Requirements: Node.js 20.19+ (or 22.12+) and Yarn 1.
+Requirements: Node.js 22.12+ and Yarn 1.
 
 ```sh
 yarn install --frozen-lockfile
