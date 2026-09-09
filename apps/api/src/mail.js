@@ -40,7 +40,9 @@ export const sendMail = async ({ to, subject, text = '', html = '' }) => {
     if (DEBUG) {
       const preview =
         (typeof info.messageId === 'string' && info.message?.raw?.length) ||
-        (info.message && Buffer.isBuffer(info.message) ? info.message.toString() : JSON.stringify(info.message ?? info))
+        (info.message && Buffer.isBuffer(info.message)
+          ? info.message.toString()
+          : JSON.stringify(info.message ?? info))
       console.log('[mail] preview:', preview)
     }
   } finally {

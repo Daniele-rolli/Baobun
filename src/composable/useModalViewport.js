@@ -2,9 +2,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 export function useModalViewport() {
   const visualViewportHeight = ref(
-    typeof window !== 'undefined'
-      ? (window.visualViewport?.height ?? window.innerHeight)
-      : 600,
+    typeof window !== 'undefined' ? (window.visualViewport?.height ?? window.innerHeight) : 600,
   )
 
   const keyboardOffset = computed(() => {

@@ -2,7 +2,7 @@ const env = (key, fallback = '') => process.env[key] ?? fallback
 
 export const config = {
   port: Number(env('PORT', '3001')),
-  webOrigin: env('WEB_ORIGIN', 'http://localhost:4173'),
+  publicUrl: env('PUBLIC_URL', env('WEB_ORIGIN')),
   env: env('NODE_ENV', 'development'),
   s3: {
     endpoint: env('S3_ENDPOINT', 'http://localhost:9100'),

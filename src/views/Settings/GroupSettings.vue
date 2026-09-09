@@ -1,7 +1,10 @@
 <template>
   <div class="min-h-screen">
     <div class="max-w-3xl mx-auto p-4 sm:p-6 space-y-5">
-      <router-link to="/settings" class="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-white transition-colors">
+      <router-link
+        to="/settings"
+        class="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-white transition-colors"
+      >
         <ChevronLeft class="w-4 h-4" />
         Back to Settings
       </router-link>
@@ -13,11 +16,7 @@
           <UiSelectValue placeholder="Select a group..." />
         </UiSelectTrigger>
         <UiSelectContent>
-          <UiSelectItem
-            v-for="g in groups"
-            :key="g.$id"
-            :value="g.$id"
-          >
+          <UiSelectItem v-for="g in groups" :key="g.$id" :value="g.$id">
             {{ g.name }}
           </UiSelectItem>
         </UiSelectContent>
@@ -27,14 +26,9 @@
       <header class="flex items-center justify-between">
         <h1 class="text-3xl font-bold text-neutral-900 dark:text-white">Group Settings</h1>
         <transition name="fade">
-          <button
-            v-if="dirty"
-            @click="saveGroup"
-            :disabled="saving"
-            class="btn-primary"
-          >
-            Save Changes
-          </button>
+          <UiButton v-if="dirty && canEditGroup" @click="saveGroup" :disabled="saving">
+            {{ saving ? 'Saving…' : 'Save Changes' }}
+          </UiButton>
         </transition>
       </header>
 
@@ -116,6 +110,7 @@
                     @input="dirty = true"
                     placeholder="Enter group name"
                     class="w-full"
+                    :disabled="!canEditGroup"
                   />
                 </div>
 
@@ -130,6 +125,7 @@
                         v-model="groupForm.color"
                         @input="dirty = true"
                         class="sr-only"
+                        :disabled="!canEditGroup"
                       />
                       <span
                         class="w-12 h-12 rounded-xl shadow-md transition-all cursor-pointer"
@@ -142,6 +138,7 @@
                         @input="dirty = true"
                         placeholder="#000000"
                         class="font-mono"
+                        :disabled="!canEditGroup"
                       />
                     </div>
                   </div>
@@ -279,7 +276,10 @@
                 <span class="ml-auto text-sm text-neutral-500">{{ members.length }}</span>
               </div>
 
-              <div v-if="members.length > 0" class="space-y-2 max-h-80 overflow-y-auto overscroll-contain pr-2 touch-pan-y">
+              <div
+                v-if="members.length > 0"
+                class="space-y-2 max-h-80 overflow-y-auto overscroll-contain pr-2 touch-pan-y"
+              >
                 <div
                   v-for="m in members"
                   :key="m.$id"
@@ -298,13 +298,32 @@
                       m.name || m.userId
                     }}</span>
                   </div>
-                  <button
-                    @click="removeMember(m.$id)"
-                    class="text-red-600 hover:text-red-700 transition-opacity font-medium text-sm"
-                    :disabled="memberBusy === m.$id"
-                  >
-                    {{ memberBusy === m.$id ? 'Removing…' : 'Remove' }}
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <UiSelect
+                      v-if="canManageRoles && m.role !== 'OWNER'"
+                      :model-value="m.role"
+                      :disabled="memberBusy === m.$id"
+                      @update:model-value="updateMemberRole(m, $event)"
+                    >
+                      <UiSelectTrigger class="h-8 w-28 text-xs">
+                        <UiSelectValue />
+                      </UiSelectTrigger>
+                      <UiSelectContent>
+                        <UiSelectItem value="ADMIN">Admin</UiSelectItem>
+                        <UiSelectItem value="MEMBER">Member</UiSelectItem>
+                        <UiSelectItem value="VIEWER">Viewer</UiSelectItem>
+                      </UiSelectContent>
+                    </UiSelect>
+                    <UiBadge v-else variant="secondary">{{ formatRole(m.role) }}</UiBadge>
+                    <button
+                      v-if="canManageMembers && m.role !== 'OWNER'"
+                      @click="removeMember(m.$id)"
+                      class="text-red-600 hover:text-red-700 transition-opacity font-medium text-sm"
+                      :disabled="memberBusy === m.$id"
+                    >
+                      {{ memberBusy === m.$id ? 'Removing…' : 'Remove' }}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -337,7 +356,7 @@
               </div>
 
               <!-- Create New Tag Section -->
-              <div class="mb-4">
+              <div v-if="canEditContent" class="mb-4">
                 <button
                   type="button"
                   @click="showCreateTag = !showCreateTag"
@@ -416,27 +435,39 @@
                       />
                     </div>
 
-                    <button
+                    <UiButton
                       type="button"
-                      class="btn-primary w-full"
+                      class="w-full"
                       @click="addTag"
                       :disabled="addingTag || !newTagName.trim()"
                     >
                       {{ addingTag ? 'Creating…' : 'Create Tag' }}
-                    </button>
+                    </UiButton>
                   </div>
                 </transition>
               </div>
 
               <!-- Tags List -->
-              <div v-if="tags.length > 0" class="space-y-2 max-h-80 overflow-y-auto overscroll-contain pr-2 touch-pan-y">
+              <div
+                v-if="tags.length > 0"
+                class="space-y-2 max-h-80 overflow-y-auto overscroll-contain pr-2 touch-pan-y"
+              >
                 <div
                   v-for="t in tags"
                   :key="t.$id"
                   class="flex items-center gap-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-3 hover:border-neutral-300 dark:hover:border-neutral-600 transition-colors group"
                 >
-                  <label class="inline-flex items-center cursor-pointer">
-                    <input type="color" v-model="t.color" @input="updateTag(t)" class="sr-only" />
+                  <label
+                    class="inline-flex items-center"
+                    :class="{ 'cursor-pointer': canEditContent }"
+                  >
+                    <input
+                      type="color"
+                      v-model="t.color"
+                      @input="updateTag(t)"
+                      class="sr-only"
+                      :disabled="!canEditContent"
+                    />
                     <span
                       class="w-10 h-10 rounded-full shadow-md transition-all cursor-pointer"
                       :style="{ backgroundColor: t.color || groupForm.color || '#ffffff' }"
@@ -448,9 +479,11 @@
                     v-model="t.name"
                     class="flex-1 decoration-none bg-transparent border-0 border-dashed border-neutral-300 focus:border-solid focus:ring-0 focus:outline-none text-neutral-900 dark:text-white"
                     @change="updateTag(t)"
+                    :disabled="!canEditContent"
                   />
 
                   <button
+                    v-if="canEditContent"
                     @click="removeTag(t.$id)"
                     class="text-red-600 hover:text-red-700 transition-opacity"
                     :disabled="tagBusy === t.$id"
@@ -490,7 +523,7 @@
         </UiCard>
 
         <!-- Delete Group -->
-        <UiCard class="p-6">
+        <UiCard v-if="canEditGroup" class="p-6">
           <div class="flex flex-col md:flex-row items-start gap-4">
             <div class="flex-1">
               <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-1">
@@ -500,13 +533,9 @@
                 Permanently delete this group and all its data. This action cannot be undone.
               </p>
             </div>
-            <button
-              @click="confirmDeleteGroup"
-              class="btn-danger"
-              :disabled="deleting"
-            >
+            <UiButton @click="confirmDeleteGroup" variant="destructive" :disabled="deleting">
               {{ deleting ? 'Deleting…' : 'Delete Group' }}
-            </button>
+            </UiButton>
           </div>
         </UiCard>
       </div>
@@ -521,6 +550,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useGroupsStore } from '@/stores/group'
 import { useTagsStore } from '@/stores/tag'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useToastStore } from '@/stores/toast'
 import { formatTime } from '@/lib/dateTimePreferences'
 import { Users, BadgeInfo, Tag, ChevronLeft } from 'lucide-vue-next'
 
@@ -529,6 +559,7 @@ const authStore = useAuthStore()
 const groupStore = useGroupsStore()
 const tagsStore = useTagsStore()
 const preferencesStore = usePreferencesStore()
+const toastStore = useToastStore()
 
 // --- reactive state ---
 const selectedGroupId = ref('')
@@ -562,6 +593,15 @@ const router = useRouter()
 // --- computed ---
 const groups = computed(() => groupStore.items)
 const tags = computed(() => tagsStore.items)
+const selectedGroup = computed(() =>
+  groupStore.items.find((group) => group.$id === selectedGroupId.value),
+)
+const canEditGroup = computed(() => selectedGroup.value?.role === 'OWNER')
+const canEditContent = computed(() => selectedGroup.value?.role !== 'VIEWER')
+const canManageRoles = computed(() => selectedGroup.value?.role === 'OWNER')
+const canManageMembers = computed(() => ['OWNER', 'ADMIN'].includes(selectedGroup.value?.role))
+const formatRole = (role) =>
+  ({ OWNER: 'Owner', ADMIN: 'Admin', MEMBER: 'Member', VIEWER: 'Viewer' })[role] || 'Member'
 
 // Watch for changes to groupForm
 watch(
@@ -616,12 +656,14 @@ const saveGroup = async () => {
     original.value = { ...groupForm.value }
     dirty.value = false
     savedAt.value = formatTime(new Date(), preferencesStore.timeFormat, true)
+    toastStore.success('Group settings saved.')
     setTimeout(() => {
       savedAt.value = ''
     }, 3000)
   } catch (e) {
     console.error(e)
     error.value = 'Could not save group.'
+    toastStore.error('Could not save group.')
   } finally {
     saving.value = false
   }
@@ -632,11 +674,13 @@ const copyInviteCode = async () => {
   try {
     await navigator.clipboard.writeText(inviteCode.value)
     codeCopied.value = true
+    toastStore.success('Invite code copied.')
     setTimeout(() => {
       codeCopied.value = false
     }, 2000)
   } catch (e) {
     console.error('Failed to copy code:', e)
+    toastStore.error('Could not copy the invite code.')
   }
 }
 
@@ -644,11 +688,13 @@ const copyInviteLink = async () => {
   try {
     await navigator.clipboard.writeText(inviteLink.value)
     linkCopied.value = true
+    toastStore.success('Invite link copied.')
     setTimeout(() => {
       linkCopied.value = false
     }, 2000)
   } catch (e) {
     console.error('Failed to copy link:', e)
+    toastStore.error('Could not copy the invite link.')
   }
 }
 
@@ -659,9 +705,27 @@ const removeMember = async (id) => {
   try {
     await groupStore.removeMember(selectedGroupId.value, id)
     members.value = await groupStore.getMembers(selectedGroupId.value, authStore.user)
+    toastStore.success('Member removed.')
   } catch (e) {
     console.error(e)
     memberError.value = 'Failed to remove member.'
+    toastStore.error('Failed to remove member.')
+  } finally {
+    memberBusy.value = ''
+  }
+}
+
+const updateMemberRole = async (member, role) => {
+  memberBusy.value = member.$id
+  memberError.value = ''
+  try {
+    const updated = await groupStore.updateMemberRole(selectedGroupId.value, member.$id, role)
+    Object.assign(member, updated)
+    toastStore.success(`${member.name || member.email}'s role is now ${formatRole(role)}.`)
+  } catch (e) {
+    console.error(e)
+    memberError.value = 'Failed to update member role.'
+    toastStore.error('Failed to update member role.')
   } finally {
     memberBusy.value = ''
   }
@@ -691,9 +755,11 @@ const addTag = async () => {
     newTagImageFile.value = null
     previewImage.value = ''
     showCreateTag.value = false
+    toastStore.success('Tag created.')
   } catch (e) {
     console.error(e)
     tagError.value = 'Failed to add tag.'
+    toastStore.error('Failed to add tag.')
   } finally {
     addingTag.value = false
   }
@@ -704,9 +770,11 @@ const updateTag = async (tag) => {
   tagError.value = ''
   try {
     await tagsStore.updateTag(tag.$id, { name: tag.name, color: tag.color })
+    toastStore.success('Tag updated.')
   } catch (e) {
     console.error(e)
     tagError.value = 'Failed to update tag.'
+    toastStore.error('Failed to update tag.')
   } finally {
     tagBusy.value = ''
   }
@@ -717,9 +785,11 @@ const removeTag = async (id) => {
   tagError.value = ''
   try {
     await tagsStore.deleteTag(id)
+    toastStore.success('Tag deleted.')
   } catch (e) {
     console.error(e)
     tagError.value = 'Failed to remove tag.'
+    toastStore.error('Failed to remove tag.')
   } finally {
     tagBusy.value = ''
   }

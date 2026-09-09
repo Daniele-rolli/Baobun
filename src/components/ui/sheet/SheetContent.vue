@@ -1,41 +1,36 @@
 <script setup>
-import { XIcon } from "@lucide/vue";
-import { reactiveOmit } from "@vueuse/core";
-import {
-  DialogClose,
-  DialogContent,
-  DialogPortal,
-  useForwardPropsEmits,
-} from "reka-ui";
-import { cn } from "@/lib/utils";
-import { Button } from '@/components/ui/button';
-import SheetOverlay from "./SheetOverlay.vue";
+import { XIcon } from '@lucide/vue'
+import { reactiveOmit } from '@vueuse/core'
+import { DialogClose, DialogContent, DialogPortal, useForwardPropsEmits } from 'reka-ui'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import SheetOverlay from './SheetOverlay.vue'
 
 defineOptions({
   inheritAttrs: false,
-});
+})
 
 const props = defineProps({
   class: { type: null, required: false },
-  side: { type: String, required: false, default: "right" },
+  side: { type: String, required: false, default: 'right' },
   showCloseButton: { type: Boolean, required: false, default: true },
   forceMount: { type: Boolean, required: false },
   disableOutsidePointerEvents: { type: Boolean, required: false },
   asChild: { type: Boolean, required: false },
   as: { type: null, required: false },
-});
+})
 const emits = defineEmits([
-  "escapeKeyDown",
-  "pointerDownOutside",
-  "focusOutside",
-  "interactOutside",
-  "openAutoFocus",
-  "closeAutoFocus",
-]);
+  'escapeKeyDown',
+  'pointerDownOutside',
+  'focusOutside',
+  'interactOutside',
+  'openAutoFocus',
+  'closeAutoFocus',
+])
 
-const delegatedProps = reactiveOmit(props, "class", "side", "showCloseButton");
+const delegatedProps = reactiveOmit(props, 'class', 'side', 'showCloseButton')
 
-const forwarded = useForwardPropsEmits(delegatedProps, emits);
+const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
 
 <template>
@@ -55,11 +50,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
       <slot />
 
       <DialogClose v-if="showCloseButton" data-slot="sheet-close" as-child>
-        <Button
-          variant="ghost"
-          class="absolute top-4 right-4 bg-secondary"
-          size="icon-sm"
-        >
+        <Button variant="ghost" class="absolute top-4 right-4 bg-secondary" size="icon-sm">
           <XIcon />
           <span class="sr-only">Close</span>
         </Button>

@@ -2,16 +2,20 @@
   <div class="min-h-screen">
     <div class="p-4 sm:p-6 overflow-y-auto">
       <div class="max-w-4xl mx-auto space-y-5">
-
         <!-- ── Welcome header ── -->
         <div class="flex items-center gap-3 sm:gap-4 mb-2">
           <img
-            :src="authStore.user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'User')}&background=random`"
+            :src="
+              authStore.user?.avatarUrl ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'User')}&background=random`
+            "
             alt="Avatar"
             class="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl object-cover flex-shrink-0 shadow-sm"
           />
           <div>
-            <h2 class="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white leading-tight">
+            <h2
+              class="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white leading-tight"
+            >
               {{ welcomePrefix }}, <span class="text-rose-600">{{ firstName }}!</span>
             </h2>
             <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
@@ -22,7 +26,9 @@
 
         <!-- ── Your groups ── -->
         <div v-if="userGroups.length > 0" class="space-y-2">
-          <p class="section-label px-1">Your Groups</p>
+          <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Your Groups
+          </p>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             <button
               v-for="group in userGroups"
@@ -37,10 +43,16 @@
                 {{ group.name.charAt(0).toUpperCase() }}
               </div>
               <div class="flex-1 min-w-0">
-                <p class="font-semibold text-sm text-neutral-800 dark:text-white truncate">{{ group.name }}</p>
-                <p class="text-xs text-neutral-400 mt-0.5">{{ counts[group.$id] || 0 }} member{{ counts[group.$id] !== 1 ? 's' : '' }}</p>
+                <p class="font-semibold text-sm text-neutral-800 dark:text-white truncate">
+                  {{ group.name }}
+                </p>
+                <p class="text-xs text-neutral-400 mt-0.5">
+                  {{ counts[group.$id] || 0 }} member{{ counts[group.$id] !== 1 ? 's' : '' }}
+                </p>
               </div>
-              <ChevronRight class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0 opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 transition-opacity" />
+              <ChevronRight
+                class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0 opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 transition-opacity"
+              />
             </button>
           </div>
         </div>
@@ -48,7 +60,9 @@
         <!-- ── Empty state ── -->
         <Card v-else class="p-8 text-center">
           <CardContent>
-            <div class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-500/15 text-rose-500 flex items-center justify-center mx-auto mb-3">
+            <div
+              class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-500/15 text-rose-500 flex items-center justify-center mx-auto mb-3"
+            >
               <Users class="w-6 h-6" />
             </div>
             <p class="font-semibold text-neutral-800 dark:text-white mb-1">No groups yet</p>
@@ -58,12 +72,13 @@
 
         <!-- ── Create + Join ── -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-
           <!-- Create Group -->
           <Card class="p-5">
             <CardContent>
               <div class="flex items-center gap-3 mb-4">
-                <span class="row-icon bg-rose-50 dark:bg-rose-500/15 text-rose-500">
+                <span
+                  class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-500 dark:bg-rose-500/15"
+                >
                   <Plus class="w-[1.125rem] h-[1.125rem]" />
                 </span>
                 <h3 class="font-semibold text-neutral-800 dark:text-white">Create a Group</h3>
@@ -87,11 +102,7 @@
                     ></span>
                   </label>
                 </div>
-                <Button
-                  type="submit"
-                  :disabled="loadingCreate"
-                  class="w-full"
-                >
+                <Button type="submit" :disabled="loadingCreate" class="w-full">
                   {{ loadingCreate ? 'Creating…' : 'Create Group' }}
                 </Button>
               </form>
@@ -102,7 +113,9 @@
           <Card class="p-5">
             <CardContent>
               <div class="flex items-center gap-3 mb-4">
-                <span class="row-icon bg-emerald-50 dark:bg-emerald-500/15 text-emerald-500">
+                <span
+                  class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500 dark:bg-emerald-500/15"
+                >
                   <Mail class="w-[1.125rem] h-[1.125rem]" />
                 </span>
                 <h3 class="font-semibold text-neutral-800 dark:text-white">Join with Code</h3>
@@ -120,14 +133,13 @@
                   type="submit"
                   :disabled="loadingJoin"
                   class="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-medium rounded-xl px-4 py-3 text-sm transition-colors disabled:opacity-50"
-                  style="min-height:44px"
+                  style="min-height: 44px"
                 >
                   {{ loadingJoin ? 'Joining…' : 'Join Group' }}
                 </button>
               </form>
             </CardContent>
           </Card>
-
         </div>
       </div>
     </div>
@@ -233,7 +245,8 @@ export default {
         inviteCode.value = ''
         await loadGroups()
       } catch (err) {
-        joinError.value = err?.code === 'not_found' ? 'Invalid invite code.' : 'Could not join group.'
+        joinError.value =
+          err?.code === 'not_found' ? 'Invalid invite code.' : 'Could not join group.'
         console.error(err)
       } finally {
         loadingJoin.value = false
@@ -258,11 +271,21 @@ export default {
     })
 
     return {
-      authStore, userGroups, counts,
-      newGroupName, newGroupColor, inviteCode,
-      colorToRgba, loadingCreate, loadingJoin, joinError,
-      firstName, welcomePrefix, welcomeSubtitle,
-      createGroup, joinGroup,
+      authStore,
+      userGroups,
+      counts,
+      newGroupName,
+      newGroupColor,
+      inviteCode,
+      colorToRgba,
+      loadingCreate,
+      loadingJoin,
+      joinError,
+      firstName,
+      welcomePrefix,
+      welcomeSubtitle,
+      createGroup,
+      joinGroup,
     }
   },
 }

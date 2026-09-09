@@ -6,27 +6,16 @@
           <Share2 class="w-5 h-5" />
           <span>Share Invite Link</span>
         </UiDialogTitle>
-        <UiDialogDescription>
-          Anyone with this link can join the group.
-        </UiDialogDescription>
+        <UiDialogDescription> Anyone with this link can join the group. </UiDialogDescription>
       </UiDialogHeader>
 
       <div class="flex items-center gap-2">
-        <UiInput
-          :model-value="inviteLink"
-          readonly
-          ref="linkInput"
-          class="flex-1"
-        />
+        <UiInput :model-value="inviteLink" readonly ref="linkInput" class="flex-1" />
       </div>
 
       <UiDialogFooter>
-        <UiButton variant="outline" class="flex-1" @click="$emit('close')">
-          Close
-        </UiButton>
-        <UiButton class="flex-1" @click="copyLink">
-          Copy
-        </UiButton>
+        <UiButton variant="outline" class="flex-1" @click="$emit('close')"> Close </UiButton>
+        <UiButton class="flex-1" @click="copyLink"> Copy </UiButton>
       </UiDialogFooter>
     </UiDialogContent>
   </UiDialog>

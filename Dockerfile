@@ -16,15 +16,13 @@ ENV VITE_API_URL=$VITE_API_URL
 
 RUN yarn build
 
-# Stage 2: Serve the built app
-FROM node:24-alpine AS runner
+# Stage 2: Serve the app and proxy API/feed requests on the same origin
+FROM nginx:1.27-alpine AS runner
 
-WORKDIR /app
-
-RUN yarn global add serve
-
-COPY --from=builder /app/dist ./dist
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 4173
 
-CMD ["serve", "-s", "dist", "-l", "4173"]
+HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=5 \
+  CMD wget -qO- http://127.0.0.1:4173/ >/dev/null || exit 1

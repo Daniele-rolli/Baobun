@@ -9,12 +9,7 @@
         <!-- Title -->
         <div class="space-y-1.5">
           <UiLabel for="bulk-title">Title</UiLabel>
-          <UiInput
-            id="bulk-title"
-            v-model="title"
-            placeholder="Enter event title"
-            required
-          />
+          <UiInput id="bulk-title" v-model="title" placeholder="Enter event title" required />
         </div>
 
         <!-- Start Date -->
@@ -30,12 +25,7 @@
         <!-- Max People per Event -->
         <div class="space-y-1.5">
           <UiLabel for="bulk-group-size">Max People per Event</UiLabel>
-          <UiInput
-            id="bulk-group-size"
-            v-model="groupSize"
-            type="number"
-            :min="1"
-          />
+          <UiInput id="bulk-group-size" v-model="groupSize" type="number" :min="1" />
         </div>
 
         <!-- Notes -->
@@ -106,12 +96,8 @@
       <!-- Actions -->
       <UiDialogFooter>
         <div class="flex gap-3 w-full">
-          <UiButton @click="$emit('close')" variant="outline" class="flex-1">
-            Close
-          </UiButton>
-          <UiButton @click="handleBulkSchedule" class="flex-1">
-            Schedule
-          </UiButton>
+          <UiButton @click="$emit('close')" variant="outline" class="flex-1"> Close </UiButton>
+          <UiButton @click="handleBulkSchedule" class="flex-1"> Schedule </UiButton>
         </div>
       </UiDialogFooter>
     </UiDialogContent>
@@ -199,7 +185,12 @@ export default {
 
     async function handleBulkSchedule() {
       const normalizedGroupSize = Math.floor(Number(groupSize.value))
-      if (!title.value || !start.value || !Number.isFinite(normalizedGroupSize) || normalizedGroupSize < 1) {
+      if (
+        !title.value ||
+        !start.value ||
+        !Number.isFinite(normalizedGroupSize) ||
+        normalizedGroupSize < 1
+      ) {
         alert('Set a valid max people per event (minimum 1)')
         return
       }

@@ -1,7 +1,5 @@
 import * as feedService from '@/lib/services/calendarFeed'
 
-export const getLiveFeedBucketId = () => import.meta.env.VITE_CALENDAR_FEEDS_BUCKET || 'configured'
-
 export const getLiveFeedUrls = async ({ groupId, userId = 'all' } = {}) => {
   if (!groupId) return { httpsUrl: '', webcalUrl: '' }
   try {

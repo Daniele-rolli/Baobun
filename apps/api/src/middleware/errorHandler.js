@@ -6,10 +6,7 @@ export const errorHandler = (err, c) => {
     return c.json({ error: { code: err.code, message: err.message } }, err.status)
   }
   console.error(err)
-  return c.json(
-    { error: { code: ERROR_CODES.internal, message: 'Something went wrong.' } },
-    500,
-  )
+  return c.json({ error: { code: ERROR_CODES.internal, message: 'Something went wrong.' } }, 500)
 }
 
 export const notFoundHandler = (c) =>

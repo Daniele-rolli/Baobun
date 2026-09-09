@@ -64,6 +64,7 @@
 
             <!-- Bulk + Spin (desktop only) -->
             <div
+              v-if="canEdit"
               class="hidden sm:flex items-center border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden bg-white dark:bg-neutral-900"
             >
               <button
@@ -85,6 +86,7 @@
 
             <!-- Add event -->
             <button
+              v-if="canEdit"
               class="touch-exempt flex items-center justify-center w-8 h-8 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white transition-colors shadow-sm shadow-rose-200 dark:shadow-none"
               @click="$emit('add-event', selectedDate)"
             >
@@ -139,7 +141,7 @@
                 :key="event.$id"
                 class="event-item mb-1 truncate rounded-lg px-2 py-1 text-xs text-auto dark:text-neutral-100 cursor-move"
                 :style="{ backgroundColor: getTagColor(event.tagId) }"
-                draggable="true"
+                :draggable="canEdit"
                 @dragstart="onDragStart(event, $event)"
                 @click.stop="$emit('edit-event', event)"
                 title="Drag to move • Click to edit"
@@ -256,7 +258,7 @@
                   top: calculateEventTop(segment.start) + 'px',
                   height: calculateEventHeight(segment.start, segment.end) + 'px',
                 }"
-                draggable="true"
+                :draggable="canEdit"
                 @dragstart="onDragStart(segment.event, $event)"
                 @click.stop="$emit('edit-event', segment.event)"
                 title="Drag to move • Click to edit"
@@ -286,7 +288,7 @@
     </div>
     <!-- Right Sidebar (Desktop) -->
     <div v-if="showDesktopSidebar" class="hidden lg:block w-72 xl:w-80 flex-shrink-0">
-      <div class="card p-4 sticky top-4 max-h-[calc(100vh-2rem)] overflow-hidden">
+      <UiCard class="sticky top-4 max-h-[calc(100vh-2rem)] overflow-hidden p-4">
         <UpcomingEvents
           :events="events"
           :tags="tags"
@@ -296,7 +298,7 @@
           compact
           @event-clicked="$emit('edit-event', $event)"
         />
-      </div>
+      </UiCard>
     </div>
   </div>
 </template>
@@ -319,28 +321,14 @@ import {
   eventOccursOnDate,
   getEventSegmentForDate,
 } from '@/lib/eventDateRange'
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  ChevronUp,
-  Share2,
-  EllipsisVertical,
-  CalendarCheck,
-  Grid3x3,
-  Grid3x2Icon,
-  Shuffle,
-} from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Plus, CalendarCheck, Shuffle } from 'lucide-vue-next'
 
 export default {
   components: {
     ChevronLeft,
     ChevronRight,
     Plus,
-    ChevronUp,
     UpcomingEvents,
-    Share2,
-    EllipsisVertical,
     CalendarCheck,
     Shuffle,
   },
@@ -352,14 +340,13 @@ export default {
     weekStartsOn: { type: Number, default: 0 },
     dateFormat: { type: String, default: 'mdy' },
     timeFormat: { type: String, default: '12h' },
+    canEdit: { type: Boolean, default: true },
   },
   emits: ['add-event', 'edit-event', 'event-moved', 'bulk-schedule', 'spin-schedule'],
   setup(props, { emit }) {
     const today = new Date()
     const month = ref(today.getMonth())
     const year = ref(today.getFullYear())
-    const avatarActive = ref(false)
-    const groupId = ref(props.groupId)
     const calendarEl = ref(null)
 
     const viewMode = ref('month') // 'month' | 'week'
@@ -641,11 +628,13 @@ export default {
 
     // --- Drag & Drop to move events between days (desktop) ---
     const onDragStart = (eventObj, domEvent) => {
+      if (!props.canEdit) return
       domEvent.dataTransfer.setData('text/plain', JSON.stringify({ id: eventObj.$id }))
       domEvent.dataTransfer.effectAllowed = 'move'
     }
 
     const onDrop = (targetDate, domEvent) => {
+      if (!props.canEdit) return
       try {
         const payload = JSON.parse(domEvent.dataTransfer.getData('text/plain'))
         const ev = props.events.find((e) => e.$id === payload.id)
@@ -665,7 +654,7 @@ export default {
 
         const newStart = newStartDate.toISOString()
         emit('event-moved', { event: ev, newStart })
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
@@ -724,10 +713,6 @@ export default {
       // other
       tagsMap,
       startOfToday,
-      avatarActive,
-      Grid3x3,
-      Grid3x2Icon,
-      groupId,
       Shuffle,
     }
   },

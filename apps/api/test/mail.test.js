@@ -18,7 +18,10 @@ describe('mail', () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     const { sendMail } = await import('../src/mail.js')
     await sendMail({ to: 'a@b.co', subject: 'Hi', text: 'body' })
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('[mail] preview:'), expect.anything())
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[mail] preview:'),
+      expect.anything(),
+    )
     logSpy.mockRestore()
   })
 })

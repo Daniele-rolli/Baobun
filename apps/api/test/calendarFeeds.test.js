@@ -28,7 +28,12 @@ beforeAll(async () => {
   groupId = (await create.json()).group.$id
   await req(`/api/groups/${groupId}/events`, {
     method: 'POST',
-    body: { title: 'Feed event', start: '2026-08-05T10:00:00Z', end: '2026-08-05T11:00:00Z', people: ['everyone'] },
+    body: {
+      title: 'Feed event',
+      start: '2026-08-05T10:00:00Z',
+      end: '2026-08-05T11:00:00Z',
+      people: ['everyone'],
+    },
   })
 })
 

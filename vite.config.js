@@ -85,10 +85,16 @@ export default defineConfig({
     host: true,
     port: 4173,
     allowedHosts: [process.env.ALLOWED_HOST || 'localhost'],
-    preview: {
-      host: true,
-      port: 4173,
-      allowedHosts: [process.env.ALLOWED_HOST || 'localhost'],
+    proxy: {
+      '/api': {
+        target: process.env.API_PROXY_TARGET || 'http://localhost:3001',
+        changeOrigin: true,
+      },
     },
+  },
+  preview: {
+    host: true,
+    port: 4173,
+    allowedHosts: [process.env.ALLOWED_HOST || 'localhost'],
   },
 })

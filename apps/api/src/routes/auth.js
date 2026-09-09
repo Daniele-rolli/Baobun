@@ -6,8 +6,8 @@ import { createSession, destroySession } from '../session.js'
 import { requireAuth } from '../middleware/auth.js'
 import { unauthorized, conflict, validationError, AppError } from '../errors.js'
 import { sendMail } from '../mail.js'
-import { config } from '../config.js'
-import { getObject, BUCKETS, presignGetUrl } from '../s3.js'
+import { getObject, BUCKETS } from '../s3.js'
+import { absoluteUrl } from '../publicUrl.js'
 import { randomBytes, createHash } from 'crypto'
 import { ERROR_CODES } from '@baobun/shared'
 
@@ -23,7 +23,7 @@ export const avatarUrlFor = async (user) => {
   if (!user.avatarObjectKey) return null
   try {
     await getObject(BUCKETS.avatars, user.avatarObjectKey)
-    return await presignGetUrl(BUCKETS.avatars, user.avatarObjectKey)
+    return `/api/files/${encodeURIComponent(BUCKETS.avatars)}/${encodeURIComponent(user.avatarObjectKey)}`
   } catch {
     return null
   }
@@ -31,7 +31,7 @@ export const avatarUrlFor = async (user) => {
 
 const hashToken = (token) => createHash('sha256').update(token).digest('hex')
 
-const emailSetPasswordLink = async (user) => {
+const emailSetPasswordLink = async (c, user) => {
   const raw = randomBytes(32).toString('base64url')
   await prisma.passwordResetToken.create({
     data: {
@@ -40,7 +40,7 @@ const emailSetPasswordLink = async (user) => {
       expiresAt: new Date(Date.now() + 60 * 60 * 1000),
     },
   })
-  const url = `${config.webOrigin}/reset-password?userId=${user.id}&token=${raw}`
+  const url = absoluteUrl(c, `/reset-password?userId=${user.id}&token=${raw}`)
   await sendMail({
     to: user.email,
     subject: 'Welcome to Baobun — set your password',
@@ -54,7 +54,11 @@ const auth = new Hono()
 auth.post('/register', async (c) => {
   const body = await c.req.json().catch(() => ({}))
   const parsed = z
-    .object({ name: z.string().trim().min(1), email: z.string().trim().email(), password: z.string() })
+    .object({
+      name: z.string().trim().min(1),
+      email: z.string().trim().email(),
+      password: z.string(),
+    })
     .safeParse(body)
   if (!parsed.success) throw validationError('Please provide name, email and password.')
   const { name, email, password } = parsed.data
@@ -90,7 +94,7 @@ auth.post('/login', async (c) => {
       const hasPending = await prisma.passwordResetToken.findFirst({
         where: { userId: user.id, usedAt: null, expiresAt: { gte: new Date() } },
       })
-      if (!hasPending) await emailSetPasswordLink(user).catch(() => {})
+      if (!hasPending) await emailSetPasswordLink(c, user).catch(() => {})
       throw new AppError(
         401,
         ERROR_CODES.passwordSetRequired,
@@ -119,7 +123,9 @@ auth.post('/logout', async (c) => {
 
 auth.post('/forgot', async (c) => {
   const body = await c.req.json().catch(() => ({}))
-  const email = String(body.email ?? '').trim().toLowerCase()
+  const email = String(body.email ?? '')
+    .trim()
+    .toLowerCase()
   if (email) {
     const user = await prisma.user.findUnique({ where: { email } })
     if (user) {
@@ -131,7 +137,7 @@ auth.post('/forgot', async (c) => {
           expiresAt: new Date(Date.now() + 60 * 60 * 1000),
         },
       })
-      const url = `${config.webOrigin}/reset-password?userId=${user.id}&token=${raw}`
+      const url = absoluteUrl(c, `/reset-password?userId=${user.id}&token=${raw}`)
       await sendMail({
         to: user.email,
         subject: 'Reset your Baobun password',
@@ -163,7 +169,9 @@ auth.post('/reset', async (c) => {
 
   await prisma.$transaction([
     prisma.passwordResetToken.update({ where: { id: token.id }, data: { usedAt: new Date() } }),
-    prisma.passwordResetToken.deleteMany({ where: { userId: parsed.data.userId, id: { not: token.id } } }),
+    prisma.passwordResetToken.deleteMany({
+      where: { userId: parsed.data.userId, id: { not: token.id } },
+    }),
     prisma.user.update({
       where: { id: parsed.data.userId },
       data: { passwordHash: await hashPassword(parsed.data.newPassword), needsPasswordSet: false },

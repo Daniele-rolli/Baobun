@@ -112,7 +112,14 @@ export const useAuthStore = defineStore(
       loading.value = false
     }
 
-    const updateProfile = async ({ name, email, password, currentPassword, avatarFile, removeAvatar }) => {
+    const updateProfile = async ({
+      name,
+      email,
+      password,
+      currentPassword,
+      avatarFile,
+      removeAvatar,
+    }) => {
       loading.value = true
       error.value = null
       try {
@@ -136,7 +143,6 @@ export const useAuthStore = defineStore(
         if (avatarFile) {
           const { avatarUrl } = await userService.updateAvatar(avatarFile)
           user.value.avatarUrl = avatarUrl
-          user.value.avatarFileId = user.value.avatarFileId
         }
         return { success: true }
       } catch (err) {
@@ -150,6 +156,7 @@ export const useAuthStore = defineStore(
 
     const resetPassword = async (email) => {
       loading.value = true
+      error.value = null
       try {
         await authService.forgot(email)
         return { success: true }
@@ -161,8 +168,9 @@ export const useAuthStore = defineStore(
       }
     }
 
-    const confirmResetPassword = async (userId, secret, newPassword, confirmPassword) => {
+    const confirmResetPassword = async (userId, secret, newPassword) => {
       loading.value = true
+      error.value = null
       try {
         await authService.reset({ userId, token: secret, newPassword })
         return { success: true }

@@ -1,7 +1,8 @@
 <template>
-  <div class="flex min-h-screen items-center justify-center px-4 py-12 bg-neutral-50 dark:bg-neutral-900">
+  <div
+    class="flex min-h-screen items-center justify-center px-4 py-12 bg-neutral-50 dark:bg-neutral-900"
+  >
     <div class="w-full max-w-sm space-y-4">
-
       <!-- Error banner -->
       <transition
         enter-active-class="transition duration-200 ease-out"
@@ -20,46 +21,87 @@
       <!-- Card -->
       <Card class="p-6 sm:p-8">
         <CardContent>
-        <div class="text-center mb-8">
-          <img class="h-16 w-auto mx-auto mb-4" src="../../public/baobun.png" alt="Baobun" />
-          <h1 class="text-2xl font-bold text-neutral-900 dark:text-white">Create account</h1>
-          <p class="text-sm text-neutral-500 mt-1">Join and start organizing together</p>
-        </div>
-
-        <form @submit.prevent="handleRegister" class="space-y-4">
-          <div class="space-y-1.5">
-            <UiLabel for="name">Full Name</UiLabel>
-            <UiInput id="name" v-model="name" type="text" required placeholder="Jane Smith" />
-          </div>
-          <div class="space-y-1.5">
-            <UiLabel for="email">Email</UiLabel>
-            <UiInput id="email" v-model="email" type="email" autocomplete="email" required placeholder="you@example.com" />
-          </div>
-          <div class="space-y-1.5">
-            <UiLabel for="password">Password</UiLabel>
-            <UiInput id="password" v-model="password" type="password" autocomplete="new-password" required placeholder="••••••••" />
-          </div>
-          <div class="space-y-1.5">
-            <UiLabel for="confirm-password">Confirm Password</UiLabel>
-            <UiInput id="confirm-password" v-model="confirmPassword" type="password" autocomplete="new-password" required placeholder="••••••••" />
+          <div class="text-center mb-8">
+            <img
+              class="mx-auto mb-4 h-16 w-16"
+              src="/icons/icon_128x128.png"
+              alt="Baobun"
+              width="64"
+              height="64"
+            />
+            <h1 class="text-2xl font-bold text-neutral-900 dark:text-white">Create account</h1>
+            <p class="text-sm text-neutral-500 mt-1">Join and start organizing together</p>
           </div>
 
-          <div class="pt-1">
-            <Button type="submit" :disabled="authStore.loading" class="w-full">
-              <svg v-if="authStore.loading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-              </svg>
-              {{ authStore.loading ? 'Creating account…' : 'Register' }}
-            </Button>
-          </div>
-        </form>
+          <form @submit.prevent="handleRegister" class="space-y-4">
+            <div class="space-y-1.5">
+              <UiLabel for="name">Full Name</UiLabel>
+              <UiInput id="name" v-model="name" type="text" required placeholder="Jane Smith" />
+            </div>
+            <div class="space-y-1.5">
+              <UiLabel for="email">Email</UiLabel>
+              <UiInput
+                id="email"
+                v-model="email"
+                type="email"
+                autocomplete="email"
+                required
+                placeholder="you@example.com"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <UiLabel for="password">Password</UiLabel>
+              <UiInput
+                id="password"
+                v-model="password"
+                type="password"
+                autocomplete="new-password"
+                required
+                placeholder="••••••••"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <UiLabel for="confirm-password">Confirm Password</UiLabel>
+              <UiInput
+                id="confirm-password"
+                v-model="confirmPassword"
+                type="password"
+                autocomplete="new-password"
+                required
+                placeholder="••••••••"
+              />
+            </div>
+
+            <div class="pt-1">
+              <Button type="submit" :disabled="authStore.loading" class="w-full">
+                <svg
+                  v-if="authStore.loading"
+                  class="animate-spin w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                {{ authStore.loading ? 'Creating account…' : 'Register' }}
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
 
       <p class="text-center text-sm text-neutral-500">
         Already have an account?
-        <router-link to="/login" class="ml-1 font-medium text-rose-600 hover:text-rose-700">Sign in</router-link>
+        <router-link to="/login" class="ml-1 font-medium text-rose-600 hover:text-rose-700"
+          >Sign in</router-link
+        >
       </p>
     </div>
   </div>
@@ -84,12 +126,17 @@ export default {
     const confirmPassword = ref('')
 
     const handleRegister = async () => {
-      if (password.value !== confirmPassword.value) { authStore.error = 'Passwords do not match'; return }
+      if (password.value !== confirmPassword.value) {
+        authStore.error = 'Passwords do not match'
+        return
+      }
       await authStore.register(name.value, email.value, password.value)
       if (authStore.user) {
         const pending = sessionStorage.getItem('pendingInviteCode')
-        if (pending) { sessionStorage.removeItem('pendingInviteCode'); router.push(`/join/${pending}`) }
-        else router.push('/dashboard')
+        if (pending) {
+          sessionStorage.removeItem('pendingInviteCode')
+          router.push(`/join/${pending}`)
+        } else router.push('/dashboard')
       }
     }
 

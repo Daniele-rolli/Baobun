@@ -1,24 +1,28 @@
 <template>
   <div class="min-h-screen dark:text-white">
     <div class="max-w-xl mx-auto px-4 py-6 space-y-6">
-
       <!-- ── Profile card ── -->
       <Card class="p-5">
         <CardContent>
           <div class="flex items-center gap-4">
             <img
-              :src="authStore.user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'U')}&background=random&size=96`"
+              :src="
+                authStore.user?.avatarUrl ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'U')}&background=random&size=96`
+              "
               alt="Avatar"
               class="w-16 h-16 rounded-2xl object-cover flex-shrink-0 shadow-sm"
             />
             <div class="flex-1 min-w-0">
-              <p class="font-semibold text-neutral-900 dark:text-white truncate">{{ authStore.user?.name || '—' }}</p>
+              <p class="font-semibold text-neutral-900 dark:text-white truncate">
+                {{ authStore.user?.name || '—' }}
+              </p>
               <p class="text-sm text-neutral-500 truncate mt-0.5">{{ authStore.user?.email }}</p>
             </div>
             <router-link
               to="/profile"
               class="flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 text-sm font-medium hover:bg-rose-100 dark:hover:bg-rose-500/25 transition-colors"
-              style="min-height:0"
+              style="min-height: 0"
             >
               Edit
               <ChevronRightIcon class="w-4 h-4" />
@@ -29,7 +33,9 @@
 
       <!-- ── Appearance ── -->
       <div class="space-y-2">
-        <p class="section-label px-1">Appearance</p>
+        <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Appearance
+        </p>
         <Card class="overflow-hidden">
           <!-- Theme row -->
           <div class="px-4 py-3.5 border-b border-neutral-100 dark:border-neutral-700/50">
@@ -40,20 +46,28 @@
                 :key="theme.value"
                 @click="setTheme(theme.value)"
                 class="flex flex-col items-center gap-1.5 py-3 rounded-xl border text-sm font-medium transition-all touch-exempt"
-                style="min-height:0; min-width:0"
-                :class="selectedTheme === theme.value
-                  ? 'border-rose-500 bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400'
-                  : 'border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700/50'"
+                style="min-height: 0; min-width: 0"
+                :class="
+                  selectedTheme === theme.value
+                    ? 'border-rose-500 bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                    : 'border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700/50'
+                "
               >
-                <component :is="theme.icon" class="w-5 h-5" :class="selectedTheme === theme.value ? '' : theme.iconClass" />
+                <component
+                  :is="theme.icon"
+                  class="w-5 h-5"
+                  :class="selectedTheme === theme.value ? '' : theme.iconClass"
+                />
                 {{ theme.label }}
               </button>
             </div>
           </div>
 
           <!-- Calendar & date/time preferences -->
-          <div class="list-row">
-            <span class="row-icon bg-blue-50 dark:bg-blue-500/15 text-blue-500">
+          <div class="flex min-h-16 items-center gap-3 px-4 py-3">
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500 dark:bg-blue-500/15"
+            >
               <CalendarDays class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
@@ -69,8 +83,10 @@
             </select>
           </div>
 
-          <div class="list-row">
-            <span class="row-icon bg-indigo-50 dark:bg-indigo-500/15 text-indigo-500">
+          <div class="flex min-h-16 items-center gap-3 px-4 py-3">
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500 dark:bg-indigo-500/15"
+            >
               <Calendar class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
@@ -86,8 +102,10 @@
             </select>
           </div>
 
-          <div class="list-row">
-            <span class="row-icon bg-cyan-50 dark:bg-cyan-500/15 text-cyan-500">
+          <div class="flex min-h-16 items-center gap-3 px-4 py-3">
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-500 dark:bg-cyan-500/15"
+            >
               <Clock3 class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
@@ -107,44 +125,68 @@
 
       <!-- ── Groups ── -->
       <div class="space-y-2">
-        <p class="section-label px-1">Groups</p>
+        <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Groups
+        </p>
         <Card class="overflow-hidden">
-          <router-link to="/groupSettings" class="list-row">
-            <span class="row-icon bg-violet-50 dark:bg-violet-500/15 text-violet-500">
+          <router-link
+            to="/groupSettings"
+            class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
+          >
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-500 dark:bg-violet-500/15"
+            >
               <Users class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Manage Groups</p>
               <p class="text-xs text-neutral-400 mt-0.5">Settings, members &amp; tags</p>
             </div>
-            <ChevronRightIcon class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0" />
+            <ChevronRightIcon
+              class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0"
+            />
           </router-link>
 
-          <router-link to="/dashboard" class="list-row">
-            <span class="row-icon bg-emerald-50 dark:bg-emerald-500/15 text-emerald-500">
+          <router-link
+            to="/dashboard"
+            class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
+          >
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500 dark:bg-emerald-500/15"
+            >
               <LayoutDashboard class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Dashboard</p>
               <p class="text-xs text-neutral-400 mt-0.5">Create or join a group</p>
             </div>
-            <ChevronRightIcon class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0" />
+            <ChevronRightIcon
+              class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0"
+            />
           </router-link>
         </Card>
       </div>
 
       <!-- ── Notifications ── -->
       <div class="space-y-2">
-        <p class="section-label px-1">Notifications</p>
+        <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Notifications
+        </p>
         <Card class="overflow-hidden">
-          <div class="list-row cursor-default">
-            <span class="row-icon bg-rose-50 dark:bg-rose-500/15 text-rose-500">
+          <div class="flex min-h-16 items-center gap-3 px-4 py-3">
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-500 dark:bg-rose-500/15"
+            >
               <Bell class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Push Notifications</p>
               <p class="text-xs text-neutral-400 mt-0.5">
-                {{ notificationsStore.unsupported ? 'Not supported on this browser' : 'Event reminders & updates' }}
+                {{
+                  notificationsStore.unsupported
+                    ? 'Not supported on this browser'
+                    : 'Event reminders & updates'
+                }}
               </p>
             </div>
             <!-- toggle -->
@@ -154,8 +196,10 @@
               @update:model-value="toggleNotifications"
             />
           </div>
-          <div class="list-row">
-            <span class="row-icon bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-300">
+          <div class="flex min-h-16 items-center gap-3 px-4 py-3">
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-300"
+            >
               <Clock3 class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
@@ -176,21 +220,53 @@
 
       <!-- ── Account ── -->
       <div class="space-y-2">
-        <p class="section-label px-1">Account</p>
+        <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Account
+        </p>
         <Card class="overflow-hidden">
-          <router-link to="/profile" class="list-row">
-            <span class="row-icon bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-300">
+          <router-link
+            to="/profile"
+            class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
+          >
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-300"
+            >
               <UserCircle class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Edit Profile</p>
               <p class="text-xs text-neutral-400 mt-0.5">Name, email, password, avatar</p>
             </div>
-            <ChevronRightIcon class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0" />
+            <ChevronRightIcon
+              class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0"
+            />
           </router-link>
 
-          <div class="list-row" @click="confirmLogout">
-            <span class="row-icon bg-red-50 dark:bg-red-500/15 text-red-500">
+          <router-link
+            to="/api-access"
+            class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
+          >
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/15"
+            >
+              <KeyRound class="h-[1.125rem] w-[1.125rem]" />
+            </span>
+            <div class="flex-1">
+              <p class="text-sm font-medium">API Access</p>
+              <p class="mt-0.5 text-xs text-neutral-400">Read-only integration tokens</p>
+            </div>
+            <ChevronRightIcon
+              class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0"
+            />
+          </router-link>
+
+          <div
+            class="flex min-h-16 cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
+            @click="confirmLogout"
+          >
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-500 dark:bg-red-500/15"
+            >
               <LogOut class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <span class="flex-1 text-sm font-medium text-red-500">Log Out</span>
@@ -199,10 +275,7 @@
       </div>
 
       <!-- ── App info ── -->
-      <p class="text-center text-xs text-neutral-300 dark:text-neutral-600 pb-2">
-        Baobun · v1.0.0
-      </p>
-
+      <p class="text-center text-xs text-neutral-300 dark:text-neutral-600 pb-2">Baobun · v1.0.0</p>
     </div>
   </div>
 </template>
@@ -227,6 +300,7 @@ import {
   CalendarDays,
   Calendar,
   Clock3,
+  KeyRound,
 } from 'lucide-vue-next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
@@ -246,6 +320,7 @@ export default {
     CalendarDays,
     Calendar,
     Clock3,
+    KeyRound,
     Card,
     CardContent,
     Switch,
@@ -258,8 +333,8 @@ export default {
 
     const themes = [
       { label: 'Light', value: 'light', icon: Sun, iconClass: 'text-yellow-500' },
-      { label: 'Dark',  value: 'dark',  icon: Moon, iconClass: 'text-blue-500' },
-      { label: 'System',value: 'system',icon: Monitor, iconClass: 'text-neutral-500' },
+      { label: 'Dark', value: 'dark', icon: Moon, iconClass: 'text-blue-500' },
+      { label: 'System', value: 'system', icon: Monitor, iconClass: 'text-neutral-500' },
     ]
     const selectedTheme = ref('system')
     const weekStartOptions = [

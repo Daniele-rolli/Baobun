@@ -15,7 +15,12 @@ export const useTagsStore = defineStore('tags', () => {
   }
 
   async function createTag(groupId, { name, color, icon, imageFile }) {
-    const res = await tagService.create(groupId, { name, color, icon, image: imageFile || undefined })
+    const res = await tagService.create(groupId, {
+      name,
+      color,
+      icon,
+      image: imageFile || undefined,
+    })
     items.value.push(res.tag)
     return res.tag
   }

@@ -1,27 +1,22 @@
 <script setup>
-import { reactiveOmit } from "@vueuse/core";
-import {
-  SelectContent,
-  SelectPortal,
-  SelectViewport,
-  useForwardPropsEmits,
-} from "reka-ui";
-import { cn } from "@/lib/utils";
-import { SelectScrollDownButton, SelectScrollUpButton } from ".";
+import { reactiveOmit } from '@vueuse/core'
+import { SelectContent, SelectPortal, SelectViewport, useForwardPropsEmits } from 'reka-ui'
+import { cn } from '@/lib/utils'
+import { SelectScrollDownButton, SelectScrollUpButton } from '.'
 
 defineOptions({
   inheritAttrs: false,
-});
+})
 
 const props = defineProps({
   forceMount: { type: Boolean, required: false },
-  position: { type: String, required: false, default: "item-aligned" },
+  position: { type: String, required: false, default: 'item-aligned' },
   bodyLock: { type: Boolean, required: false },
   memoDependencies: { type: Array, required: false },
   side: { type: null, required: false },
   sideOffset: { type: Number, required: false },
   sideFlip: { type: Boolean, required: false },
-  align: { type: null, required: false, default: "center" },
+  align: { type: null, required: false, default: 'center' },
   alignOffset: { type: Number, required: false },
   alignFlip: { type: Boolean, required: false },
   avoidCollisions: { type: Boolean, required: false },
@@ -41,16 +36,12 @@ const props = defineProps({
   as: { type: null, required: false },
   disableOutsidePointerEvents: { type: Boolean, required: false },
   class: { type: null, required: false },
-});
-const emits = defineEmits([
-  "closeAutoFocus",
-  "escapeKeyDown",
-  "pointerDownOutside",
-]);
+})
+const emits = defineEmits(['closeAutoFocus', 'escapeKeyDown', 'pointerDownOutside'])
 
-const delegatedProps = reactiveOmit(props, "class");
+const delegatedProps = reactiveOmit(props, 'class')
 
-const forwarded = useForwardPropsEmits(delegatedProps, emits);
+const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
 
 <template>

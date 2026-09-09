@@ -1,5 +1,4 @@
 import { formatDateNumeric, formatTime } from '@/lib/dateTimePreferences'
-import { data } from 'autoprefixer'
 
 const normalizePeopleIds = (people) => {
   if (!Array.isArray(people)) return []
@@ -54,7 +53,11 @@ export const downloadEventsCsv = ({
     ),
   }
 
-  const rows = [['Title', 'Start Date', 'End Date', 'People'].join(',')]
+  const rows = [
+    ['Title', 'Start Date', 'Start Time', 'End Date', 'End Time', 'Tag', 'People']
+      .map(csvEscape)
+      .join(','),
+  ]
 
   for (const event of events) {
     const people = normalizePeopleIds(event?.people)
@@ -65,7 +68,10 @@ export const downloadEventsCsv = ({
       [
         event?.title || '',
         event?.start ? formatDateNumeric(event.start, dateFormat, true) : '',
+        event?.start ? formatTime(event.start, timeFormat, true) : '',
         event?.end ? formatDateNumeric(event.end, dateFormat, true) : '',
+        event?.end ? formatTime(event.end, timeFormat, true) : '',
+        tagNameById[event?.tagId] || '',
         people,
       ]
         .map(csvEscape)

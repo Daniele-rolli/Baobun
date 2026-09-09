@@ -2,90 +2,84 @@
   <div class="flex min-h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-sm">
       <!-- Forgot Password Form -->
-      <form
-        v-if="!successMessage"
-        @submit.prevent="handleSubmit"
-        class="bg-white dark:bg-neutral-900 shadow p-6 rounded-3xl space-y-6"
-      >
-        <div class="flex justify-center">
-          <div class="flex p-3 border rounded-lg justify-center items-center">
-            <KeyRound class="w-6 h-6" />
+      <UiCard v-if="!successMessage" class="rounded-3xl">
+        <UiCardContent class="p-6">
+          <form @submit.prevent="handleSubmit" class="space-y-6">
+            <div class="flex justify-center">
+              <div class="flex items-center justify-center rounded-xl border bg-muted/40 p-3">
+                <KeyRound class="h-6 w-6 text-primary" />
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <h1 class="text-center text-2xl font-bold">Forgot your password?</h1>
+              <p class="text-center text-sm text-muted-foreground">
+                Enter your account email and we’ll send you a secure reset link.
+              </p>
+            </div>
+
+            <div class="space-y-1.5">
+              <UiLabel for="email">Email</UiLabel>
+              <UiInput
+                id="email"
+                v-model="email"
+                type="email"
+                autocomplete="email"
+                required
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div
+              v-if="auth.error"
+              role="alert"
+              class="flex gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+            >
+              <HeartCrack class="h-5 w-5 shrink-0" />
+              <p>{{ auth.error }}</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <UiButton as-child variant="outline">
+                <router-link to="/login">
+                  <ChevronLeft class="h-4 w-4" />
+                  Back to login
+                </router-link>
+              </UiButton>
+
+              <UiButton type="submit" :disabled="auth.loading">
+                {{ auth.loading ? 'Sending…' : 'Send reset link' }}
+                <ChevronRight class="h-4 w-4" />
+              </UiButton>
+            </div>
+          </form>
+        </UiCardContent>
+      </UiCard>
+
+      <UiCard v-else class="rounded-3xl">
+        <UiCardContent class="space-y-6 p-6">
+          <div class="flex justify-center">
+            <div class="flex items-center justify-center rounded-xl border bg-muted/40 p-3">
+              <Mail class="h-6 w-6 text-primary" />
+            </div>
           </div>
-        </div>
-
-        <h2 class="text-center text-2xl font-bold">Forgot Password</h2>
-        <p class="text-center text-sm text-neutral-600 dark:text-neutral-400">
-          You'll receive a password reset link on the email you used to register your Baobun
-          account.
-        </p>
-
-        <div class="space-y-1.5">
-          <UiLabel for="email">Email</UiLabel>
-          <UiInput
-            id="email"
-            v-model="email"
-            type="email"
-            autocomplete="on"
-            required
-            placeholder="you@example.com"
-          />
-        </div>
-
-        <div class="flex gap-2">
-          <router-link
-            to="/login"
-            class="w-full flex items-center justify-center gap-2 bg-white dark:bg-neutral-900 text-neutral border py-2 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800/20 transition disabled:opacity-50"
-          >
-            <ChevronLeft class="w-5 h-5" />
-            <span>Back to login</span>
-          </router-link>
-
-          <button
-            type="submit"
-            class="w-full flex items-center justify-center gap-2 bg-rose-600 text-white py-2 rounded-xl hover:bg-rose-700 transition disabled:opacity-50"
-            :disabled="auth.loading"
-          >
-            <span>Reset Password</span>
-            <ChevronRight class="w-5 h-5" />
-          </button>
-        </div>
-      </form>
-
-      <!-- Error State -->
-      <div
-        v-if="auth.error"
-        class="mt-4 flex gap-3 bg-rose-100/10 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm"
-      >
-        <HeartCrack class="w-5 h-5" />
-        <p class="text-red-600">Something went wrong. Please try again.</p>
-      </div>
-
-      <!-- Success State -->
-      <div
-        v-if="successMessage"
-        class="bg-white dark:bg-neutral-900 shadow p-6 rounded-3xl space-y-6"
-      >
-        <div class="flex justify-center">
-          <div class="flex p-3 border rounded-lg justify-center items-center">
-            <Mail class="w-6 h-6" />
+          <div class="space-y-2 text-center">
+            <h1 class="text-2xl font-bold">Check your email</h1>
+            <p class="text-sm text-muted-foreground">
+              If an account exists for <span class="font-medium text-foreground">{{ email }}</span
+              >, a reset link is on its way.
+            </p>
           </div>
-        </div>
-
-        <h2 class="text-center text-2xl font-bold">Email Sent</h2>
-        <p class="text-center text-sm text-neutral-600 dark:text-neutral-400">
-          We have sent an email to <span class="text-rose-500 font-medium">{{ email }}</span
-          >. Check your inbox and follow the instructions to reset your password.
-        </p>
-
-        <button
-          @click="handleSubmit"
-          type="button"
-          class="w-full flex items-center justify-center gap-2 bg-rose-600 text-white py-2 rounded-xl hover:bg-rose-700 transition disabled:opacity-50"
-          :disabled="auth.loading"
-        >
-          <span>Send Again</span>
-        </button>
-      </div>
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <UiButton as-child variant="outline">
+              <router-link to="/login">Back to login</router-link>
+            </UiButton>
+            <UiButton type="button" :disabled="auth.loading" @click="handleSubmit">
+              {{ auth.loading ? 'Sending…' : 'Send again' }}
+            </UiButton>
+          </div>
+        </UiCardContent>
+      </UiCard>
     </div>
   </div>
 </template>

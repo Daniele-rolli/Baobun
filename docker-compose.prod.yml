@@ -1,41 +1,38 @@
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-baobun}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-baobun_dev}
       POSTGRES_DB: ${POSTGRES_DB:-baobun}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-baobun}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-baobun}']
       interval: 5s
       timeout: 5s
       retries: 10
 
   minio:
     image: minio/minio:latest
+    restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-baobun}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-baobun_dev}
     volumes:
       - miniodata:/data
-    ports:
-      - "${MINIO_API_PORT:-9100}:9000"
-      - "${MINIO_CONSOLE_PORT:-9101}:9001"
 
   api:
     image: ghcr.io/daniele-rolli/baobun-api:latest
+    restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-baobun}:${POSTGRES_PASSWORD:-baobun_dev}@postgres:5432/${POSTGRES_DB:-baobun}
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: ${MINIO_ROOT_USER:-baobun}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-baobun_dev}
-      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://localhost:9100}
-      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:4173}
+      PUBLIC_URL: ${PUBLIC_URL:-}
       MAIL_DEBUG: ${MAIL_DEBUG:-true}
       MAIL_SENDER: ${MAIL_SENDER:-"Baobun <no-reply@baobun.local>"}
       MAIL_HOST: ${MAIL_HOST:-mailpit}
@@ -48,21 +45,21 @@ services:
         condition: service_healthy
       minio:
         condition: service_started
-    ports:
-      - "${API_PORT:-3001}:3001"
+    expose:
+      - '3001'
 
   frontend:
     image: ghcr.io/daniele-rolli/baobun-frontend:latest
+    restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-4173}:4173"
+      - '${FRONTEND_PORT:-4173}:4173'
     depends_on:
-      - api
+      api:
+        condition: service_started
 
   mailpit:
     image: axllent/mailpit:latest
-    ports:
-      - "${MAILPIT_UI_PORT:-8025}:8025"
-      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+    restart: unless-stopped
 
 volumes:
   pgdata:

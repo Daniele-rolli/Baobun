@@ -1,17 +1,12 @@
 <script setup>
-import { reactiveOmit } from "@vueuse/core";
-import {
-  DrawerContent,
-  DrawerHandle,
-  DrawerPortal,
-  useForwardPropsEmits,
-} from "reka-ui";
-import { cn } from "@/lib/utils";
-import DrawerOverlay from "./DrawerOverlay.vue";
+import { reactiveOmit } from '@vueuse/core'
+import { DrawerContent, DrawerHandle, DrawerPortal, useForwardPropsEmits } from 'reka-ui'
+import { cn } from '@/lib/utils'
+import DrawerOverlay from './DrawerOverlay.vue'
 
 defineOptions({
   inheritAttrs: false,
-});
+})
 
 const props = defineProps({
   forceMount: { type: Boolean, required: false },
@@ -21,19 +16,19 @@ const props = defineProps({
   asChild: { type: Boolean, required: false },
   as: { type: null, required: false },
   class: { type: null, required: false },
-});
+})
 const emits = defineEmits([
-  "escapeKeyDown",
-  "pointerDownOutside",
-  "focusOutside",
-  "interactOutside",
-  "openAutoFocus",
-  "closeAutoFocus",
-]);
+  'escapeKeyDown',
+  'pointerDownOutside',
+  'focusOutside',
+  'interactOutside',
+  'openAutoFocus',
+  'closeAutoFocus',
+])
 
-const delegatedProps = reactiveOmit(props, "class");
+const delegatedProps = reactiveOmit(props, 'class')
 
-const forwarded = useForwardPropsEmits(delegatedProps, emits);
+const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
 
 <template>

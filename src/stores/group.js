@@ -56,6 +56,7 @@ export const useGroupsStore = defineStore('groups', () => {
         `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.name || doc.email.split('@')[0])}&background=random`,
       addedAt: doc.addedAt,
       userId: doc.userId || null,
+      role: doc.role || 'MEMBER',
     }))
   }
 
@@ -66,6 +67,11 @@ export const useGroupsStore = defineStore('groups', () => {
 
   async function removeMember(groupId, memberId) {
     return await groupService.removeMember(groupId, memberId)
+  }
+
+  async function updateMemberRole(groupId, memberId, role) {
+    const res = await groupService.updateMemberRole(groupId, memberId, role)
+    return res.member
   }
 
   return {
@@ -81,5 +87,6 @@ export const useGroupsStore = defineStore('groups', () => {
     listMembers,
     addMember,
     removeMember,
+    updateMemberRole,
   }
 })

@@ -13,7 +13,8 @@ export const usePreferencesStore = defineStore(
 
     const setWeekStartsOn = (value) => {
       const normalized = Number(value)
-      weekStartsOn.value = Number.isInteger(normalized) && normalized >= 0 && normalized <= 6 ? normalized : 0
+      weekStartsOn.value =
+        Number.isInteger(normalized) && normalized >= 0 && normalized <= 6 ? normalized : 0
     }
 
     const setDateFormat = (value) => {

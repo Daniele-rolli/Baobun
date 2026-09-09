@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import { ensureBuckets, putObject, getObject, deleteObject, BUCKETS, presignGetUrl } from '../src/s3.js'
+import {
+  ensureBuckets,
+  putObject,
+  getObject,
+  deleteObject,
+  BUCKETS,
+  presignGetUrl,
+} from '../src/s3.js'
 
 describe('s3', () => {
   beforeAll(async () => {

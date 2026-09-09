@@ -9,12 +9,7 @@
         <!-- Title -->
         <div class="space-y-1.5">
           <UiLabel for="event-title">Title</UiLabel>
-          <UiInput
-            id="event-title"
-            v-model="title"
-            placeholder="Enter event title"
-            required
-          />
+          <UiInput id="event-title" v-model="title" placeholder="Enter event title" required />
         </div>
 
         <!--
@@ -64,12 +59,7 @@
               <UiSelectValue placeholder="Select people..." />
             </UiSelectTrigger>
             <UiSelectContent>
-              <UiSelectItem
-                v-for="m in members"
-                :key="m.$id"
-                :value="m.$id"
-                :text-value="m.name"
-              >
+              <UiSelectItem v-for="m in members" :key="m.$id" :value="m.$id" :text-value="m.name">
                 <img
                   :src="
                     m.avatarUrl ||
@@ -160,22 +150,82 @@
                 </label>
               </div>
             </div>
-            <button type="button" class="btn-primary w-full" @click="createTag">Create Tag</button>
+            <UiButton
+              type="button"
+              class="w-full"
+              :disabled="!newTagName.trim()"
+              @click="createTag"
+            >
+              Create Tag
+            </UiButton>
           </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="space-y-1.5">
+            <UiLabel>Reminder</UiLabel>
+            <UiSelect v-model="reminder">
+              <UiSelectTrigger class="w-full">
+                <UiSelectValue />
+              </UiSelectTrigger>
+              <UiSelectContent>
+                <UiSelectItem value="none">No reminder</UiSelectItem>
+                <UiSelectItem value="0">At start time</UiSelectItem>
+                <UiSelectItem value="10">10 minutes before</UiSelectItem>
+                <UiSelectItem value="30">30 minutes before</UiSelectItem>
+                <UiSelectItem value="60">1 hour before</UiSelectItem>
+                <UiSelectItem value="1440">1 day before</UiSelectItem>
+              </UiSelectContent>
+            </UiSelect>
+          </div>
+
+          <div v-if="!event" class="space-y-1.5">
+            <UiLabel>Repeat</UiLabel>
+            <UiSelect v-model="recurrenceFrequency">
+              <UiSelectTrigger class="w-full">
+                <UiSelectValue />
+              </UiSelectTrigger>
+              <UiSelectContent>
+                <UiSelectItem value="none">Does not repeat</UiSelectItem>
+                <UiSelectItem value="DAILY">Daily</UiSelectItem>
+                <UiSelectItem value="WEEKLY">Weekly</UiSelectItem>
+                <UiSelectItem value="MONTHLY">Monthly</UiSelectItem>
+              </UiSelectContent>
+            </UiSelect>
+          </div>
+        </div>
+
+        <div v-if="!event && recurrenceFrequency !== 'none'" class="space-y-1.5">
+          <UiLabel for="recurrence-count">Number of occurrences</UiLabel>
+          <UiInput
+            id="recurrence-count"
+            v-model.number="recurrenceCount"
+            type="number"
+            min="2"
+            max="366"
+          />
+          <p class="text-xs text-muted-foreground">Includes the first event.</p>
         </div>
 
         <!-- Actions -->
         <div v-if="event">
-          <button type="button" @click="showDeleteConfirm = true" class="btn-danger w-full">
+          <UiButton
+            type="button"
+            variant="destructive"
+            class="w-full"
+            @click="showDeleteConfirm = true"
+          >
             Delete
-          </button>
+          </UiButton>
         </div>
 
         <div class="flex gap-3">
-          <button type="button" @click="$emit('close')" class="btn-secondary flex-1">Cancel</button>
-          <button type="submit" class="btn-primary flex-1">
-            {{ event ? 'Update Event' : 'Add Event' }}
-          </button>
+          <UiButton type="button" variant="outline" class="flex-1" @click="$emit('close')">
+            Cancel
+          </UiButton>
+          <UiButton type="submit" class="flex-1" :disabled="saving">
+            {{ saving ? 'Saving…' : event ? 'Update Event' : 'Add Event' }}
+          </UiButton>
         </div>
       </form>
     </UiDialogContent>
@@ -205,6 +255,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useEventsStore } from '@/stores/event'
 import { useTagsStore } from '@/stores/tag'
 import { useGroupsStore } from '@/stores/group'
+import { useToastStore } from '@/stores/toast'
 
 export default {
   props: {
@@ -219,6 +270,7 @@ export default {
     const eventsStore = useEventsStore()
     const tagsStore = useTagsStore()
     const groupStore = useGroupsStore()
+    const toast = useToastStore()
 
     const title = ref('')
     const start = ref(new Date().toISOString().slice(0, 16))
@@ -233,6 +285,10 @@ export default {
     const newTagColor = ref('#F87171')
     const newTagImageFile = ref(null)
     const previewImage = ref('')
+    const reminder = ref('none')
+    const recurrenceFrequency = ref('none')
+    const recurrenceCount = ref(10)
+    const saving = ref(false)
 
     const handleFileUpload = (e) => {
       const file = e.target.files[0]
@@ -249,12 +305,18 @@ export default {
       if (!name || !color) return // stop if empty
 
       // Pass groupId as first argument
-      const tag = await tagsStore.createTag(props.groupId, {
-        name,
-        color,
-        imageFile: newTagImageFile.value,
-        icon: null,
-      })
+      let tag
+      try {
+        tag = await tagsStore.createTag(props.groupId, {
+          name,
+          color,
+          imageFile: newTagImageFile.value,
+          icon: null,
+        })
+      } catch (error) {
+        toast.error('Could not create tag', error?.message)
+        return
+      }
 
       tagId.value = tag.$id
       emit('tag-created', tag)
@@ -265,6 +327,7 @@ export default {
       newTagColor.value = '#F87171'
       newTagImageFile.value = null
       previewImage.value = ''
+      toast.success('Tag created')
     }
 
     const saveEvent = async () => {
@@ -280,27 +343,51 @@ export default {
         end: safeEndDate.toISOString(),
         people: people.value,
         tagId: tagId.value || '',
+        reminderMinutes: reminder.value === 'none' ? null : Number(reminder.value),
       }
-      if (props.event) {
-        await eventsStore.updateEvent(props.event.$id, eventData)
-        emit('event-updated')
-      } else {
-        await eventsStore.createEvent({
-          ...eventData,
-          userId: authStore.user.$id,
-          groupId: props.groupId,
-        })
-        emit('event-added')
+      if (!props.event && recurrenceFrequency.value !== 'none') {
+        eventData.recurrence = {
+          frequency: recurrenceFrequency.value,
+          interval: 1,
+          count: Math.min(366, Math.max(2, Number(recurrenceCount.value) || 2)),
+        }
       }
-      emit('close')
+      saving.value = true
+      try {
+        if (props.event) {
+          await eventsStore.updateEvent(props.event.$id, eventData)
+          emit('event-updated')
+          toast.success('Event updated')
+        } else {
+          await eventsStore.createEvent({
+            ...eventData,
+            userId: authStore.user.$id,
+            groupId: props.groupId,
+          })
+          emit('event-added')
+          toast.success(
+            recurrenceFrequency.value === 'none' ? 'Event created' : 'Recurring events created',
+          )
+        }
+        emit('close')
+      } catch (error) {
+        toast.error('Could not save event', error?.message)
+      } finally {
+        saving.value = false
+      }
     }
 
     const confirmDeleteEvent = async () => {
       if (!props.event) return
       showDeleteConfirm.value = false
-      await eventsStore.deleteEvent(props.event.$id)
-      emit('event-deleted')
-      emit('close')
+      try {
+        await eventsStore.deleteEvent(props.event.$id)
+        emit('event-deleted')
+        emit('close')
+        toast.success('Event deleted')
+      } catch (error) {
+        toast.error('Could not delete event', error?.message)
+      }
     }
 
     const formatLocalDateTime = (date) => {
@@ -319,6 +406,10 @@ export default {
         notes.value = props.event.notes
         people.value = props.event.people || []
         tagId.value = props.event.tagId || ''
+        reminder.value =
+          props.event.reminderMinutes === null || props.event.reminderMinutes === undefined
+            ? 'none'
+            : String(props.event.reminderMinutes)
       } else {
         title.value = ''
         const base = props.defaultDate ? new Date(props.defaultDate) : new Date()
@@ -330,6 +421,9 @@ export default {
         notes.value = ''
         people.value = []
         tagId.value = ''
+        reminder.value = 'none'
+        recurrenceFrequency.value = 'none'
+        recurrenceCount.value = 10
       }
       showCreateTag.value = false
       showDeleteConfirm.value = false
@@ -378,6 +472,10 @@ export default {
       newTagColor,
       newTagImageFile,
       previewImage,
+      reminder,
+      recurrenceFrequency,
+      recurrenceCount,
+      saving,
       handleFileUpload,
       createTag,
       saveEvent,

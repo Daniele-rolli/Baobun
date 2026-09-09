@@ -1,35 +1,77 @@
-# baobun
+# Baobun
 
-This template should help get you started developing with Vue 3 in Vite.
+Baobun is a shared calendar for groups. Members can create groups, invite people, schedule
+recurring events and email reminders, import or export `.ics` calendars, tag events, and
+publish subscribable calendar feeds. Owner, admin, member, and viewer roles control who can
+change shared data.
 
-## Recommended IDE Setup
+## Run with Docker Compose
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+Docker Compose is the recommended local and self-hosted setup. It starts the web app, API,
+Postgres, MinIO object storage, and a Mailpit development inbox.
 
 ```sh
-npm install
+cp .env.example .env
+docker compose up --build
 ```
 
-### Compile and Hot-Reload for Development
+Open:
+
+- App: http://localhost:4173
+- Mailpit inbox: http://localhost:8025
+- MinIO console: http://localhost:9101
+
+The app uses one browser-facing origin: the frontend container serves the Vue SPA and
+proxies `/api` to the API and `/feeds` to MinIO. No separate frontend API URL is required.
+Data is kept in named Docker volumes across restarts.
+
+Stop the app with `docker compose down`. Avoid `docker compose down -v` unless you intend to
+delete all Baobun data.
+
+## Local development
+
+Requirements: Node.js 20.19+ (or 22.12+) and Yarn 1.
 
 ```sh
-npm run dev
+yarn install --frozen-lockfile
+cp apps/api/.env.example apps/api/.env
+docker compose up -d postgres minio mailpit
+yarn api:dev
 ```
 
-### Compile and Minify for Production
+In a second terminal:
 
 ```sh
-npm run build
+yarn watch
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+The Vite development server runs at http://localhost:4173 and proxies API requests to
+http://localhost:3001.
+
+## Quality checks
 
 ```sh
-npm run lint
+yarn build
+yarn eslint .
 ```
+
+With the Docker Compose stack running, execute the responsive browser and single-origin API
+flows with:
+
+```sh
+yarn e2e
+```
+
+API tests require a dedicated test database configured in `apps/api/.env.test`; use
+`apps/api/.env.example` as a starting point, then run:
+
+```sh
+yarn api:test
+```
+
+## Production deployment
+
+See [`docs/deploy.md`](docs/deploy.md) for pre-built images, environment variables, TLS,
+SMTP, reverse proxy guidance, updates, and verification.
+
+For read-only integration tokens and endpoints, see [`docs/api.md`](docs/api.md).

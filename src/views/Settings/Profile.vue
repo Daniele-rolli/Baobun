@@ -2,7 +2,10 @@
   <div class="min-h-screen dark:text-white">
     <div class="max-w-xl mx-auto px-4 py-6 space-y-6">
       <div class="space-y-2">
-        <router-link to="/settings" class="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-white transition-colors">
+        <router-link
+          to="/settings"
+          class="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-white transition-colors"
+        >
           <ChevronLeft class="w-4 h-4" />
           Back to Settings
         </router-link>
@@ -26,24 +29,52 @@
               : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800',
           ]"
         >
-          <svg v-if="message.type === 'success'" class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          <svg
+            v-if="message.type === 'success'"
+            class="w-4 h-4 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
           </svg>
-          <svg v-else class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          <svg
+            v-else
+            class="w-4 h-4 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           {{ message.text }}
         </div>
       </transition>
 
       <div class="space-y-2">
-        <p class="section-label px-1">Profile</p>
+        <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Profile
+        </p>
         <Card class="p-5">
           <CardContent>
             <div class="flex items-center gap-4">
               <div class="relative group flex-shrink-0">
                 <img
-                  :src="previewAvatar || avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'User')}&background=random`"
+                  :src="
+                    previewAvatar ||
+                    avatarUrl ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'User')}&background=random`
+                  "
                   alt="Profile Avatar"
                   class="h-20 w-20 rounded-2xl object-cover border border-neutral-200 dark:border-neutral-700 shadow-sm"
                 />
@@ -64,30 +95,38 @@
                 </button>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="font-semibold text-neutral-900 dark:text-white truncate">{{ authStore.user?.name }}</p>
+                <p class="font-semibold text-neutral-900 dark:text-white truncate">
+                  {{ authStore.user?.name }}
+                </p>
                 <p class="text-sm text-neutral-500 truncate">{{ authStore.user?.email }}</p>
-                <button @click="triggerAvatarUpload" class="mt-1.5 text-sm text-rose-600 hover:text-rose-700 font-medium touch-exempt">
+                <button
+                  @click="triggerAvatarUpload"
+                  class="mt-1.5 text-sm text-rose-600 hover:text-rose-700 font-medium touch-exempt"
+                >
                   Upload photo
                 </button>
               </div>
-              <input ref="avatarInput" type="file" accept="image/*" class="hidden" @change="handleAvatarChange" />
+              <input
+                ref="avatarInput"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="handleAvatarChange"
+              />
             </div>
           </CardContent>
         </Card>
       </div>
 
       <div class="space-y-2">
-        <p class="section-label px-1">Account</p>
+        <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Account
+        </p>
         <Card class="p-5">
           <CardContent class="space-y-4">
             <div>
               <Label class="text-sm font-medium">Full Name</Label>
-              <Input
-                v-model="form.name"
-                type="text"
-                placeholder="Your full name"
-                class="mt-1.5"
-              />
+              <Input v-model="form.name" type="text" placeholder="Your full name" class="mt-1.5" />
             </div>
 
             <div>
@@ -104,13 +143,17 @@
       </div>
 
       <div class="space-y-2">
-        <p class="section-label px-1">Security</p>
+        <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Security
+        </p>
         <Card class="p-5">
           <CardContent class="space-y-4">
             <div>
               <Label class="text-sm font-medium">
                 Current Password
-                <span class="text-neutral-400 font-normal ml-1">(required to change email or password)</span>
+                <span class="text-neutral-400 font-normal ml-1"
+                  >(required to change email or password)</span
+                >
               </Label>
               <Input
                 v-model="form.currentPassword"
@@ -148,21 +191,15 @@
       </div>
 
       <div class="space-y-2">
-        <p class="section-label px-1">Actions</p>
+        <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Actions
+        </p>
         <Card class="p-4">
           <CardContent class="space-y-2">
-            <Button
-              @click="submitProfile"
-              :disabled="authStore.loading"
-              class="w-full"
-            >
+            <Button @click="submitProfile" :disabled="authStore.loading" class="w-full">
               {{ authStore.loading ? 'Saving…' : 'Save Changes' }}
             </Button>
-            <Button
-              @click="authStore.logout()"
-              variant="secondary"
-              class="w-full"
-            >
+            <Button @click="authStore.logout()" variant="secondary" class="w-full">
               Log Out
             </Button>
           </CardContent>

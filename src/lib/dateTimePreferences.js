@@ -25,9 +25,7 @@ export const formatDateShort = (value, dateFormat = 'mdy', includeYear = false) 
   }
 
   if (dateFormat === 'ymd') {
-    return includeYear
-      ? `${year}-${pad2(month)}-${pad2(day)}`
-      : `${pad2(month)}-${pad2(day)}`
+    return includeYear ? `${year}-${pad2(month)}-${pad2(day)}` : `${pad2(month)}-${pad2(day)}`
   }
 
   return includeYear ? `${monthShort} ${day}, ${year}` : `${monthShort} ${day}`

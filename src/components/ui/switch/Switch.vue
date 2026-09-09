@@ -1,7 +1,7 @@
 <script setup>
-import { reactiveOmit } from "@vueuse/core";
-import { SwitchRoot, SwitchThumb, useForwardPropsEmits } from "reka-ui";
-import { cn } from "@/lib/utils";
+import { reactiveOmit } from '@vueuse/core'
+import { SwitchRoot, SwitchThumb, useForwardPropsEmits } from 'reka-ui'
+import { cn } from '@/lib/utils'
 
 const props = defineProps({
   defaultValue: { type: null, required: false },
@@ -16,14 +16,14 @@ const props = defineProps({
   name: { type: String, required: false },
   required: { type: Boolean, required: false },
   class: { type: null, required: false },
-  size: { type: String, required: false, default: "default" },
-});
+  size: { type: String, required: false, default: 'default' },
+})
 
-const emits = defineEmits(["update:modelValue"]);
+const emits = defineEmits(['update:modelValue'])
 
-const delegatedProps = reactiveOmit(props, "class", "size");
+const delegatedProps = reactiveOmit(props, 'class', 'size')
 
-const forwarded = useForwardPropsEmits(delegatedProps, emits);
+const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
 
 <template>

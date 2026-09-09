@@ -171,6 +171,8 @@
       <li class="flex-1 flex justify-center">
         <button
           class="-mt-5 w-14 h-14 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white rounded-2xl shadow-lg shadow-rose-500/30 flex items-center justify-center transition-all duration-150"
+          :class="{ 'opacity-40 cursor-not-allowed hover:bg-rose-500': !canAddEvent }"
+          :disabled="!canAddEvent"
           aria-label="Add event"
           @click="goToAddEvent()"
         >
@@ -226,13 +228,13 @@
 <script setup>
 defineOptions({ inheritAttrs: false })
 
-import { ref, computed, onMounted, defineProps, defineEmits } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useGroupsStore } from '@/stores/group'
 import { Home, Users, ChevronLeft, ChevronRight, Plus, CalendarDays } from 'lucide-vue-next'
 
-const props = defineProps({
+defineProps({
   collapsed: {
     type: Boolean,
     default: false,
@@ -250,6 +252,13 @@ const userGroups = ref([])
 const avatarActive = ref(false)
 
 const isGroupRoute = computed(() => route.path.startsWith('/group/'))
+const targetGroup = computed(() => {
+  if (isGroupRoute.value) {
+    return userGroups.value.find((group) => group.$id === route.params.id)
+  }
+  return userGroups.value.find((group) => group.role !== 'VIEWER') || userGroups.value[0]
+})
+const canAddEvent = computed(() => !targetGroup.value || targetGroup.value.role !== 'VIEWER')
 
 const loadGroups = async () => {
   if (!authStore.user) return
@@ -281,8 +290,8 @@ const goToAddEvent = () => {
   if (isGroupRoute.value) {
     // Dispatch a custom event that the group page can listen to
     window.dispatchEvent(new CustomEvent('baobun:add-event'))
-  } else if (userGroups.value.length > 0) {
-    router.push('/group/' + userGroups.value[0].$id)
+  } else if (targetGroup.value) {
+    router.push('/group/' + targetGroup.value.$id)
   } else {
     router.push('/dashboard')
   }

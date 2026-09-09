@@ -7,7 +7,7 @@
  */
 import { onUnmounted } from 'vue'
 
-const THRESHOLD = 40  // min px to register as a swipe
+const THRESHOLD = 40 // min px to register as a swipe
 const MAX_DURATION_MS = 600
 
 export function useSwipe({ onLeft, onRight, onUp, onDown } = {}) {

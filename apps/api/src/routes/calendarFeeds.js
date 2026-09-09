@@ -3,8 +3,8 @@ import { getLiveFeedFileId, buildIcsContent } from '@baobun/shared'
 import { prisma } from '../db.js'
 import { requireAuth } from '../middleware/auth.js'
 import { forbidden, notFound } from '../errors.js'
-import { getObject, putObject, BUCKETS, publicUrl } from '../s3.js'
-import { config } from '../config.js'
+import { getObject, putObject, BUCKETS } from '../s3.js'
+import { absoluteUrl } from '../publicUrl.js'
 import { eventToJson } from './events.js'
 
 const keyFor = (c) => {
@@ -68,18 +68,23 @@ feeds.put('/:groupId/:userId', requireAuth, async (c) => {
 
   const ics = await buildFeed({ groupId, userId })
   const key = getLiveFeedFileId({ groupId, userId })
-  await putObject(BUCKETS.calendarFeeds, key, Buffer.from(ics, 'utf8'), 'text/calendar; charset=utf-8')
-  const base = config.s3.publicEndpoint.replace(/\/$/, '')
-  const httpsUrl = `${base}/${BUCKETS.calendarFeeds}/${key}`
+  await putObject(
+    BUCKETS.calendarFeeds,
+    key,
+    Buffer.from(ics, 'utf8'),
+    'text/calendar; charset=utf-8',
+  )
+  const httpsUrl = absoluteUrl(c, `/feeds/${BUCKETS.calendarFeeds}/${key}`)
   return c.json({ httpsUrl, webcalUrl: httpsUrl.replace(/^https?:\/\//i, 'webcal://') })
 })
 
 feeds.get('/:groupId/:userId/url', requireAuth, async (c) => {
   const user = c.get('user')
   const { groupId, userId, key } = keyFor(c)
+  if (userId !== 'all' && userId !== user.id) throw forbidden('You can only access your own feed.')
   const membership = await prisma.groupMember.findFirst({ where: { groupId, userId: user.id } })
   if (!membership) throw forbidden('You are not a member of this group.')
-  const httpsUrl = publicUrl(BUCKETS.calendarFeeds, key)
+  const httpsUrl = absoluteUrl(c, `/feeds/${BUCKETS.calendarFeeds}/${key}`)
   return c.json({ httpsUrl, webcalUrl: httpsUrl.replace(/^https?:\/\//i, 'webcal://') })
 })
 

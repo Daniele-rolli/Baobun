@@ -14,7 +14,9 @@ export const useNotificationsStore = defineStore(
   () => {
     const enabled = ref(false)
     const leadMinutes = ref(DEFAULT_LEAD_MINUTES)
-    const permission = ref(typeof Notification !== 'undefined' ? Notification.permission : 'default')
+    const permission = ref(
+      typeof Notification !== 'undefined' ? Notification.permission : 'default',
+    )
     const unsupported = ref(typeof Notification === 'undefined')
 
     const syncPermission = () => {

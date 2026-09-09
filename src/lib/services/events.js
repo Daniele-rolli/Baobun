@@ -10,6 +10,14 @@ export const listByGroup = (groupId, { from, to } = {}) => {
 
 export const create = (groupId, payload) =>
   apiFetch(`/api/groups/${groupId}/events`, { method: 'POST', json: true, body: payload })
-export const update = (id, patch) => apiFetch(`/api/events/${id}`, { method: 'PATCH', json: true, body: patch })
+export const update = (id, patch) =>
+  apiFetch(`/api/events/${id}`, { method: 'PATCH', json: true, body: patch })
 export const remove = (id) => apiFetch(`/api/events/${id}`, { method: 'DELETE' })
-export const moveDate = (id, start) => apiFetch(`/api/events/${id}/date`, { method: 'PUT', json: true, body: { start } })
+export const moveDate = (id, start) =>
+  apiFetch(`/api/events/${id}/date`, { method: 'PUT', json: true, body: { start } })
+
+export const importCalendar = (groupId, file) => {
+  const body = new FormData()
+  body.append('file', file)
+  return apiFetch(`/api/groups/${groupId}/events/import`, { method: 'POST', body })
+}

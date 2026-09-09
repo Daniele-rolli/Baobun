@@ -3,7 +3,11 @@ import { config } from './config.js'
 
 const parseEndpoint = (endpoint) => {
   const url = new URL(endpoint)
-  return { host: url.hostname, port: url.port ? Number(url.port) : undefined, ssl: url.protocol === 'https:' }
+  return {
+    host: url.hostname,
+    port: url.port ? Number(url.port) : undefined,
+    ssl: url.protocol === 'https:',
+  }
 }
 
 const { host, port, ssl } = parseEndpoint(config.s3.endpoint)
@@ -66,6 +70,14 @@ export const getObject = async (bucket, key) => {
   const chunks = []
   for await (const chunk of stream) chunks.push(chunk)
   return Buffer.concat(chunks)
+}
+
+export const getObjectWithMetadata = async (bucket, key) => {
+  const s3 = getS3()
+  const [data, stat] = await Promise.all([getObject(bucket, key), s3.statObject(bucket, key)])
+  const contentType =
+    stat.metaData?.['content-type'] || stat.metaData?.['Content-Type'] || 'application/octet-stream'
+  return { data, contentType }
 }
 
 export const deleteObject = async (bucket, key) => {

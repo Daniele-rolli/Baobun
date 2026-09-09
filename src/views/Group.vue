@@ -10,11 +10,7 @@
             <UiSelectValue placeholder="Select a group..." />
           </UiSelectTrigger>
           <UiSelectContent>
-            <UiSelectItem
-              v-for="g in groupsStore.items"
-              :key="g.$id"
-              :value="g.$id"
-            >
+            <UiSelectItem v-for="g in groupsStore.items" :key="g.$id" :value="g.$id">
               {{ g.name }}
             </UiSelectItem>
           </UiSelectContent>
@@ -43,6 +39,7 @@
         :week-starts-on="preferencesStore.weekStartsOn"
         :date-format="preferencesStore.dateFormat"
         :time-format="preferencesStore.timeFormat"
+        :can-edit="canEdit"
         @add-event="openAddEvent"
         @edit-event="handleEditEvent"
         @bulk-schedule="showBulkScheduleModal = true"
@@ -59,70 +56,96 @@
           <UiDialogTitle class="dark:text-white">Calendar Integrations</UiDialogTitle>
         </UiDialogHeader>
 
-      <div class="space-y-4">
-        <p class="text-sm text-neutral-600 dark:text-neutral-300">
-          No additional login needed in Baobun. This integration is a live personal feed.
-        </p>
-
-        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-3 space-y-3">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <p class="text-sm font-medium text-neutral-800 dark:text-neutral-100">Live updates</p>
-              <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                Publishes only events for you + everyone, refreshed about every 30 minutes.
-              </p>
-            </div>
-            <button
-              type="button"
-              class="touch-exempt rounded-lg border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              :disabled="!selectedGroupId || liveFeedBusy || !liveFeedBucketId"
-              @click="toggleLiveUpdates"
-            >
-              {{ liveFeedEnabledForGroup ? 'Disable' : 'Enable' }}
-            </button>
-          </div>
-
-          <div v-if="!liveFeedBucketId" class="text-xs text-amber-600 dark:text-amber-400">
-            Live feed bucket is not configured. Set <code>VITE_CALENDAR_FEEDS_BUCKET</code> to enable subscriptions.
-          </div>
-
-          <div v-else-if="liveFeedEnabledForGroup" class="space-y-2">
-            <label class="text-xs font-medium text-neutral-600 dark:text-neutral-300">Subscription URL (webcal)</label>
-            <div class="flex items-center gap-2">
-              <input
-                :value="liveFeedWebcalUrl"
-                readonly
-                class="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-2.5 py-2 text-xs text-neutral-700 dark:text-neutral-200"
-              />
-              <button
-                type="button"
-                class="touch-exempt rounded-lg border border-neutral-200 dark:border-neutral-700 px-2.5 py-2 text-xs font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-                @click="copyText(liveFeedWebcalUrl)"
-              >
-                Copy
-              </button>
-            </div>
-            <div class="flex items-center justify-between gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-              <span>
-                Last sync: {{ liveFeedLastSyncedLabel }}
-              </span>
-              <button
-                type="button"
-                class="touch-exempt inline-flex items-center gap-1 rounded-lg border border-neutral-200 dark:border-neutral-700 px-2.5 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                :disabled="liveFeedBusy"
-                @click="refreshLiveFeedNow"
-              >
-                <Link class="w-3.5 h-3.5" />
-                Sync now
-              </button>
-            </div>
-          </div>
-
-          <p v-if="liveFeedError" class="text-xs text-red-500">
-            {{ liveFeedError }}
+        <div class="space-y-4">
+          <p class="text-sm text-neutral-600 dark:text-neutral-300">
+            No additional login needed in Baobun. This integration is a live personal feed.
           </p>
+
+          <div class="rounded-xl border border-neutral-200 p-3 dark:border-neutral-700">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p class="text-sm font-medium">Import calendar</p>
+                <p class="text-xs text-muted-foreground">
+                  Add events from an `.ics` file. Existing event UIDs are skipped.
+                </p>
+              </div>
+              <label
+                v-if="canEdit"
+                class="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border bg-background px-3 text-sm font-medium hover:bg-muted"
+                :class="{ 'pointer-events-none opacity-50': importBusy }"
+              >
+                <Upload class="mr-2 h-4 w-4" />
+                {{ importBusy ? 'Importing…' : 'Choose file' }}
+                <input
+                  type="file"
+                  accept=".ics,text/calendar"
+                  class="sr-only"
+                  :disabled="importBusy"
+                  @change="importCalendar"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-3 space-y-3">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-sm font-medium text-neutral-800 dark:text-neutral-100">
+                  Live updates
+                </p>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                  Publishes only events for you + everyone, refreshed about every 30 minutes.
+                </p>
+              </div>
+              <button
+                type="button"
+                class="touch-exempt rounded-lg border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                :disabled="!selectedGroupId || liveFeedBusy"
+                @click="toggleLiveUpdates"
+              >
+                {{ liveFeedEnabledForGroup ? 'Disable' : 'Enable' }}
+              </button>
+            </div>
+
+            <div v-if="liveFeedEnabledForGroup" class="space-y-2">
+              <label class="text-xs font-medium text-neutral-600 dark:text-neutral-300"
+                >Subscription URL (webcal)</label
+              >
+              <div class="flex items-center gap-2">
+                <input
+                  :value="liveFeedWebcalUrl"
+                  readonly
+                  class="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-2.5 py-2 text-xs text-neutral-700 dark:text-neutral-200"
+                />
+                <button
+                  type="button"
+                  class="touch-exempt rounded-lg border border-neutral-200 dark:border-neutral-700 px-2.5 py-2 text-xs font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                  @click="copyText(liveFeedWebcalUrl)"
+                >
+                  Copy
+                </button>
+              </div>
+              <div
+                class="flex items-center justify-between gap-2 text-xs text-neutral-500 dark:text-neutral-400"
+              >
+                <span> Last sync: {{ liveFeedLastSyncedLabel }} </span>
+                <button
+                  type="button"
+                  class="touch-exempt inline-flex items-center gap-1 rounded-lg border border-neutral-200 dark:border-neutral-700 px-2.5 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  :disabled="liveFeedBusy"
+                  @click="refreshLiveFeedNow"
+                >
+                  <Link class="w-3.5 h-3.5" />
+                  Sync now
+                </button>
+              </div>
+            </div>
+
+            <p v-if="liveFeedError" class="text-xs text-red-500">
+              {{ liveFeedError }}
+            </p>
+          </div>
         </div>
-      </div>
       </UiDialogContent>
     </UiDialog>
     <EventModal
@@ -171,12 +194,10 @@ import {
   scheduleEventNotifications,
   clearScheduledEventNotifications,
 } from '@/composable/useEventNotifications'
-import {
-  getLiveFeedBucketId,
-  getLiveFeedUrls,
-  publishLiveCalendarFeed,
-} from '@/lib/liveCalendarFeed'
-import { CalendarPlus, Link, Share2 } from 'lucide-vue-next'
+import { getLiveFeedUrls, publishLiveCalendarFeed } from '@/lib/liveCalendarFeed'
+import { CalendarPlus, Link, Share2, Upload } from 'lucide-vue-next'
+import { importCalendar as uploadCalendar } from '@/lib/services/events'
+import { useToastStore } from '@/stores/toast'
 
 const route = useRoute()
 const router = useRouter()
@@ -188,6 +209,7 @@ const tagsStore = useTagsStore()
 const preferencesStore = usePreferencesStore()
 const notificationsStore = useNotificationsStore()
 const calendarFeedStore = useCalendarFeedStore()
+const toast = useToastStore()
 
 const selectedGroupId = ref(route.params.id || '')
 
@@ -204,6 +226,34 @@ const showBulkScheduleModal = ref(false)
 const showSpinScheduler = ref(false)
 const LIVE_FEED_REPUBLISH_MS = 30 * 60 * 1000
 const groupMembers = ref([])
+const importBusy = ref(false)
+const selectedGroup = computed(() =>
+  groupsStore.items.find((group) => group.$id === selectedGroupId.value),
+)
+const canEdit = computed(() => selectedGroup.value?.role !== 'VIEWER')
+
+const importCalendar = async (event) => {
+  const file = event.target.files?.[0]
+  if (!file || !selectedGroupId.value) return
+  importBusy.value = true
+  try {
+    const result = await uploadCalendar(selectedGroupId.value, file)
+    await refreshEvents()
+    toast.success(
+      'Calendar imported',
+      `${result.imported} event${result.imported === 1 ? '' : 's'} added${
+        result.skipped
+          ? `, ${result.skipped} duplicate${result.skipped === 1 ? '' : 's'} skipped`
+          : ''
+      }.`,
+    )
+  } catch (error) {
+    toast.error('Could not import calendar', error?.message)
+  } finally {
+    importBusy.value = false
+    event.target.value = ''
+  }
+}
 
 /** Fetch helpers */
 const refreshGroups = async () => {
@@ -247,6 +297,13 @@ watch(
 )
 
 const handleEditEvent = (event) => {
+  if (!canEdit.value) {
+    toast.show({
+      title: event.title,
+      description: 'You have view-only access to this group.',
+    })
+    return
+  }
   selectedEvent.value = event
   showEventModal.value = true
 }
@@ -315,7 +372,6 @@ const sortedEvents = computed(() =>
     .sort((a, b) => new Date(a.start) - new Date(b.start)),
 )
 
-const liveFeedBucketId = getLiveFeedBucketId()
 const liveFeedScopeKey = computed(() =>
   selectedGroupId.value && authStore.user?.$id
     ? `${selectedGroupId.value}:${authStore.user.$id}`
@@ -418,10 +474,13 @@ const copyText = async (value) => {
 }
 
 const syncLiveFeed = async ({ force = false } = {}) => {
-  if (!selectedGroupId.value || !liveFeedBucketId) return
+  if (!selectedGroupId.value) return
   if (!liveFeedEnabledForGroup.value) return
   if (!force && !liveFeedDirty.value) return
-  if (!force && calendarFeedStore.lastSignatureByGroup[liveFeedScopeKey.value] === liveFeedSignature.value) {
+  if (
+    !force &&
+    calendarFeedStore.lastSignatureByGroup[liveFeedScopeKey.value] === liveFeedSignature.value
+  ) {
     liveFeedDirty.value = false
     return
   }
@@ -464,7 +523,7 @@ const stopLiveRepublishLoop = () => {
 
 const startLiveRepublishLoop = () => {
   stopLiveRepublishLoop()
-  if (!selectedGroupId.value || !liveFeedEnabledForGroup.value || !liveFeedBucketId) return
+  if (!selectedGroupId.value || !liveFeedEnabledForGroup.value) return
 
   liveSyncIntervalId.value = window.setInterval(() => {
     syncLiveFeed()
@@ -472,7 +531,7 @@ const startLiveRepublishLoop = () => {
 }
 
 const toggleLiveUpdates = async () => {
-  if (!selectedGroupId.value || !liveFeedBucketId || liveFeedBusy.value) return
+  if (!selectedGroupId.value || liveFeedBusy.value) return
 
   if (liveFeedEnabledForGroup.value) {
     calendarFeedStore.setEnabledForGroup(liveFeedScopeKey.value, false)

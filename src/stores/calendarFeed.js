@@ -23,7 +23,8 @@ export const useCalendarFeedStore = defineStore(
 
     const setSyncedMetadata = ({ groupId, syncedAt, signature }) => {
       if (!groupId) return
-      if (syncedAt) lastSyncedAtByGroup.value = { ...lastSyncedAtByGroup.value, [groupId]: syncedAt }
+      if (syncedAt)
+        lastSyncedAtByGroup.value = { ...lastSyncedAtByGroup.value, [groupId]: syncedAt }
       if (signature != null) {
         lastSignatureByGroup.value = { ...lastSignatureByGroup.value, [groupId]: signature }
       }

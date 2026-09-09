@@ -28,6 +28,11 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/api-access',
+    component: () => import('@/views/ApiAccess.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/group/:id',
     component: () => import('../views/Group.vue'),
     meta: { requiresAuth: true },
