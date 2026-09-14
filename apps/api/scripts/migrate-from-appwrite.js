@@ -332,6 +332,10 @@ const main = async () => {
   }
 
   for (const e of events) {
+    if (!e.groupId) {
+      console.warn(`[migrate] event skip "${e.title}": missing group (${e.$id})`)
+      continue
+    }
     const group = await prisma.group.findUnique({ where: { id: e.groupId } })
     if (!group) {
       console.warn(`[migrate] event skip "${e.title}": group ${e.groupId} not found`)
