@@ -2,15 +2,13 @@ import { PrismaClient } from '@prisma/client'
 import { randomBytes } from 'crypto'
 import { getLiveFeedFileId } from '@baobun/shared'
 import { ensureStorage, putObject, BUCKETS } from '../src/storage.js'
+import { hashPassword } from '../src/password.js'
 
 const prisma = new PrismaClient()
 
 const env = (k) => process.env[k]
 const dryRun = process.argv.includes('--dry-run')
 const listMode = process.argv.includes('--list')
-
-const hashPassword = () =>
-  `$random$` + randomBytes(32).toString('base64url') // placeholder; real argon2 set via set-password link
 
 const api = async (path) => {
   const res = await fetch(`${baseUrl()}${path}`, {
@@ -20,15 +18,20 @@ const api = async (path) => {
   return res.json()
 }
 
-const PAGE_SIZE = 25
+const PAGE_SIZE = 100
+const paginationQuery = (method, value) =>
+  encodeURIComponent(JSON.stringify({ method, values: [value] }))
 
-const listAll = async (path) => {
+const listAll = async (path, resultKey = 'documents') => {
   const out = []
   const seen = new Set()
   let offset = 0
   for (;;) {
-    const page = await api(`${path}${path.includes('?') ? '&' : '?'}limit=${PAGE_SIZE}&offset=${offset}`)
-    const docs = page.documents || []
+    const separator = path.includes('?') ? '&' : '?'
+    const page = await api(
+      `${path}${separator}queries[]=${paginationQuery('limit', PAGE_SIZE)}&queries[]=${paginationQuery('offset', offset)}`,
+    )
+    const docs = page[resultKey] || []
     let newCount = 0
     for (const doc of docs) {
       if (!seen.has(doc.$id)) {
@@ -60,6 +63,20 @@ const checkCollection = async (label, collectionId) => {
 }
 
 const main = async () => {
+  const required = [
+    'APPWRITE_ENDPOINT',
+    'APPWRITE_PROJECT_ID',
+    'APPWRITE_API_KEY',
+    'APPWRITE_DB_ID',
+    'APPWRITE_AVATAR_BUCKET',
+    'APPWRITE_TAG_ICONS_BUCKET',
+    'APPWRITE_CALENDAR_FEEDS_BUCKET',
+  ]
+  const missingRequired = required.filter((key) => !env(key))
+  if (missingRequired.length) {
+    throw new Error(`[validate] Missing env vars: ${missingRequired.join(', ')}`)
+  }
+
   if (listMode) {
     const dbId = env('APPWRITE_DB_ID')
     const res = await fetch(
@@ -71,6 +88,7 @@ const main = async () => {
     for (const c of data.collections || []) {
       console.log(`  ${c.$id}  ${c.name}`)
     }
+    await prisma.$disconnect()
     return
   }
 
@@ -81,43 +99,51 @@ const main = async () => {
     events: env('APPWRITE_EVENTS_COLLECTION'),
     tags: env('APPWRITE_TAGS_COLLECTION'),
   }
-  const missing = Object.entries(collections).filter(([, v]) => !v)
-  if (missing.length) {
-    throw new Error(`[validate] Missing env vars: ${missing.map(([k]) => k.toUpperCase()).join(', ')}`)
+  const missingCollections = Object.entries(collections).filter(([, value]) => !value)
+  if (missingCollections.length) {
+    throw new Error(
+      `[validate] Missing collection env vars: ${missingCollections
+        .map(([key]) => `APPWRITE_${key.toUpperCase()}_COLLECTION`)
+        .join(', ')}`,
+    )
   }
 
   console.log('[validate] Checking collections exist...')
   await Promise.all(Object.entries(collections).map(([k, v]) => checkCollection(k, v)))
 
-  await ensureStorage()
   const dry = dryRun ? ' (dry run)' : ''
 
-  // Fetch auth users first (needed for per-user event fetching)
-  const authUsersRes = await api('/users?limit=100')
-  const authUsersById = new Map()
-  for (const au of authUsersRes.users || []) authUsersById.set(au.$id, au)
-  console.log(`[migrate] auth users: ${authUsersById.size}`)
+  // Fetch auth users first so relations can be validated before anything is written.
+  const authUsers = await listAll('/users', 'users')
+  console.log(`[migrate] auth users: ${authUsers.length}`)
 
-  const [users, groups, members, tags] = await Promise.all([
+  const [users, groups, members, events, tags] = await Promise.all([
     listAll(`/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_USERS_COLLECTION')}/documents`),
     listAll(`/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_GROUPS_COLLECTION')}/documents`),
     listAll(`/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_MEMBERS_COLLECTION')}/documents`),
+    listAll(`/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_EVENTS_COLLECTION')}/documents`),
     listAll(`/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_TAGS_COLLECTION')}/documents`),
   ])
 
-  const allEvents = [] // skipping events (Appwrite Cloud free tier limit)
+  console.log(
+    `[migrate]${dry} users=${authUsers.length} groups=${groups.length} members=${members.length} events=${events.length} tags=${tags.length}`,
+  )
 
-  console.log(`[migrate]${dry} users=${users.length} groups=${groups.length} members=${members.length} events=${allEvents.length} tags=${tags.length}`)
+  if (dry) {
+    await prisma.$disconnect()
+    return
+  }
 
-  if (dry) return
-
-  const report = { users: 0, groups: groups.length, members: members.length, events: allEvents.length, tags: tags.length }
+  if (!authUsers.length) throw new Error('[validate] Appwrite has no auth users to migrate.')
+  await ensureStorage()
+  const report = { users: 0, groups: 0, members: 0, events: 0, tags: 0, calendarFeeds: 0 }
 
   // users: merge auth user (email/name) with DB collection (avatarFileId)
   const dbUsersById = new Map()
   for (const u of users) dbUsersById.set(u.$id, u)
 
-  for (const [id, auth] of authUsersById) {
+  for (const auth of authUsers) {
+    const id = auth.$id
     const email = (auth.email || '').toLowerCase()
     if (!email) {
       console.warn(`[migrate] user skip ${id}: no email`)
@@ -125,15 +151,16 @@ const main = async () => {
     }
     const name = auth.name || email.split('@')[0]
     const dbUser = dbUsersById.get(id)
+    const avatarObjectKey = dbUser?.avatarFileId ? `avatar-${id}` : null
     await prisma.user.upsert({
       where: { email },
-      update: { needsPasswordSet: true },
+      update: { name, avatarObjectKey },
       create: {
         id,
         email,
-        passwordHash: hashPassword(),
+        passwordHash: await hashPassword(randomBytes(32).toString('base64url')),
         name,
-        avatarObjectKey: dbUser?.avatarFileId ? `avatar-${id}` : null,
+        avatarObjectKey,
         needsPasswordSet: true,
       },
     })
@@ -141,9 +168,10 @@ const main = async () => {
     if (dbUser?.avatarFileId) {
       try {
         const file = await fetch(
-          `${baseUrl()}/storage/buckets/${env('APPWRITE_AVATAR_BUCKET')}/files/${dbUser.avatarFileId}/download`,
+          `${baseUrl()}/storage/buckets/${env('APPWRITE_AVATAR_BUCKET')}/files/${encodeURIComponent(dbUser.avatarFileId)}/download`,
           { headers: { 'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'), 'X-Appwrite-Key': env('APPWRITE_API_KEY') } },
         )
+        if (!file.ok) throw new Error(`Appwrite avatar download -> ${file.status}`)
         const buf = Buffer.from(await file.arrayBuffer())
         await putObject(BUCKETS.avatars, `avatar-${id}`, buf, file.headers.get('content-type') || 'image/png')
       } catch (err) {
@@ -153,39 +181,57 @@ const main = async () => {
   }
 
   for (const g of groups) {
+    const ownerUserId = g.ownerId || g.ownerUserId
+    const owner =
+      (ownerUserId && (await prisma.user.findUnique({ where: { id: ownerUserId } }))) ||
+      (await prisma.user.findFirst({ orderBy: { createdAt: 'asc' } }))
+    if (!owner) {
+      console.warn(`[migrate] group skip "${g.name}": owner not found`)
+      continue
+    }
+    const inviteCode =
+      g.inviteCode || g.$id.replace(/[^a-z0-9]/gi, '').slice(0, 10).toUpperCase()
     await prisma.group.upsert({
       where: { id: g.$id },
-      update: { name: g.name, color: g.color || '#f43f5e', inviteCode: g.inviteCode },
+      update: { name: g.name, color: g.color || '#f43f5e', inviteCode, ownerUserId: owner.id },
       create: {
         id: g.$id,
         name: g.name,
         color: g.color || '#f43f5e',
-        ownerUserId: g.ownerId || g.ownerUserId || users[0]?.$id,
-        inviteCode: g.inviteCode,
+        ownerUserId: owner.id,
+        inviteCode,
       },
     })
+    report.groups++
   }
 
   for (const m of members) {
     const email = (m.email || '').toLowerCase()
-    const user = await prisma.user.findUnique({ where: { email } }).catch(() => null)
-    const groupExists = groups.some((g) => g.$id === m.groupId)
-    if (!groupExists) {
+    const user =
+      (m.userId && (await prisma.user.findUnique({ where: { id: m.userId } }))) ||
+      (email && (await prisma.user.findUnique({ where: { email } }).catch(() => null)))
+    const group = await prisma.group.findUnique({ where: { id: m.groupId } })
+    if (!group) {
       console.warn(`[migrate] member skip ${email}: group ${m.groupId} not found`)
       continue
     }
+    const memberData = {
+      groupId: m.groupId,
+      userId: user?.id ?? null,
+      email: email || user?.email || `migrated-${m.$id}@invalid.local`,
+      name: m.name || user?.name || email.split('@')[0] || 'Migrated member',
+      joinedAt: m.joinedAt ? new Date(m.joinedAt) : new Date(),
+      role: user?.id === group.ownerUserId ? 'OWNER' : 'MEMBER',
+    }
     await prisma.groupMember.upsert({
       where: { id: m.$id },
-      update: {},
+      update: memberData,
       create: {
         id: m.$id,
-        groupId: m.groupId,
-        userId: user?.id ?? null,
-        email,
-        name: m.name || email.split('@')[0],
-        joinedAt: m.joinedAt ? new Date(m.joinedAt) : new Date(),
+        ...memberData,
       },
     })
+    report.members++
   }
 
   for (const t of tags) {
@@ -196,7 +242,12 @@ const main = async () => {
     }
     await prisma.tag.upsert({
       where: { id: t.$id },
-      update: { name: t.name, color: t.color || '#6B7280' },
+      update: {
+        name: t.name,
+        color: t.color || '#6B7280',
+        icon: t.icon ?? null,
+        imageObjectKey: t.imageId ? `tag-${t.$id}` : null,
+      },
       create: {
         id: t.$id,
         groupId: t.groupId,
@@ -206,12 +257,14 @@ const main = async () => {
         imageObjectKey: t.imageId ? `tag-${t.$id}` : null,
       },
     })
+    report.tags++
     if (t.imageId) {
       try {
         const file = await fetch(
-          `${baseUrl()}/storage/buckets/${env('APPWRITE_TAG_ICONS_BUCKET')}/files/${t.imageId}/download`,
+          `${baseUrl()}/storage/buckets/${env('APPWRITE_TAG_ICONS_BUCKET')}/files/${encodeURIComponent(t.imageId)}/download`,
           { headers: { 'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'), 'X-Appwrite-Key': env('APPWRITE_API_KEY') } },
         )
+        if (!file.ok) throw new Error(`Appwrite tag icon download -> ${file.status}`)
         const buf = Buffer.from(await file.arrayBuffer())
         await putObject(BUCKETS.tagIcons, `tag-${t.$id}`, buf, file.headers.get('content-type') || 'image/png')
       } catch (err) {
@@ -220,33 +273,53 @@ const main = async () => {
     }
   }
 
-  for (const e of allEvents) {
-    const groupExists = groups.some((g) => g.$id === e.groupId)
-    if (!groupExists) {
+  for (const e of events) {
+    const group = await prisma.group.findUnique({ where: { id: e.groupId } })
+    if (!group) {
       console.warn(`[migrate] event skip "${e.title}": group ${e.groupId} not found`)
+      continue
+    }
+    const creator =
+      (e.userId && (await prisma.user.findUnique({ where: { id: e.userId } }))) ||
+      (await prisma.user.findUnique({ where: { id: group.ownerUserId } }))
+    const start = new Date(e.start)
+    const end = new Date(e.end || e.start)
+    if (!creator || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      console.warn(`[migrate] event skip "${e.title}": invalid creator or date`)
       continue
     }
     await prisma.event.upsert({
       where: { id: e.$id },
-      update: {},
+      update: {
+        title: e.title,
+        notes: e.notes || '',
+        start,
+        end,
+        people: Array.isArray(e.people) ? e.people : [],
+        tagId: e.tagId || '',
+      },
       create: {
         id: e.$id,
         groupId: e.groupId,
         title: e.title,
         notes: e.notes || '',
-        start: new Date(e.start),
-        end: new Date(e.end || e.start),
+        start,
+        end,
         people: Array.isArray(e.people) ? e.people : [],
         tagId: e.tagId || '',
-        userId: e.userId || groups.find((g) => g.$id === e.groupId)?.ownerId || users[0]?.$id,
+        userId: creator.id,
       },
     })
+    report.events++
   }
 
   // Calendar feeds: reproduce object keys so existing webcal subscriptions keep working
   for (const g of groups) {
-    for (const m of members.filter((mm) => mm.groupId === g.$id && mm.userId)) {
-      const key = getLiveFeedFileId({ groupId: g.$id, userId: m.userId })
+    const migratedMembers = await prisma.groupMember.findMany({
+      where: { groupId: g.$id, userId: { not: null } },
+    })
+    for (const member of migratedMembers) {
+      const key = getLiveFeedFileId({ groupId: g.$id, userId: member.userId })
       const src = `${baseUrl()}/storage/buckets/${env('APPWRITE_CALENDAR_FEEDS_BUCKET')}/files/${encodeURIComponent(key)}/download`
       try {
         const res = await fetch(src, {
@@ -255,7 +328,7 @@ const main = async () => {
         if (res.ok) {
           const buf = Buffer.from(await res.arrayBuffer())
           await putObject(BUCKETS.calendarFeeds, key, buf, 'text/calendar; charset=utf-8')
-          report.calendarFeeds = (report.calendarFeeds || 0) + 1
+          report.calendarFeeds++
         }
       } catch {
         // no feed yet — fine

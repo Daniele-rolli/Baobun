@@ -24,6 +24,13 @@ docker compose pull
 docker compose up -d
 ```
 
+To merge Baobun into an existing Compose project instead, download
+`docker-compose.baobun.yml` and run:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.baobun.yml up -d
+```
+
 To update to the latest version:
 
 ```sh
