@@ -9,7 +9,7 @@ const tokens = new Hono()
 tokens.use('*', requireAuth)
 
 const tokenToJson = (token) => ({
-  $id: token.id,
+  id: token.id,
   name: token.name,
   prefix: token.tokenPrefix,
   createdAt: token.createdAt.toISOString(),

@@ -46,5 +46,5 @@ export const getSessionUser = async (c) => {
 export const destroySession = async (c) => {
   const token = getCookie(c, SESSION_COOKIE)
   if (token) await prisma.session.delete({ where: { id: token } }).catch(() => {})
-  deleteCookie(c, SESSION_COOKIE, { path: '/' })
+  deleteCookie(c, SESSION_COOKIE, { path: '/', secure: true, sameSite: 'Lax' })
 }

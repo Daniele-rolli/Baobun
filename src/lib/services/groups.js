@@ -7,7 +7,7 @@ export const update = (id, patch) =>
   apiFetch(`/api/groups/${id}`, { method: 'PATCH', json: true, body: patch })
 export const remove = (id) => apiFetch(`/api/groups/${id}`, { method: 'DELETE' })
 export const joinByCode = (inviteCode) =>
-  apiFetch(`/api/groups/join?inviteCode=${encodeURIComponent(inviteCode)}`)
+  apiFetch('/api/groups/join', { method: 'POST', json: true, body: { inviteCode } })
 export const listMembers = (id) => apiFetch(`/api/groups/${id}/members`)
 export const addMember = (id, email) =>
   apiFetch(`/api/groups/${id}/members`, { method: 'POST', json: true, body: { email } })

@@ -164,6 +164,24 @@
               class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0"
             />
           </router-link>
+
+          <router-link
+            to="/settings/migration"
+            class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
+          >
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-500/15"
+            >
+              <Database class="w-[1.125rem] h-[1.125rem]" />
+            </span>
+            <div class="flex-1">
+              <p class="text-sm font-medium">Migration</p>
+              <p class="text-xs text-neutral-400 mt-0.5">Appwrite import report</p>
+            </div>
+            <ChevronRightIcon
+              class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0"
+            />
+          </router-link>
         </Card>
       </div>
 
@@ -301,6 +319,7 @@ import {
   Calendar,
   Clock3,
   KeyRound,
+  Database,
 } from 'lucide-vue-next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'

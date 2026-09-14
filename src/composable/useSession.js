@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-import router from '@/router'
 import * as authService from '@/lib/services/auth'
 
 const SESSION_STORE_KEY = 'baobun_session'
@@ -41,6 +40,7 @@ export async function withSession(key, fn) {
         const status = err?.status
         if (status === 401) {
           clearSession()
+          const { default: router } = await import('@/router')
           router.push('/login')
           throw err
         }

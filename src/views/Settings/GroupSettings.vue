@@ -16,7 +16,7 @@
           <UiSelectValue placeholder="Select a group..." />
         </UiSelectTrigger>
         <UiSelectContent>
-          <UiSelectItem v-for="g in groups" :key="g.$id" :value="g.$id">
+          <UiSelectItem v-for="g in groups" :key="g.id" :value="g.id">
             {{ g.name }}
           </UiSelectItem>
         </UiSelectContent>
@@ -282,7 +282,7 @@
               >
                 <div
                   v-for="m in members"
-                  :key="m.$id"
+                  :key="m.id"
                   class="flex items-center justify-between p-3 rounded-xl bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-900 dark:hover:bg-neutral-900/70 transition-colors group"
                 >
                   <div class="flex items-center gap-3">
@@ -302,7 +302,7 @@
                     <UiSelect
                       v-if="canManageRoles && m.role !== 'OWNER'"
                       :model-value="m.role"
-                      :disabled="memberBusy === m.$id"
+                      :disabled="memberBusy === m.id"
                       @update:model-value="updateMemberRole(m, $event)"
                     >
                       <UiSelectTrigger class="h-8 w-28 text-xs">
@@ -317,11 +317,11 @@
                     <UiBadge v-else variant="secondary">{{ formatRole(m.role) }}</UiBadge>
                     <button
                       v-if="canManageMembers && m.role !== 'OWNER'"
-                      @click="removeMember(m.$id)"
+                      @click="removeMember(m.id)"
                       class="text-red-600 hover:text-red-700 transition-opacity font-medium text-sm"
-                      :disabled="memberBusy === m.$id"
+                      :disabled="memberBusy === m.id"
                     >
-                      {{ memberBusy === m.$id ? 'Removing…' : 'Remove' }}
+                      {{ memberBusy === m.id ? 'Removing…' : 'Remove' }}
                     </button>
                   </div>
                 </div>
@@ -454,7 +454,7 @@
               >
                 <div
                   v-for="t in tags"
-                  :key="t.$id"
+                  :key="t.id"
                   class="flex items-center gap-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-3 hover:border-neutral-300 dark:hover:border-neutral-600 transition-colors group"
                 >
                   <label
@@ -475,7 +475,7 @@
                   </label>
 
                   <input
-                    :id="`tag-name-${t.$id}`"
+                    :id="`tag-name-${t.id}`"
                     v-model="t.name"
                     class="flex-1 decoration-none bg-transparent border-0 border-dashed border-neutral-300 focus:border-solid focus:ring-0 focus:outline-none text-neutral-900 dark:text-white"
                     @change="updateTag(t)"
@@ -484,9 +484,9 @@
 
                   <button
                     v-if="canEditContent"
-                    @click="removeTag(t.$id)"
+                    @click="removeTag(t.id)"
                     class="text-red-600 hover:text-red-700 transition-opacity"
-                    :disabled="tagBusy === t.$id"
+                    :disabled="tagBusy === t.id"
                   >
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
@@ -594,7 +594,7 @@ const router = useRouter()
 const groups = computed(() => groupStore.items)
 const tags = computed(() => tagsStore.items)
 const selectedGroup = computed(() =>
-  groupStore.items.find((group) => group.$id === selectedGroupId.value),
+  groupStore.items.find((group) => group.id === selectedGroupId.value),
 )
 const canEditGroup = computed(() => selectedGroup.value?.role === 'OWNER')
 const canEditContent = computed(() => selectedGroup.value?.role !== 'VIEWER')
@@ -623,7 +623,7 @@ const loadGroup = async (id) => {
   try {
     error.value = ''
     savedAt.value = ''
-    const g = groupStore.items.find((x) => x.$id === id)
+    const g = groupStore.items.find((x) => x.id === id)
     if (!g) return
     groupForm.value = { name: g.name, color: g.color || '#4f46e5' }
     original.value = { ...groupForm.value }
@@ -716,10 +716,10 @@ const removeMember = async (id) => {
 }
 
 const updateMemberRole = async (member, role) => {
-  memberBusy.value = member.$id
+  memberBusy.value = member.id
   memberError.value = ''
   try {
-    const updated = await groupStore.updateMemberRole(selectedGroupId.value, member.$id, role)
+    const updated = await groupStore.updateMemberRole(selectedGroupId.value, member.id, role)
     Object.assign(member, updated)
     toastStore.success(`${member.name || member.email}'s role is now ${formatRole(role)}.`)
   } catch (e) {
@@ -766,10 +766,10 @@ const addTag = async () => {
 }
 
 const updateTag = async (tag) => {
-  tagBusy.value = tag.$id
+  tagBusy.value = tag.id
   tagError.value = ''
   try {
-    await tagsStore.updateTag(tag.$id, { name: tag.name, color: tag.color })
+    await tagsStore.updateTag(tag.id, { name: tag.name, color: tag.color })
     toastStore.success('Tag updated.')
   } catch (e) {
     console.error(e)
@@ -819,7 +819,7 @@ const confirmDeleteGroup = async () => {
 onMounted(async () => {
   await groupStore.fetchAll()
   if (groups.value.length && !selectedGroupId.value) {
-    selectedGroupId.value = groups.value[0].$id
+    selectedGroupId.value = groups.value[0].id
     await loadGroup(selectedGroupId.value)
   }
 })

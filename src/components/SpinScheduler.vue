@@ -570,7 +570,7 @@ async function createAllEvents() {
         people: [],
         tagId: null,
         groupId: props.groupId,
-        userId: authStore.user.$id,
+        userId: authStore.user.id,
       })
     }
     emit('done')

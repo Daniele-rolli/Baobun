@@ -29,7 +29,7 @@ const sanitizeFilePart = (value = 'calendar') =>
 
 const normalizeTagId = (tagId) => {
   if (Array.isArray(tagId)) return tagId[0]
-  if (typeof tagId === 'object' && tagId?.$id) return tagId.$id
+  if (typeof tagId === 'object' && tagId?.id) return tagId.id
   return tagId
 }
 
@@ -38,7 +38,7 @@ const normalizePeople = (people) => {
   return people
     .map((person) => {
       if (typeof person === 'string') return person
-      if (person?.$id) return person.$id
+      if (person?.id) return person.id
       return ''
     })
     .filter(Boolean)
@@ -96,7 +96,7 @@ export const buildIcsContent = ({
     if (!startDate) return
 
     const endDate = toDate(event.end) || new Date(startDate.getTime() + 60 * 60 * 1000)
-    const uidBase = event.$id || `${startDate.getTime()}-${index}`
+    const uidBase = event.id || `${startDate.getTime()}-${index}`
     const summary = event.title || 'Event'
     const description = buildEventDetailsText(event, { tagNameById, memberNameById })
 

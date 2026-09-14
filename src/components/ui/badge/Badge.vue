@@ -2,7 +2,7 @@
 import { reactiveOmit } from '@vueuse/core'
 import { Primitive } from 'reka-ui'
 import { cn } from '@/lib/utils'
-import { badgeVariants } from '.'
+import { badgeVariants } from './variants'
 
 const props = defineProps({
   asChild: { type: Boolean, required: false },

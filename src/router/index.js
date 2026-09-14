@@ -33,6 +33,11 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/settings/migration',
+    component: () => import('@/views/Settings/Migration.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/group/:id',
     component: () => import('../views/Group.vue'),
     meta: { requiresAuth: true },

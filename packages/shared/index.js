@@ -1,4 +1,3 @@
-export { getLiveFeedFileId, normalizeGroupId, stableHash } from './feed-key.js'
 export {
   buildIcsContent,
   buildCalendarFileName,
@@ -16,5 +15,6 @@ export const ERROR_CODES = {
   validation: 'validation_error',
   conflict: 'conflict',
   passwordSetRequired: 'password_set_required',
+  rateLimited: 'rate_limited',
   internal: 'internal',
 }

@@ -59,7 +59,7 @@
               <UiSelectValue placeholder="Select people..." />
             </UiSelectTrigger>
             <UiSelectContent>
-              <UiSelectItem v-for="m in members" :key="m.$id" :value="m.$id" :text-value="m.name">
+              <UiSelectItem v-for="m in members" :key="m.id" :value="m.id" :text-value="m.name">
                 <img
                   :src="
                     m.avatarUrl ||
@@ -84,8 +84,8 @@
             <UiSelectContent>
               <UiSelectItem
                 v-for="t in tagsStore.items"
-                :key="t.$id"
-                :value="t.$id"
+                :key="t.id"
+                :value="t.id"
                 :text-value="t.name"
               >
                 <div
@@ -249,7 +249,7 @@
   </UiDialog>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useEventsStore } from '@/stores/event'
@@ -257,232 +257,203 @@ import { useTagsStore } from '@/stores/tag'
 import { useGroupsStore } from '@/stores/group'
 import { useToastStore } from '@/stores/toast'
 
-export default {
-  props: {
-    groupId: { type: String, required: true },
-    visible: { type: Boolean, default: true },
-    event: { type: Object, default: null },
-    defaultDate: { type: Date, default: null },
-  },
-  emits: ['close', 'event-added', 'event-updated', 'tag-created', 'event-deleted'],
-  setup(props, { emit }) {
-    const authStore = useAuthStore()
-    const eventsStore = useEventsStore()
-    const tagsStore = useTagsStore()
-    const groupStore = useGroupsStore()
-    const toast = useToastStore()
+const props = defineProps({
+  groupId: { type: String, required: true },
+  visible: { type: Boolean, default: true },
+  event: { type: Object, default: null },
+  defaultDate: { type: Date, default: null },
+})
+const emit = defineEmits(['close', 'event-added', 'event-updated', 'tag-created', 'event-deleted'])
+const authStore = useAuthStore()
+const eventsStore = useEventsStore()
+const tagsStore = useTagsStore()
+const groupStore = useGroupsStore()
+const toast = useToastStore()
 
-    const title = ref('')
-    const start = ref(new Date().toISOString().slice(0, 16))
-    const end = ref(new Date(Date.now() + 3600000).toISOString().slice(0, 16))
-    const notes = ref('')
-    const people = ref([])
-    const members = ref([])
-    const tagId = ref('') // single-select
-    const showDeleteConfirm = ref(false)
-    const showCreateTag = ref(false)
-    const newTagName = ref('')
-    const newTagColor = ref('#F87171')
-    const newTagImageFile = ref(null)
-    const previewImage = ref('')
-    const reminder = ref('none')
-    const recurrenceFrequency = ref('none')
-    const recurrenceCount = ref(10)
-    const saving = ref(false)
+const title = ref('')
+const start = ref(new Date().toISOString().slice(0, 16))
+const end = ref(new Date(Date.now() + 3600000).toISOString().slice(0, 16))
+const notes = ref('')
+const people = ref([])
+const members = ref([])
+const tagId = ref('') // single-select
+const showDeleteConfirm = ref(false)
+const showCreateTag = ref(false)
+const newTagName = ref('')
+const newTagColor = ref('#F87171')
+const newTagImageFile = ref(null)
+const previewImage = ref('')
+const reminder = ref('none')
+const recurrenceFrequency = ref('none')
+const recurrenceCount = ref(10)
+const saving = ref(false)
 
-    const handleFileUpload = (e) => {
-      const file = e.target.files[0]
-      if (file) {
-        newTagImageFile.value = file
-        previewImage.value = URL.createObjectURL(file)
-      }
-    }
-
-    const createTag = async () => {
-      const name = newTagName.value?.trim()
-      const color = newTagColor.value
-
-      if (!name || !color) return // stop if empty
-
-      // Pass groupId as first argument
-      let tag
-      try {
-        tag = await tagsStore.createTag(props.groupId, {
-          name,
-          color,
-          imageFile: newTagImageFile.value,
-          icon: null,
-        })
-      } catch (error) {
-        toast.error('Could not create tag', error?.message)
-        return
-      }
-
-      tagId.value = tag.$id
-      emit('tag-created', tag)
-
-      // Reset form & collapse
-      showCreateTag.value = false
-      newTagName.value = ''
-      newTagColor.value = '#F87171'
-      newTagImageFile.value = null
-      previewImage.value = ''
-      toast.success('Tag created')
-    }
-
-    const saveEvent = async () => {
-      if (!title.value || !start.value || !end.value) return
-      const startDate = new Date(start.value)
-      const endDate = new Date(end.value)
-      const safeEndDate = endDate > startDate ? endDate : new Date(startDate.getTime() + 3600000)
-
-      const eventData = {
-        title: title.value,
-        notes: notes.value || '',
-        start: startDate.toISOString(),
-        end: safeEndDate.toISOString(),
-        people: people.value,
-        tagId: tagId.value || '',
-        reminderMinutes: reminder.value === 'none' ? null : Number(reminder.value),
-      }
-      if (!props.event && recurrenceFrequency.value !== 'none') {
-        eventData.recurrence = {
-          frequency: recurrenceFrequency.value,
-          interval: 1,
-          count: Math.min(366, Math.max(2, Number(recurrenceCount.value) || 2)),
-        }
-      }
-      saving.value = true
-      try {
-        if (props.event) {
-          await eventsStore.updateEvent(props.event.$id, eventData)
-          emit('event-updated')
-          toast.success('Event updated')
-        } else {
-          await eventsStore.createEvent({
-            ...eventData,
-            userId: authStore.user.$id,
-            groupId: props.groupId,
-          })
-          emit('event-added')
-          toast.success(
-            recurrenceFrequency.value === 'none' ? 'Event created' : 'Recurring events created',
-          )
-        }
-        emit('close')
-      } catch (error) {
-        toast.error('Could not save event', error?.message)
-      } finally {
-        saving.value = false
-      }
-    }
-
-    const confirmDeleteEvent = async () => {
-      if (!props.event) return
-      showDeleteConfirm.value = false
-      try {
-        await eventsStore.deleteEvent(props.event.$id)
-        emit('event-deleted')
-        emit('close')
-        toast.success('Event deleted')
-      } catch (error) {
-        toast.error('Could not delete event', error?.message)
-      }
-    }
-
-    const formatLocalDateTime = (date) => {
-      const d = new Date(date)
-      const pad = (n) => n.toString().padStart(2, '0')
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-        d.getHours(),
-      )}:${pad(d.getMinutes())}`
-    }
-
-    const resetForm = () => {
-      if (props.event) {
-        title.value = props.event.title
-        start.value = formatLocalDateTime(props.event.start)
-        end.value = formatLocalDateTime(props.event.end)
-        notes.value = props.event.notes
-        people.value = props.event.people || []
-        tagId.value = props.event.tagId || ''
-        reminder.value =
-          props.event.reminderMinutes === null || props.event.reminderMinutes === undefined
-            ? 'none'
-            : String(props.event.reminderMinutes)
-      } else {
-        title.value = ''
-        const base = props.defaultDate ? new Date(props.defaultDate) : new Date()
-        base.setHours(9, 0, 0, 0)
-        const endBase = new Date(base.getTime() + 3600000)
-
-        start.value = formatLocalDateTime(base)
-        end.value = formatLocalDateTime(endBase)
-        notes.value = ''
-        people.value = []
-        tagId.value = ''
-        reminder.value = 'none'
-        recurrenceFrequency.value = 'none'
-        recurrenceCount.value = 10
-      }
-      showCreateTag.value = false
-      showDeleteConfirm.value = false
-    }
-
-    onMounted(async () => {
-      const fetchedMembers = await groupStore.getMembers(props.groupId, authStore.user)
-      members.value = [
-        {
-          $id: 'everyone',
-          name: 'Everyone',
-          avatarUrl: 'https://ui-avatars.com/api/?name=Everyone&background=f1f5f9&color=64748b',
-        },
-        ...fetchedMembers,
-      ]
-      await tagsStore.fetchByGroup(props.groupId)
-      resetForm()
-    })
-
-    watch(
-      () => props.visible,
-      (val) => val && resetForm(),
-    )
-
-    watch(start, (value) => {
-      if (!value) return
-      const startDate = new Date(value)
-      const endDate = new Date(end.value)
-      if (!end.value || !Number.isFinite(endDate.getTime()) || endDate <= startDate) {
-        end.value = formatLocalDateTime(new Date(startDate.getTime() + 3600000))
-      }
-    })
-
-    return {
-      title,
-      start,
-      end,
-      notes,
-      people,
-      members,
-      tagsStore,
-      tagId,
-      showDeleteConfirm,
-      showCreateTag,
-      newTagName,
-      newTagColor,
-      newTagImageFile,
-      previewImage,
-      reminder,
-      recurrenceFrequency,
-      recurrenceCount,
-      saving,
-      handleFileUpload,
-      createTag,
-      saveEvent,
-      confirmDeleteEvent,
-    }
-  },
+const handleFileUpload = (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    newTagImageFile.value = file
+    previewImage.value = URL.createObjectURL(file)
+  }
 }
+
+const createTag = async () => {
+  const name = newTagName.value?.trim()
+  const color = newTagColor.value
+
+  if (!name || !color) return // stop if empty
+
+  // Pass groupId as first argument
+  let tag
+  try {
+    tag = await tagsStore.createTag(props.groupId, {
+      name,
+      color,
+      imageFile: newTagImageFile.value,
+      icon: null,
+    })
+  } catch (error) {
+    toast.error('Could not create tag', error?.message)
+    return
+  }
+
+  tagId.value = tag.id
+  emit('tag-created', tag)
+
+  // Reset form & collapse
+  showCreateTag.value = false
+  newTagName.value = ''
+  newTagColor.value = '#F87171'
+  newTagImageFile.value = null
+  previewImage.value = ''
+  toast.success('Tag created')
+}
+
+const saveEvent = async () => {
+  if (!title.value || !start.value || !end.value) return
+  const startDate = new Date(start.value)
+  const endDate = new Date(end.value)
+  const safeEndDate = endDate > startDate ? endDate : new Date(startDate.getTime() + 3600000)
+
+  const eventData = {
+    title: title.value,
+    notes: notes.value || '',
+    start: startDate.toISOString(),
+    end: safeEndDate.toISOString(),
+    people: people.value,
+    tagId: tagId.value || '',
+    reminderMinutes: reminder.value === 'none' ? null : Number(reminder.value),
+  }
+  if (!props.event && recurrenceFrequency.value !== 'none') {
+    eventData.recurrence = {
+      frequency: recurrenceFrequency.value,
+      interval: 1,
+      count: Math.min(366, Math.max(2, Number(recurrenceCount.value) || 2)),
+    }
+  }
+  saving.value = true
+  try {
+    if (props.event) {
+      await eventsStore.updateEvent(props.event.id, eventData)
+      emit('event-updated')
+      toast.success('Event updated')
+    } else {
+      await eventsStore.createEvent({
+        ...eventData,
+        userId: authStore.user.id,
+        groupId: props.groupId,
+      })
+      emit('event-added')
+      toast.success(
+        recurrenceFrequency.value === 'none' ? 'Event created' : 'Recurring events created',
+      )
+    }
+    emit('close')
+  } catch (error) {
+    toast.error('Could not save event', error?.message)
+  } finally {
+    saving.value = false
+  }
+}
+
+const confirmDeleteEvent = async () => {
+  if (!props.event) return
+  showDeleteConfirm.value = false
+  try {
+    await eventsStore.deleteEvent(props.event.id)
+    emit('event-deleted')
+    emit('close')
+    toast.success('Event deleted')
+  } catch (error) {
+    toast.error('Could not delete event', error?.message)
+  }
+}
+
+const formatLocalDateTime = (date) => {
+  const d = new Date(date)
+  const pad = (n) => n.toString().padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+    d.getHours(),
+  )}:${pad(d.getMinutes())}`
+}
+
+const resetForm = () => {
+  if (props.event) {
+    title.value = props.event.title
+    start.value = formatLocalDateTime(props.event.start)
+    end.value = formatLocalDateTime(props.event.end)
+    notes.value = props.event.notes
+    people.value = props.event.people || []
+    tagId.value = props.event.tagId || ''
+    reminder.value =
+      props.event.reminderMinutes === null || props.event.reminderMinutes === undefined
+        ? 'none'
+        : String(props.event.reminderMinutes)
+  } else {
+    title.value = ''
+    const base = props.defaultDate ? new Date(props.defaultDate) : new Date()
+    base.setHours(9, 0, 0, 0)
+    const endBase = new Date(base.getTime() + 3600000)
+
+    start.value = formatLocalDateTime(base)
+    end.value = formatLocalDateTime(endBase)
+    notes.value = ''
+    people.value = []
+    tagId.value = ''
+    reminder.value = 'none'
+    recurrenceFrequency.value = 'none'
+    recurrenceCount.value = 10
+  }
+  showCreateTag.value = false
+  showDeleteConfirm.value = false
+}
+
+onMounted(async () => {
+  const fetchedMembers = await groupStore.getMembers(props.groupId, authStore.user)
+  members.value = [
+    {
+      id: 'everyone',
+      name: 'Everyone',
+      avatarUrl: 'https://ui-avatars.com/api/?name=Everyone&background=f1f5f9&color=64748b',
+    },
+    ...fetchedMembers,
+  ]
+  await tagsStore.fetchByGroup(props.groupId)
+  resetForm()
+})
+
+watch(
+  () => props.visible,
+  (val) => val && resetForm(),
+)
+
+watch(start, (value) => {
+  if (!value) return
+  const startDate = new Date(value)
+  const endDate = new Date(end.value)
+  if (!end.value || !Number.isFinite(endDate.getTime()) || endDate <= startDate) {
+    end.value = formatLocalDateTime(new Date(startDate.getTime() + 3600000))
+  }
+})
 </script>
 
 <!--

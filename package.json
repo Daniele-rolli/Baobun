@@ -22,17 +22,13 @@
     "e2e": "playwright test"
   },
   "dependencies": {
-    "@lucide/vue": "^1.28.0",
     "@tailwindcss/vite": "^4.1.11",
     "@vueuse/core": "^14.4.0",
-    "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "dlx": "^0.2.1",
     "lucide-vue-next": "^0.539.0",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.5.0",
-    "postcss": "^8.5.6",
     "reka-ui": "^2.10.1",
     "shadcn-vue": "^2.8.1",
     "tailwind-merge": "^3.6.0",

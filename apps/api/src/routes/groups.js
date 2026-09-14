@@ -2,7 +2,9 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { prisma } from '../db.js'
 import { requireAuth, requireMember, requireOwner, requireGroupRole } from '../middleware/auth.js'
-import { notFound, conflict, validationError } from '../errors.js'
+import { joinLimiter } from '../middleware/rateLimit.js'
+import { notFound, conflict, forbidden, validationError } from '../errors.js'
+import { config } from '../config.js'
 import { avatarUrlFor } from './auth.js'
 import { eventToJson, eventSchema } from './events.js'
 import { tagToJson } from './tags.js'
@@ -17,7 +19,7 @@ const generateInviteCode = () => {
 }
 
 export const groupToJson = (group, memberCount = 0, role = null) => ({
-  $id: group.id,
+  id: group.id,
   name: group.name,
   color: group.color,
   inviteCode: group.inviteCode,
@@ -27,7 +29,7 @@ export const groupToJson = (group, memberCount = 0, role = null) => ({
 })
 
 const memberToJson = (m) => ({
-  $id: m.id,
+  id: m.id,
   email: m.email,
   name: m.name,
   avatarUrl: m.avatarUrl ?? null,
@@ -83,9 +85,21 @@ groups.post('/', async (c) => {
   return c.json({ group: groupToJson(group, 1, 'OWNER') }, 201)
 })
 
-groups.get('/join', async (c) => {
+groups.post('/join', joinLimiter, async (c) => {
   const user = c.get('user')
-  const code = String(c.req.query('inviteCode') || '')
+  // CSRF guard: browsers always send Origin on fetch POST (or Referer as
+  // fallback); reject cross-site values. Both absent = non-browser client.
+  const allowed = config.publicUrl
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean)
+  const sameSite = (v) => !v || allowed.some((o) => v === o || v.startsWith(`${o}/`))
+  const origin = c.req.header('origin')
+  if (!sameSite(origin) || (!origin && !sameSite(c.req.header('referer')))) {
+    throw forbidden('Cross-site request blocked.')
+  }
+  const body = await c.req.json().catch(() => ({}))
+  const code = String(body.inviteCode || '')
     .trim()
     .toUpperCase()
   if (!code) throw validationError('Invite code is required.')

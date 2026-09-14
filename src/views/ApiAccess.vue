@@ -53,7 +53,7 @@
       <UiCardContent>
         <div v-if="loading" class="py-8 text-center text-sm text-muted-foreground">Loading…</div>
         <div v-else-if="tokens.length" class="divide-y">
-          <div v-for="token in tokens" :key="token.$id" class="flex items-center gap-3 py-3">
+          <div v-for="token in tokens" :key="token.id" class="flex items-center gap-3 py-3">
             <KeyRound class="h-5 w-5 text-muted-foreground" />
             <div class="min-w-0 flex-1">
               <p class="truncate text-sm font-medium">{{ token.name }}</p>
@@ -137,8 +137,8 @@ const createToken = async () => {
 const revokeToken = async (token) => {
   busy.value = true
   try {
-    await apiFetch(`/api/tokens/${token.$id}`, { method: 'DELETE' })
-    tokens.value = tokens.value.filter((item) => item.$id !== token.$id)
+    await apiFetch(`/api/tokens/${token.id}`, { method: 'DELETE' })
+    tokens.value = tokens.value.filter((item) => item.id !== token.id)
     toast.success('API token revoked')
   } catch (error) {
     toast.error('Could not revoke API token', error?.message)

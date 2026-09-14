@@ -5,7 +5,7 @@ import { requireAuth, ROLE_LEVEL } from '../middleware/auth.js'
 import { notFound, forbidden, validationError } from '../errors.js'
 
 export const eventToJson = (event) => ({
-  $id: event.id,
+  id: event.id,
   groupId: event.groupId,
   title: event.title,
   start: event.start.toISOString(),
@@ -83,7 +83,8 @@ events.patch('/:id', requireEventMember, async (c) => {
   if (typeof body.notes === 'string') data.notes = body.notes
   if (typeof body.start === 'string' && body.start) {
     data.start = new Date(body.start)
-    if (Number.isNaN(data.start.getTime())) throw validationError('Event start must be a valid date.')
+    if (Number.isNaN(data.start.getTime()))
+      throw validationError('Event start must be a valid date.')
     data.remindedAt = null
   }
   if (typeof body.end === 'string' && body.end) {

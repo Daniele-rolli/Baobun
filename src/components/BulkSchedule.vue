@@ -48,8 +48,8 @@
           <UiSelectContent>
             <UiSelectItem
               v-for="item in tagsStore.items"
-              :key="item.$id"
-              :value="item.$id"
+              :key="item.id"
+              :value="item.id"
               :text-value="item.name"
             >
               <span class="flex items-center gap-2">
@@ -104,157 +104,139 @@
   </UiDialog>
 </template>
 
-<script>
+<script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useEventsStore } from '@/stores/event'
 import { useAuthStore } from '@/stores/auth'
 import { useTagsStore } from '@/stores/tag'
 import { useGroupsStore } from '@/stores/group'
 
-export default {
-  props: { groupId: { type: String, required: true } },
-  data() {
-    return { showModal: true }
-  },
-  emits: ['close', 'event-added'],
-  setup(props, { emit }) {
-    const tagsStore = useTagsStore()
-    const groupStore = useGroupsStore()
-    const eventsStore = useEventsStore()
-    const authStore = useAuthStore()
+const props = defineProps({ groupId: { type: String, required: true } })
+const emit = defineEmits(['close', 'event-added'])
+const showModal = ref(true)
+const tagsStore = useTagsStore()
+const groupStore = useGroupsStore()
+const eventsStore = useEventsStore()
+const authStore = useAuthStore()
 
-    const title = ref('')
-    const toLocalDateInputValue = (value = new Date()) => {
-      const d = value instanceof Date ? value : new Date(value)
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-        d.getDate(),
-      ).padStart(2, '0')}`
-    }
-    const parseLocalDate = (yyyyMmDd) => {
-      const [y, m, d] = String(yyyyMmDd).split('-').map(Number)
-      return new Date(y, (m || 1) - 1, d || 1)
-    }
-    const start = ref(toLocalDateInputValue())
-    const groupSize = ref(1)
-    const notes = ref('')
-    const tagId = ref('')
-    const members = ref([])
-    const selectedDays = reactive({
-      Monday: false,
-      Tuesday: false,
-      Wednesday: false,
-      Thursday: false,
-      Friday: false,
-      Saturday: false,
-      Sunday: false,
-    })
-    const daysOfWeek = Object.keys(selectedDays)
-
-    const toggleDay = (day) => (selectedDays[day] = !selectedDays[day])
-
-    const shuffleArray = (array) =>
-      array
-        .map((v) => ({ v, sort: Math.random() }))
-        .sort((a, b) => a.sort - b.sort)
-        .map((o) => o.v)
-
-    const getNextEventDates = (startDate, weekdays, count) => {
-      const result = []
-      const dayMap = {
-        Sunday: 0,
-        Monday: 1,
-        Tuesday: 2,
-        Wednesday: 3,
-        Thursday: 4,
-        Friday: 5,
-        Saturday: 6,
-      }
-      const targetDays = weekdays.map((d) => dayMap[d])
-      let currentDate = parseLocalDate(startDate)
-
-      while (result.length < count) {
-        const dayOfWeek = currentDate.getDay()
-        if (targetDays.includes(dayOfWeek)) {
-          result.push(new Date(currentDate))
-        }
-        currentDate.setDate(currentDate.getDate() + 1)
-      }
-
-      return result
-    }
-
-    async function handleBulkSchedule() {
-      const normalizedGroupSize = Math.floor(Number(groupSize.value))
-      if (
-        !title.value ||
-        !start.value ||
-        !Number.isFinite(normalizedGroupSize) ||
-        normalizedGroupSize < 1
-      ) {
-        alert('Set a valid max people per event (minimum 1)')
-        return
-      }
-
-      const chosenDays = Object.keys(selectedDays).filter((d) => selectedDays[d])
-      if (!chosenDays.length) {
-        alert('Select at least one day')
-        return
-      }
-
-      const shuffledPeople = shuffleArray(members.value)
-      const totalFullGroups = Math.floor(shuffledPeople.length / normalizedGroupSize)
-      const remainder = shuffledPeople.length % normalizedGroupSize
-      const totalEvents = remainder > 0 ? totalFullGroups + 1 : totalFullGroups
-
-      const eventDates = getNextEventDates(start.value, chosenDays, totalEvents)
-
-      let startIndex = 0
-      for (let i = 0; i < totalEvents; i++) {
-        let size = normalizedGroupSize
-        if (i === totalEvents - 1 && remainder > 0) size = remainder
-        const assigned = shuffledPeople.slice(startIndex, startIndex + size)
-        startIndex += size
-
-        if (!assigned.length) continue
-
-        const eventDate = eventDates[i] || eventDates[eventDates.length - 1]
-        const startTime = new Date(eventDate)
-        const endTime = new Date(startTime.getTime() + 60 * 60 * 1000)
-
-        await eventsStore.createEvent({
-          title: `${title.value} #${i + 1}`,
-          notes: notes.value || '',
-          start: startTime.toISOString(),
-          end: endTime.toISOString(),
-          people: assigned.map((p) => p.$id),
-          tagId: tagId.value,
-          groupId: props.groupId,
-          userId: authStore.user.$id,
-        })
-      }
-
-      emit('close')
-    }
-
-    onMounted(async () => {
-      if (!props.groupId) return
-      await tagsStore.fetchByGroup(props.groupId)
-      members.value = await groupStore.getMembers(props.groupId, authStore.user)
-    })
-
-    return {
-      start,
-      title,
-      groupSize,
-      notes,
-      tagId,
-      members,
-      selectedDays,
-      daysOfWeek,
-      toggleDay,
-      tagsStore,
-      handleBulkSchedule,
-    }
-  },
+const title = ref('')
+const toLocalDateInputValue = (value = new Date()) => {
+  const d = value instanceof Date ? value : new Date(value)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+    d.getDate(),
+  ).padStart(2, '0')}`
 }
+const parseLocalDate = (yyyyMmDd) => {
+  const [y, m, d] = String(yyyyMmDd).split('-').map(Number)
+  return new Date(y, (m || 1) - 1, d || 1)
+}
+const start = ref(toLocalDateInputValue())
+const groupSize = ref(1)
+const notes = ref('')
+const tagId = ref('')
+const members = ref([])
+const selectedDays = reactive({
+  Monday: false,
+  Tuesday: false,
+  Wednesday: false,
+  Thursday: false,
+  Friday: false,
+  Saturday: false,
+  Sunday: false,
+})
+const daysOfWeek = Object.keys(selectedDays)
+
+const toggleDay = (day) => (selectedDays[day] = !selectedDays[day])
+
+const shuffleArray = (array) =>
+  array
+    .map((v) => ({ v, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map((o) => o.v)
+
+const getNextEventDates = (startDate, weekdays, count) => {
+  const result = []
+  const dayMap = {
+    Sunday: 0,
+    Monday: 1,
+    Tuesday: 2,
+    Wednesday: 3,
+    Thursday: 4,
+    Friday: 5,
+    Saturday: 6,
+  }
+  const targetDays = weekdays.map((d) => dayMap[d])
+  let currentDate = parseLocalDate(startDate)
+
+  while (result.length < count) {
+    const dayOfWeek = currentDate.getDay()
+    if (targetDays.includes(dayOfWeek)) {
+      result.push(new Date(currentDate))
+    }
+    currentDate.setDate(currentDate.getDate() + 1)
+  }
+
+  return result
+}
+
+async function handleBulkSchedule() {
+  const normalizedGroupSize = Math.floor(Number(groupSize.value))
+  if (
+    !title.value ||
+    !start.value ||
+    !Number.isFinite(normalizedGroupSize) ||
+    normalizedGroupSize < 1
+  ) {
+    alert('Set a valid max people per event (minimum 1)')
+    return
+  }
+
+  const chosenDays = Object.keys(selectedDays).filter((d) => selectedDays[d])
+  if (!chosenDays.length) {
+    alert('Select at least one day')
+    return
+  }
+
+  const shuffledPeople = shuffleArray(members.value)
+  const totalFullGroups = Math.floor(shuffledPeople.length / normalizedGroupSize)
+  const remainder = shuffledPeople.length % normalizedGroupSize
+  const totalEvents = remainder > 0 ? totalFullGroups + 1 : totalFullGroups
+
+  const eventDates = getNextEventDates(start.value, chosenDays, totalEvents)
+
+  const payloads = []
+  let startIndex = 0
+  for (let i = 0; i < totalEvents; i++) {
+    let size = normalizedGroupSize
+    if (i === totalEvents - 1 && remainder > 0) size = remainder
+    const assigned = shuffledPeople.slice(startIndex, startIndex + size)
+    startIndex += size
+
+    if (!assigned.length) continue
+
+    const eventDate = eventDates[i] || eventDates[eventDates.length - 1]
+    const startTime = new Date(eventDate)
+    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000)
+
+    payloads.push({
+      title: `${title.value} #${i + 1}`,
+      notes: notes.value || '',
+      start: startTime.toISOString(),
+      end: endTime.toISOString(),
+      people: assigned.map((p) => p.id),
+      tagId: tagId.value,
+      groupId: props.groupId,
+      userId: authStore.user.id,
+    })
+  }
+  await Promise.all(payloads.map((p) => eventsStore.createEvent(p)))
+
+  emit('close')
+}
+
+onMounted(async () => {
+  if (!props.groupId) return
+  await tagsStore.fetchByGroup(props.groupId)
+  members.value = await groupStore.getMembers(props.groupId, authStore.user)
+})
 </script>

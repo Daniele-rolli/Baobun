@@ -209,7 +209,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, reactive } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { X, ChevronLeft } from 'lucide-vue-next'
@@ -218,101 +218,82 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-export default {
-  components: { X, ChevronLeft, Card, CardContent, Button, Input, Label },
-  name: 'Profile',
-  setup() {
-    const authStore = useAuthStore()
-    const avatarInput = ref(null)
+const authStore = useAuthStore()
+const avatarInput = ref(null)
 
-    const form = reactive({
-      name: authStore.user?.name || '',
-      email: authStore.user?.email || '',
-      currentPassword: '',
-      password: '',
-      confirmPassword: '',
-    })
+const form = reactive({
+  name: authStore.user?.name || '',
+  email: authStore.user?.email || '',
+  currentPassword: '',
+  password: '',
+  confirmPassword: '',
+})
 
-    const previewAvatar = ref(null)
-    const avatarFile = ref(null)
-    const avatarUrl = ref(authStore.user?.avatarUrl || null)
-    const removeAvatarFlag = ref(false)
-    const message = reactive({ text: '', type: '' })
+const previewAvatar = ref(null)
+const avatarFile = ref(null)
+const avatarUrl = ref(authStore.user?.avatarUrl || null)
+const removeAvatarFlag = ref(false)
+const message = reactive({ text: '', type: '' })
 
-    const triggerAvatarUpload = () => avatarInput.value?.click()
+const triggerAvatarUpload = () => avatarInput.value?.click()
 
-    const handleAvatarChange = (event) => {
-      const file = event.target.files[0]
-      if (!file) return
-      if (file.size > 5 * 1024 * 1024) {
-        showMessage('File size must be less than 5MB', 'error')
-        return
-      }
-      avatarFile.value = file
-      previewAvatar.value = URL.createObjectURL(file)
-      removeAvatarFlag.value = false
-      clearMessage()
-    }
+const handleAvatarChange = (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  if (file.size > 5 * 1024 * 1024) {
+    showMessage('File size must be less than 5MB', 'error')
+    return
+  }
+  avatarFile.value = file
+  previewAvatar.value = URL.createObjectURL(file)
+  removeAvatarFlag.value = false
+  clearMessage()
+}
 
-    const removeAvatar = () => {
-      previewAvatar.value = null
-      avatarFile.value = null
-      avatarUrl.value = null
-      removeAvatarFlag.value = true
-      if (avatarInput.value) avatarInput.value.value = ''
-    }
+const removeAvatar = () => {
+  previewAvatar.value = null
+  avatarFile.value = null
+  avatarUrl.value = null
+  removeAvatarFlag.value = true
+  if (avatarInput.value) avatarInput.value.value = ''
+}
 
-    const showMessage = (text, type) => {
-      message.text = text
-      message.type = type
-      setTimeout(clearMessage, 5000)
-    }
-    const clearMessage = () => {
-      message.text = ''
-      message.type = ''
-    }
+const showMessage = (text, type) => {
+  message.text = text
+  message.type = type
+  setTimeout(clearMessage, 5000)
+}
+const clearMessage = () => {
+  message.text = ''
+  message.type = ''
+}
 
-    const submitProfile = async () => {
-      clearMessage()
-      if (form.password && form.password !== form.confirmPassword) {
-        showMessage('Passwords do not match.', 'error')
-        return
-      }
+const submitProfile = async () => {
+  clearMessage()
+  if (form.password && form.password !== form.confirmPassword) {
+    showMessage('Passwords do not match.', 'error')
+    return
+  }
 
-      const { success, error } = await authStore.updateProfile({
-        name: form.name,
-        email: form.email,
-        password: form.password || null,
-        currentPassword: form.currentPassword || null,
-        avatarFile: avatarFile.value,
-        removeAvatar: removeAvatarFlag.value,
-      })
+  const { success, error } = await authStore.updateProfile({
+    name: form.name,
+    email: form.email,
+    password: form.password || null,
+    currentPassword: form.currentPassword || null,
+    avatarFile: avatarFile.value,
+    removeAvatar: removeAvatarFlag.value,
+  })
 
-      if (success) {
-        showMessage('Profile updated successfully!', 'success')
-        form.currentPassword = ''
-        form.password = ''
-        form.confirmPassword = ''
-        previewAvatar.value = null
-        avatarFile.value = null
-        removeAvatarFlag.value = false
-      } else {
-        showMessage(error || 'Failed to update profile.', 'error')
-      }
-    }
-
-    return {
-      authStore,
-      form,
-      previewAvatar,
-      avatarUrl,
-      avatarInput,
-      triggerAvatarUpload,
-      handleAvatarChange,
-      removeAvatar,
-      submitProfile,
-      message,
-    }
-  },
+  if (success) {
+    showMessage('Profile updated successfully!', 'success')
+    form.currentPassword = ''
+    form.password = ''
+    form.confirmPassword = ''
+    previewAvatar.value = null
+    avatarFile.value = null
+    removeAvatarFlag.value = false
+  } else {
+    showMessage(error || 'Failed to update profile.', 'error')
+  }
 }
 </script>

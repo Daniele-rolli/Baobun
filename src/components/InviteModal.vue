@@ -15,34 +15,28 @@
 
       <UiDialogFooter>
         <UiButton variant="outline" class="flex-1" @click="$emit('close')"> Close </UiButton>
-        <UiButton class="flex-1" @click="copyLink"> Copy </UiButton>
+        <UiButton class="flex-1" @click="copyLink"> {{ copied ? 'Copied' : 'Copy' }} </UiButton>
       </UiDialogFooter>
     </UiDialogContent>
   </UiDialog>
 </template>
 
-<script>
+<script setup>
+import { computed, ref } from 'vue'
 import { Share2 } from 'lucide-vue-next'
 
-export default {
-  components: { Share2 },
-  props: ['inviteCode'],
-  emits: ['close'],
-  data() {
-    return {
-      showModal: true,
-    }
-  },
-  computed: {
-    inviteLink() {
-      return `${window.location.origin}/join/${this.inviteCode}`
-    },
-  },
-  methods: {
-    copyLink() {
-      navigator.clipboard.writeText(this.inviteLink)
-      alert('Link copied!')
-    },
-  },
+const props = defineProps(['inviteCode'])
+defineEmits(['close'])
+
+const showModal = ref(true)
+const copied = ref(false)
+const inviteLink = computed(() => `${window.location.origin}/join/${props.inviteCode}`)
+
+const copyLink = async () => {
+  await navigator.clipboard.writeText(inviteLink.value)
+  copied.value = true
+  setTimeout(() => {
+    copied.value = false
+  }, 2000)
 }
 </script>

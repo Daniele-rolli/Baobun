@@ -23,9 +23,9 @@ beforeAll(async () => {
   })
   cookie = reg.headers.get('set-cookie') || ''
   const { user } = await (await req('/api/auth/me')).json()
-  userId = user.$id
+  userId = user.id
   const create = await req('/api/groups', { method: 'POST', body: { name: 'FeedG' } })
-  groupId = (await create.json()).group.$id
+  groupId = (await create.json()).group.id
   await req(`/api/groups/${groupId}/events`, {
     method: 'POST',
     body: {
@@ -38,13 +38,14 @@ beforeAll(async () => {
 })
 
 describe('calendar feeds', () => {
-  it('publishes and reads a feed', async () => {
+  it('publishes and reads a feed by unguessable token', async () => {
     const put = await req(`/api/calendar-feeds/${groupId}/${userId}.ics`, { method: 'PUT' })
     expect(put.status).toBe(200)
-    const { webcalUrl } = await put.json()
+    const { httpsUrl, webcalUrl } = await put.json()
     expect(webcalUrl).toMatch(/^webcal:\/\//)
+    expect(httpsUrl).toMatch(/\/api\/calendar-feeds\/public\/[0-9a-f]{32}\.ics$/)
 
-    const get = await app.request(`/api/calendar-feeds/${groupId}/${userId}.ics`)
+    const get = await app.request(new URL(httpsUrl).pathname)
     expect(get.status).toBe(200)
     expect(get.headers.get('content-type')).toContain('text/calendar')
     const body = await get.text()
@@ -52,8 +53,22 @@ describe('calendar feeds', () => {
     expect(body).toContain('Feed event')
   })
 
-  it('404s for a missing feed', async () => {
-    const get = await app.request('/api/calendar-feeds/nonexistent/nobody.ics')
+  it('re-publishing rotates the token and kills the old URL', async () => {
+    const first = await (
+      await req(`/api/calendar-feeds/${groupId}/${userId}.ics`, { method: 'PUT' })
+    ).json()
+    const second = await (
+      await req(`/api/calendar-feeds/${groupId}/${userId}.ics`, { method: 'PUT' })
+    ).json()
+    expect(second.httpsUrl).not.toBe(first.httpsUrl)
+    expect(await (await app.request(new URL(first.httpsUrl).pathname)).status).toBe(404)
+    expect(await (await app.request(new URL(second.httpsUrl).pathname)).status).toBe(200)
+  })
+
+  it('404s for unknown tokens and legacy deterministic keys', async () => {
+    const get = await app.request('/api/calendar-feeds/public/00000000000000000000000000000000.ics')
     expect(get.status).toBe(404)
+    const legacy = await app.request(`/api/calendar-feeds/${groupId}/${userId}.ics`)
+    expect(legacy.status).toBe(404)
   })
 })

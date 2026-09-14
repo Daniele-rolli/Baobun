@@ -39,17 +39,17 @@
       <div class="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
         <button
           v-for="member in members"
-          :key="member.$id"
+          :key="member.id"
           class="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors"
           :class="
-            selectedUserIdLocal === member.$id
+            selectedUserIdLocal === member.id
               ? 'bg-rose-500 text-white border-rose-500'
               : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:border-rose-300'
           "
-          @click="selectedUserIdLocal = member.$id"
+          @click="selectedUserIdLocal = member.id"
         >
           <img
-            v-if="member.avatarUrl && member.$id !== 'everyone'"
+            v-if="member.avatarUrl && member.id !== 'everyone'"
             :src="member.avatarUrl"
             :alt="member.name"
             class="w-4 h-4 rounded-full object-cover"
@@ -77,10 +77,10 @@
     >
       <button
         v-for="event in filteredEvents"
-        :key="event.$id"
+        :key="event.id"
         class="w-full flex items-center gap-3 p-3 rounded-xl cursor-pointer text-left transition-all active:scale-[0.98]"
         :class="{
-          'ring-2 ring-rose-500 ring-inset': selectionMode && isEventSelected(event.$id),
+          'ring-2 ring-rose-500 ring-inset': selectionMode && isEventSelected(event.id),
         }"
         :style="{ background: getTagColor(event.tagId) }"
         @click="handleEventClick(event)"
@@ -89,7 +89,7 @@
           v-if="selectionMode"
           class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-sm border text-[10px] font-bold"
           :class="
-            isEventSelected(event.$id)
+            isEventSelected(event.id)
               ? 'border-rose-500 bg-rose-500 text-white'
               : 'border-neutral-300 dark:border-neutral-600 text-transparent'
           "
@@ -143,7 +143,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useGroupsStore } from '@/stores/group'
 import { useAuthStore } from '@/stores/auth'
@@ -164,221 +164,180 @@ import {
   DownloadIcon,
 } from 'lucide-vue-next'
 
-export default {
-  props: {
-    events: { type: Array, required: true },
-    tags: { type: Array, required: true },
-    currentUserId: { type: String, default: null },
-    selectedDate: { type: [Date, String], default: null },
-    groupId: { type: String, required: true },
-    compact: { type: Boolean, default: false },
-  },
-  components: {
-    CheckIcon,
-    SearchIcon,
-    ChevronRightIcon,
-    CalendarIcon,
-    DownloadIcon,
-  },
-  emits: ['event-clicked', 'update:selectedUserId'],
-  setup(props, { emit }) {
-    const authStore = useAuthStore()
-    const groupStore = useGroupsStore()
-    const preferencesStore = usePreferencesStore()
+const props = defineProps({
+  events: { type: Array, required: true },
+  tags: { type: Array, required: true },
+  currentUserId: { type: String, default: null },
+  selectedDate: { type: [Date, String], default: null },
+  groupId: { type: String, required: true },
+  compact: { type: Boolean, default: false },
+})
+const emit = defineEmits(['event-clicked', 'update:selectedUserId'])
+const authStore = useAuthStore()
+const groupStore = useGroupsStore()
+const preferencesStore = usePreferencesStore()
 
-    const search = ref('')
-    const selectedUserIdLocal = ref('everyone')
-    const selectionMode = ref(false)
-    const selectedEventIds = ref([])
-    const members = ref([])
-    const brokenIcons = reactive(new Set())
+const search = ref('')
+const selectedUserIdLocal = ref('everyone')
+const selectionMode = ref(false)
+const selectedEventIds = ref([])
+const members = ref([])
+const brokenIcons = reactive(new Set())
 
-    onMounted(async () => {
-      const fetchedMembers = await groupStore.getMembers(props.groupId, authStore.user)
-      members.value = [
-        {
-          $id: 'everyone',
-          name: 'Everyone',
-          avatarUrl: null,
-        },
-        ...fetchedMembers,
-      ]
+onMounted(async () => {
+  const fetchedMembers = await groupStore.getMembers(props.groupId, authStore.user)
+  members.value = [
+    {
+      id: 'everyone',
+      name: 'Everyone',
+      avatarUrl: null,
+    },
+    ...fetchedMembers,
+  ]
+})
+
+const tagsMap = computed(() => {
+  return props.tags.reduce((map, tag) => {
+    map[tag.id] = tag
+    return map
+  }, {})
+})
+
+const normalizePeopleIds = (people) => {
+  if (!Array.isArray(people)) return []
+  return people
+    .map((person) => {
+      if (typeof person === 'string') return person
+      if (person?.id) return person.id
+      return ''
     })
-
-    const tagsMap = computed(() => {
-      return props.tags.reduce((map, tag) => {
-        map[tag.$id] = tag
-        return map
-      }, {})
-    })
-
-    const normalizePeopleIds = (people) => {
-      if (!Array.isArray(people)) return []
-      return people
-        .map((person) => {
-          if (typeof person === 'string') return person
-          if (person?.$id) return person.$id
-          return ''
-        })
-        .filter(Boolean)
-    }
-
-    const matchingEvents = computed(() => {
-      let result = [...props.events].sort((a, b) => new Date(a.start) - new Date(b.start))
-
-      if (props.selectedDate) {
-        const selectedDateObj = new Date(props.selectedDate)
-        selectedDateObj.setHours(0, 0, 0, 0)
-        result = result.filter((event) => eventEndsOnOrAfterDate(event, selectedDateObj))
-      }
-
-      if (selectedUserIdLocal.value && selectedUserIdLocal.value !== 'everyone') {
-        result = result.filter((e) => {
-          const people = normalizePeopleIds(e.people)
-          if (people.includes('everyone')) return true
-          if (people.includes(selectedUserIdLocal.value)) return true
-          return !people.length && e.userId === selectedUserIdLocal.value
-        })
-      }
-
-      if (search.value.trim()) {
-        const term = search.value.toLowerCase()
-        result = result.filter((e) => e.title.toLowerCase().includes(term))
-      }
-
-      return result
-    })
-
-    const filteredEvents = computed(() => matchingEvents.value.slice(0, props.compact ? 20 : 50))
-
-    const eventListStyle = computed(() =>
-      props.compact ? 'max-height: min(72vh, 38rem)' : 'max-height: min(60vh, 32rem)',
-    )
-
-    watch(selectedUserIdLocal, (val) => emit('update:selectedUserId', val))
-
-    const clearFilters = () => {
-      selectedUserIdLocal.value = 'everyone'
-      search.value = ''
-    }
-
-    const selectedEvents = computed(() =>
-      filteredEvents.value.filter((event) => selectedEventIds.value.includes(event.$id)),
-    )
-
-    const isEventSelected = (eventId) => selectedEventIds.value.includes(eventId)
-
-    const toggleEventSelection = (eventId) => {
-      if (isEventSelected(eventId)) {
-        selectedEventIds.value = selectedEventIds.value.filter((id) => id !== eventId)
-        return
-      }
-      selectedEventIds.value = [...selectedEventIds.value, eventId]
-    }
-
-    const clearSelection = () => {
-      selectionMode.value = false
-      selectedEventIds.value = []
-    }
-
-    const exportSelectedEvents = () => {
-      downloadEventsCsv({
-        events: selectedEvents.value,
-        tags: props.tags,
-        members: members.value,
-        filename: buildEventsCsvFileName(
-          props.selectedDate ? 'events-from-selected-date' : 'events',
-        ),
-        dateFormat: preferencesStore.dateFormat,
-        timeFormat: preferencesStore.timeFormat,
-      })
-      clearSelection()
-    }
-
-    const handleEventClick = (event) => {
-      if (selectionMode.value) {
-        toggleEventSelection(event.$id)
-        return
-      }
-      emit('event-clicked', event)
-    }
-
-    const normalizeTagId = (tagId) => {
-      if (Array.isArray(tagId)) return tagId[0]
-      if (typeof tagId === 'object' && tagId?.$id) return tagId.$id
-      return tagId
-    }
-
-    const getTagLabel = (tagId) => {
-      const id = normalizeTagId(tagId)
-      return tagsMap.value[id]?.name || 'General'
-    }
-
-    const hexToRgba = (hex, alpha) => {
-      if (!hex) return `rgba(107,114,128,${alpha})`
-      let c = hex.replace('#', '')
-      if (c.length === 3)
-        c = c
-          .split('')
-          .map((ch) => ch + ch)
-          .join('')
-      const r = parseInt(c.substring(0, 2), 16)
-      const g = parseInt(c.substring(2, 4), 16)
-      const b = parseInt(c.substring(4, 6), 16)
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`
-    }
-
-    const getTagColor = (tagId) => {
-      const id = normalizeTagId(tagId)
-      const hex = tagsMap.value[id]?.color || '#6B7280'
-      return hexToRgba(hex, 0.15)
-    }
-
-    const getTagIconUrl = (imageId) => {
-      const tag = Object.values(tagsMap.value).find((t) => t.imageId === imageId)
-      return tag?.imageUrl || ''
-    }
-
-    const formatDate = (iso) => {
-      const datePart = formatDateShortByPreference(iso, preferencesStore.dateFormat, true)
-      const timePart = formatTime(iso, preferencesStore.timeFormat, true)
-      return `${datePart} ${timePart}`.trim()
-    }
-
-    const formatEventDateRange = (event) => {
-      if (!event?.start) return ''
-      if (!eventSpansMultipleDates(event)) return formatDate(event.start)
-      return `${formatDate(event.start)} -> ${formatDate(event.end)}`
-    }
-
-    const formatDateShort = (date) =>
-      formatDateShortByPreference(date, preferencesStore.dateFormat, false)
-
-    return {
-      search,
-      members,
-      selectionMode,
-      selectedEvents,
-      selectedUserIdLocal,
-      isEventSelected,
-      handleEventClick,
-      matchingEvents,
-      filteredEvents,
-      eventListStyle,
-      tagsMap,
-      brokenIcons,
-      normalizePeopleIds,
-      normalizeTagId,
-      getTagLabel,
-      getTagColor,
-      getTagIconUrl,
-      formatDate,
-      formatEventDateRange,
-      formatDateShort,
-      clearFilters,
-      exportSelectedEvents,
-      clearSelection,
-    }
-  },
+    .filter(Boolean)
 }
+
+const matchingEvents = computed(() => {
+  let result = [...props.events].sort((a, b) => new Date(a.start) - new Date(b.start))
+
+  if (props.selectedDate) {
+    const selectedDateObj = new Date(props.selectedDate)
+    selectedDateObj.setHours(0, 0, 0, 0)
+    result = result.filter((event) => eventEndsOnOrAfterDate(event, selectedDateObj))
+  }
+
+  if (selectedUserIdLocal.value && selectedUserIdLocal.value !== 'everyone') {
+    result = result.filter((e) => {
+      const people = normalizePeopleIds(e.people)
+      if (people.includes('everyone')) return true
+      if (people.includes(selectedUserIdLocal.value)) return true
+      return !people.length && e.userId === selectedUserIdLocal.value
+    })
+  }
+
+  if (search.value.trim()) {
+    const term = search.value.toLowerCase()
+    result = result.filter((e) => e.title.toLowerCase().includes(term))
+  }
+
+  return result
+})
+
+const filteredEvents = computed(() => matchingEvents.value.slice(0, props.compact ? 20 : 50))
+
+const eventListStyle = computed(() =>
+  props.compact ? 'max-height: min(72vh, 38rem)' : 'max-height: min(60vh, 32rem)',
+)
+
+watch(selectedUserIdLocal, (val) => emit('update:selectedUserId', val))
+
+const clearFilters = () => {
+  selectedUserIdLocal.value = 'everyone'
+  search.value = ''
+}
+
+const selectedEvents = computed(() =>
+  filteredEvents.value.filter((event) => selectedEventIds.value.includes(event.id)),
+)
+
+const isEventSelected = (eventId) => selectedEventIds.value.includes(eventId)
+
+const toggleEventSelection = (eventId) => {
+  if (isEventSelected(eventId)) {
+    selectedEventIds.value = selectedEventIds.value.filter((id) => id !== eventId)
+    return
+  }
+  selectedEventIds.value = [...selectedEventIds.value, eventId]
+}
+
+const clearSelection = () => {
+  selectionMode.value = false
+  selectedEventIds.value = []
+}
+
+const exportSelectedEvents = () => {
+  downloadEventsCsv({
+    events: selectedEvents.value,
+    members: members.value,
+    filename: buildEventsCsvFileName(props.selectedDate ? 'events-from-selected-date' : 'events'),
+    dateFormat: preferencesStore.dateFormat,
+  })
+  clearSelection()
+}
+
+const handleEventClick = (event) => {
+  if (selectionMode.value) {
+    toggleEventSelection(event.id)
+    return
+  }
+  emit('event-clicked', event)
+}
+
+const normalizeTagId = (tagId) => {
+  if (Array.isArray(tagId)) return tagId[0]
+  if (typeof tagId === 'object' && tagId?.id) return tagId.id
+  return tagId
+}
+
+const getTagLabel = (tagId) => {
+  const id = normalizeTagId(tagId)
+  return tagsMap.value[id]?.name || 'General'
+}
+
+const hexToRgba = (hex, alpha) => {
+  if (!hex) return `rgba(107,114,128,${alpha})`
+  let c = hex.replace('#', '')
+  if (c.length === 3)
+    c = c
+      .split('')
+      .map((ch) => ch + ch)
+      .join('')
+  const r = parseInt(c.substring(0, 2), 16)
+  const g = parseInt(c.substring(2, 4), 16)
+  const b = parseInt(c.substring(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+const getTagColor = (tagId) => {
+  const id = normalizeTagId(tagId)
+  const hex = tagsMap.value[id]?.color || '#6B7280'
+  return hexToRgba(hex, 0.15)
+}
+
+const getTagIconUrl = (imageId) => {
+  const tag = Object.values(tagsMap.value).find((t) => t.imageId === imageId)
+  return tag?.imageUrl || ''
+}
+
+const formatDate = (iso) => {
+  const datePart = formatDateShortByPreference(iso, preferencesStore.dateFormat, true)
+  const timePart = formatTime(iso, preferencesStore.timeFormat, true)
+  return `${datePart} ${timePart}`.trim()
+}
+
+const formatEventDateRange = (event) => {
+  if (!event?.start) return ''
+  if (!eventSpansMultipleDates(event)) return formatDate(event.start)
+  return `${formatDate(event.start)} -> ${formatDate(event.end)}`
+}
+
+const formatDateShort = (date) =>
+  formatDateShortByPreference(date, preferencesStore.dateFormat, false)
 </script>

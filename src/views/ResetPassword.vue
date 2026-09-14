@@ -109,7 +109,6 @@ const userId = ref(null)
 const secret = ref(null)
 const successMessage = ref('')
 
-// Toggle states for show/hide
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const hasValidLink = computed(() => Boolean(userId.value && secret.value))

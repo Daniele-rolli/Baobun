@@ -44,11 +44,11 @@
         </h3>
 
         <ul class="space-y-1">
-          <li v-for="group in userGroups" :key="group.$id">
+          <li v-for="group in userGroups" :key="group.id">
             <button
               class="w-full flex items-center px-3 py-2 text-sm text-neutral-700 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-rose-600 rounded-md transition"
               :class="[collapsed ? 'justify-center' : 'justify-start']"
-              @click="$router.push('/group/' + group.$id)"
+              @click="$router.push('/group/' + group.id)"
             >
               <Users class="h-5 w-5" :class="{ 'mr-3': !collapsed }" />
               <span v-if="!collapsed" class="truncate">{{ group.name }}</span>
@@ -254,7 +254,7 @@ const avatarActive = ref(false)
 const isGroupRoute = computed(() => route.path.startsWith('/group/'))
 const targetGroup = computed(() => {
   if (isGroupRoute.value) {
-    return userGroups.value.find((group) => group.$id === route.params.id)
+    return userGroups.value.find((group) => group.id === route.params.id)
   }
   return userGroups.value.find((group) => group.role !== 'VIEWER') || userGroups.value[0]
 })
@@ -272,7 +272,7 @@ const loadGroups = async () => {
 
 const goToFirstGroup = () => {
   if (userGroups.value.length > 0) {
-    router.push('/group/' + userGroups.value[0].$id)
+    router.push('/group/' + userGroups.value[0].id)
   } else {
     router.push('/dashboard')
   }
@@ -291,7 +291,7 @@ const goToAddEvent = () => {
     // Dispatch a custom event that the group page can listen to
     window.dispatchEvent(new CustomEvent('baobun:add-event'))
   } else if (targetGroup.value) {
-    router.push('/group/' + targetGroup.value.$id)
+    router.push('/group/' + targetGroup.value.id)
   } else {
     router.push('/dashboard')
   }

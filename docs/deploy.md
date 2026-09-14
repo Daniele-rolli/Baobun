@@ -57,7 +57,7 @@ Only the first two values are required:
 | Variable            | Default                          | Purpose                                                                         |
 | ------------------- | -------------------------------- | ------------------------------------------------------------------------------- |
 | `POSTGRES_PASSWORD` | —                                | **Required.** PostgreSQL password; use a long URL-safe value.                   |
-| `PUBLIC_URL`        | —                                | **Required.** Public HTTPS URL, for example `https://baobun.example.com`.        |
+| `PUBLIC_URL`        | —                                | **Required.** Public HTTPS URL, for example `https://baobun.example.com`.       |
 | `FRONTEND_PORT`     | `4173`                           | The only host port published by the stack.                                      |
 | `MAIL_DEBUG`        | `true`                           | Log messages instead of sending them. Set `false` when SMTP is configured.      |
 | `MAIL_SENDER`       | `Baobun <no-reply@baobun.local>` | From-address for email.                                                         |
@@ -94,7 +94,7 @@ Point your domain to the Baobun application:
 No CORS allowlist or path-specific reverse-proxy rules are needed. PostgreSQL is not
 published by the production Compose file.
 
-Example nginx snippets:
+Example nginx snippet:
 
 ```nginx
 location / {
@@ -104,6 +104,22 @@ location / {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 }
 ```
+
+Or with Caddy (automatic HTTPS, no certificate setup):
+
+```caddy
+baobun.example.com {
+    reverse_proxy 127.0.0.1:4173
+}
+```
+
+## SMTP is optional
+
+The stack boots and runs normally with `MAIL_HOST` left empty. Without SMTP,
+password-reset emails and event reminders are silently skipped (`POST
+/api/auth/forgot` still returns 200, so addresses can't be enumerated). Set
+`MAIL_DEBUG=true` to preview messages in the app logs, or configure a real
+relay for production.
 
 ## HTTPS / cookies
 

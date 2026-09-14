@@ -28,13 +28,13 @@ describe('groups', () => {
     const create = await req('/api/groups', { method: 'POST', body: { name: 'Team' } })
     expect(create.status).toBe(201)
     const { group } = await create.json()
-    groupId = group.$id
+    groupId = group.id
     expect(group.inviteCode).toMatch(/^[A-Z0-9]{6}$/)
     expect(group.ownerId).toBeTruthy()
 
     const list = await req('/api/groups')
     const { groups } = await list.json()
-    expect(groups.some((g) => g.$id === groupId)).toBe(true)
+    expect(groups.some((g) => g.id === groupId)).toBe(true)
   })
 
   it('joins via invite code', async () => {
@@ -49,14 +49,39 @@ describe('groups', () => {
 
     const list = await req('/api/groups')
     const { groups } = await list.json()
-    const group = groups.find((g) => g.$id === groupId)
+    const group = groups.find((g) => g.id === groupId)
     expect(group).toBeTruthy()
 
-    const join = await app.request(`/api/groups/join?inviteCode=${group.inviteCode}`, {
-      headers: { cookie: otherCookie },
+    const join = await app.request('/api/groups/join', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', cookie: otherCookie },
+      body: JSON.stringify({ inviteCode: group.inviteCode }),
     })
     expect(join.status).toBe(200)
     const { group: joined } = await join.json()
     expect(joined.memberCount).toBeGreaterThanOrEqual(2)
+  })
+
+  it('rejects cross-site join (CSRF guard)', async () => {
+    const bad = await app.request('/api/groups/join', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', cookie, origin: 'https://evil.example' },
+      body: JSON.stringify({ inviteCode: 'XXXXXX' }),
+    })
+    expect(bad.status).toBe(403)
+  })
+
+  it('rate-limits repeated joins', async () => {
+    let last = null
+    for (let i = 0; i < 12; i++) {
+      last = await app.request('/api/groups/join', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', cookie },
+        body: JSON.stringify({ inviteCode: 'XXXXXX' }),
+      })
+    }
+    expect(last.status).toBe(429)
+    const body = await last.json()
+    expect(body.error.code).toBe('rate_limited')
   })
 })

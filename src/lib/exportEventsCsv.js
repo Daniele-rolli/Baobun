@@ -5,7 +5,7 @@ const normalizePeopleIds = (people) => {
   return people
     .map((person) => {
       if (typeof person === 'string') return person
-      if (person?.$id) return person.$id
+      if (person?.id) return person.id
       return ''
     })
     .filter(Boolean)
@@ -42,14 +42,14 @@ export const downloadEventsCsv = ({
   if (!Array.isArray(events) || !events.length || typeof document === 'undefined') return false
 
   const tagNameById = Object.fromEntries(
-    (tags || []).filter((tag) => tag?.$id).map((tag) => [tag.$id, tag.name || 'General']),
+    (tags || []).filter((tag) => tag?.id).map((tag) => [tag.id, tag.name || 'General']),
   )
   const memberNameById = {
     everyone: 'Everyone',
     ...Object.fromEntries(
       (members || [])
-        .filter((member) => member?.$id)
-        .map((member) => [member.$id, member.name || member.email || member.$id]),
+        .filter((member) => member?.id)
+        .map((member) => [member.id, member.name || member.email || member.id]),
     ),
   }
 

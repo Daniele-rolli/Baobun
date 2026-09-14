@@ -10,7 +10,7 @@
             <UiSelectValue placeholder="Select a group..." />
           </UiSelectTrigger>
           <UiSelectContent>
-            <UiSelectItem v-for="g in groupsStore.items" :key="g.$id" :value="g.$id">
+            <UiSelectItem v-for="g in groupsStore.items" :key="g.id" :value="g.id">
               {{ g.name }}
             </UiSelectItem>
           </UiSelectContent>
@@ -34,7 +34,7 @@
       <CalendarView
         :events="eventsStore.items"
         :tags="tagsStore.items"
-        :current-user-id="authStore.user.$id"
+        :current-user-id="authStore.user.id"
         :group-id="selectedGroupId"
         :week-starts-on="preferencesStore.weekStartsOn"
         :date-format="preferencesStore.dateFormat"
@@ -228,7 +228,7 @@ const LIVE_FEED_REPUBLISH_MS = 30 * 60 * 1000
 const groupMembers = ref([])
 const importBusy = ref(false)
 const selectedGroup = computed(() =>
-  groupsStore.items.find((group) => group.$id === selectedGroupId.value),
+  groupsStore.items.find((group) => group.id === selectedGroupId.value),
 )
 const canEdit = computed(() => selectedGroup.value?.role !== 'VIEWER')
 
@@ -322,7 +322,7 @@ const onEventMoved = async ({ event, newStart }) => {
     patch.end = new Date(newStartDate.getTime() + 60 * 60 * 1000).toISOString()
   }
 
-  await eventsStore.updateEvent(event.$id, patch)
+  await eventsStore.updateEvent(event.id, patch)
 }
 
 /** Bulk schedule callback */
@@ -335,7 +335,7 @@ const handleBulkSchedule = () => {
 onMounted(async () => {
   await refreshGroups()
   if (!selectedGroupId.value && groupsStore.items.length) {
-    selectedGroupId.value = groupsStore.items[0].$id
+    selectedGroupId.value = groupsStore.items[0].id
   }
   await changeGroup()
 
@@ -373,8 +373,8 @@ const sortedEvents = computed(() =>
 )
 
 const liveFeedScopeKey = computed(() =>
-  selectedGroupId.value && authStore.user?.$id
-    ? `${selectedGroupId.value}:${authStore.user.$id}`
+  selectedGroupId.value && authStore.user?.id
+    ? `${selectedGroupId.value}:${authStore.user.id}`
     : selectedGroupId.value,
 )
 const liveFeedEnabledForGroup = computed(() =>
@@ -383,18 +383,18 @@ const liveFeedEnabledForGroup = computed(() =>
 const normalizePeopleIds = (people) => {
   if (!Array.isArray(people)) return []
   return people
-    .map((person) => (typeof person === 'string' ? person : person?.$id || ''))
+    .map((person) => (typeof person === 'string' ? person : person?.id || ''))
     .filter(Boolean)
 }
 const currentUserIdentitySet = computed(() => {
   const ids = new Set()
-  if (authStore.user?.$id) ids.add(authStore.user.$id)
+  if (authStore.user?.id) ids.add(authStore.user.id)
   if (authStore.user?.email) ids.add(authStore.user.email)
 
   for (const member of groupMembers.value || []) {
     if (!member) continue
     // people[] can contain membership doc ids or raw user ids depending on creator flow/version.
-    if (member.userId && member.userId === authStore.user?.$id && member.$id) ids.add(member.$id)
+    if (member.userId && member.userId === authStore.user?.id && member.id) ids.add(member.id)
     if (member.userId) ids.add(member.userId)
     if (member.email) ids.add(member.email)
   }
@@ -404,8 +404,8 @@ const currentUserIdentitySet = computed(() => {
 const liveFeedEvents = computed(() =>
   sortedEvents.value.filter((event) => {
     const people = normalizePeopleIds(event.people)
-    if (!authStore.user?.$id) return true
-    if (!people.length) return event.userId === authStore.user.$id
+    if (!authStore.user?.id) return true
+    if (!people.length) return event.userId === authStore.user.id
     if (people.includes('everyone')) return true
     return people.some((personId) => currentUserIdentitySet.value.has(personId))
   }),
@@ -418,7 +418,7 @@ const refreshLiveFeedUrls = async () => {
   }
   liveFeedUrls.value = await getLiveFeedUrls({
     groupId: selectedGroupId.value,
-    userId: authStore.user?.$id,
+    userId: authStore.user?.id,
   })
 }
 const liveFeedWebcalUrl = computed(() => liveFeedUrls.value.webcalUrl || '')
@@ -433,7 +433,7 @@ const liveFeedSignature = computed(() =>
   liveFeedEvents.value
     .map((event) =>
       [
-        event.$id,
+        event.id,
         event.start,
         event.end,
         event.title,
@@ -441,7 +441,7 @@ const liveFeedSignature = computed(() =>
         event.tagId,
         Array.isArray(event.people)
           ? event.people
-              .map((person) => (typeof person === 'string' ? person : person?.$id || ''))
+              .map((person) => (typeof person === 'string' ? person : person?.id || ''))
               .filter(Boolean)
               .join(',')
           : '',
@@ -452,14 +452,14 @@ const liveFeedSignature = computed(() =>
 const tagNameById = computed(() => {
   const map = {}
   for (const tag of tagsStore.items || []) {
-    if (tag?.$id) map[tag.$id] = tag.name || 'General'
+    if (tag?.id) map[tag.id] = tag.name || 'General'
   }
   return map
 })
 const memberNameById = computed(() => {
   const map = { everyone: 'Everyone' }
   for (const member of groupMembers.value || []) {
-    if (member?.$id) map[member.$id] = member.name || member.email || member.$id
+    if (member?.id) map[member.id] = member.name || member.email || member.id
   }
   return map
 })
@@ -490,7 +490,7 @@ const syncLiveFeed = async ({ force = false } = {}) => {
   try {
     const result = await publishLiveCalendarFeed({
       groupId: selectedGroupId.value,
-      userId: authStore.user?.$id,
+      userId: authStore.user?.id,
       groupName: selectedGroupName.value,
       events: liveFeedEvents.value,
       tagNameById: tagNameById.value,
@@ -571,7 +571,7 @@ watch(
     notificationsStore.leadMinutes,
     preferencesStore.dateFormat,
     preferencesStore.timeFormat,
-    eventsStore.items.map((e) => `${e.$id}:${e.start}`).join('|'),
+    eventsStore.items.map((e) => `${e.id}:${e.start}`).join('|'),
   ],
   () => {
     scheduleReminders()

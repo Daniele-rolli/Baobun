@@ -1,8 +1,23 @@
 import { PrismaClient } from '@prisma/client'
 import { randomBytes } from 'crypto'
-import { getLiveFeedFileId } from '@baobun/shared'
 import { ensureStorage, putObject, BUCKETS } from '../src/storage.js'
 import { hashPassword } from '../src/password.js'
+
+// Legacy Appwrite-side feed key format (source data only — the new scheme uses
+// random tokens, see routes/calendarFeeds.js). Kept to locate existing files.
+const legacyFeedKey = ({ groupId, userId = '' } = {}) => {
+  const norm = (v) =>
+    String(v)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '')
+  let hash = 0
+  for (const ch of `${groupId}:${userId}`) hash = ((hash << 5) - hash + ch.charCodeAt(0)) | 0
+  return `cal-feed-${norm(groupId).slice(0, 10) || 'group'}-${norm(userId).slice(0, 8) || 'all'}-${Math.abs(hash).toString(36).slice(0, 10)}`.slice(
+    0,
+    36,
+  )
+}
 
 const prisma = new PrismaClient()
 
@@ -12,7 +27,10 @@ const listMode = process.argv.includes('--list')
 
 const api = async (path) => {
   const res = await fetch(`${baseUrl()}${path}`, {
-    headers: { 'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'), 'X-Appwrite-Key': env('APPWRITE_API_KEY') },
+    headers: {
+      'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'),
+      'X-Appwrite-Key': env('APPWRITE_API_KEY'),
+    },
   })
   if (!res.ok) throw new Error(`Appwrite ${path} -> ${res.status}`)
   return res.json()
@@ -50,14 +68,18 @@ const baseUrl = () => env('APPWRITE_ENDPOINT').replace(/\/v1\/?$/, '') + '/v1'
 
 const checkCollection = async (label, collectionId) => {
   const dbId = env('APPWRITE_DB_ID')
-  const res = await fetch(
-    `${baseUrl()}/databases/${dbId}/collections/${collectionId}`,
-    { headers: { 'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'), 'X-Appwrite-Key': env('APPWRITE_API_KEY') } },
-  )
+  const res = await fetch(`${baseUrl()}/databases/${dbId}/collections/${collectionId}`, {
+    headers: {
+      'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'),
+      'X-Appwrite-Key': env('APPWRITE_API_KEY'),
+    },
+  })
   if (!res.ok) {
     const body = await res.json().catch(() => null)
     const msg = body?.message || res.statusText
-    throw new Error(`[validate] ${label}: collection "${collectionId}" not found (${res.status}: ${msg})`)
+    throw new Error(
+      `[validate] ${label}: collection "${collectionId}" not found (${res.status}: ${msg})`,
+    )
   }
   console.log(`[validate] ${label}: OK`)
 }
@@ -79,10 +101,12 @@ const main = async () => {
 
   if (listMode) {
     const dbId = env('APPWRITE_DB_ID')
-    const res = await fetch(
-      `${baseUrl()}/databases/${dbId}/collections?limit=100`,
-      { headers: { 'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'), 'X-Appwrite-Key': env('APPWRITE_API_KEY') } },
-    )
+    const res = await fetch(`${baseUrl()}/databases/${dbId}/collections?limit=100`, {
+      headers: {
+        'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'),
+        'X-Appwrite-Key': env('APPWRITE_API_KEY'),
+      },
+    })
     const data = await res.json()
     console.log(`Collections in database ${dbId}:`)
     for (const c of data.collections || []) {
@@ -118,11 +142,21 @@ const main = async () => {
   console.log(`[migrate] auth users: ${authUsers.length}`)
 
   const [users, groups, members, events, tags] = await Promise.all([
-    listAll(`/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_USERS_COLLECTION')}/documents`),
-    listAll(`/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_GROUPS_COLLECTION')}/documents`),
-    listAll(`/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_MEMBERS_COLLECTION')}/documents`),
-    listAll(`/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_EVENTS_COLLECTION')}/documents`),
-    listAll(`/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_TAGS_COLLECTION')}/documents`),
+    listAll(
+      `/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_USERS_COLLECTION')}/documents`,
+    ),
+    listAll(
+      `/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_GROUPS_COLLECTION')}/documents`,
+    ),
+    listAll(
+      `/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_MEMBERS_COLLECTION')}/documents`,
+    ),
+    listAll(
+      `/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_EVENTS_COLLECTION')}/documents`,
+    ),
+    listAll(
+      `/databases/${env('APPWRITE_DB_ID')}/collections/${env('APPWRITE_TAGS_COLLECTION')}/documents`,
+    ),
   ])
 
   console.log(
@@ -169,11 +203,21 @@ const main = async () => {
       try {
         const file = await fetch(
           `${baseUrl()}/storage/buckets/${env('APPWRITE_AVATAR_BUCKET')}/files/${encodeURIComponent(dbUser.avatarFileId)}/download`,
-          { headers: { 'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'), 'X-Appwrite-Key': env('APPWRITE_API_KEY') } },
+          {
+            headers: {
+              'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'),
+              'X-Appwrite-Key': env('APPWRITE_API_KEY'),
+            },
+          },
         )
         if (!file.ok) throw new Error(`Appwrite avatar download -> ${file.status}`)
         const buf = Buffer.from(await file.arrayBuffer())
-        await putObject(BUCKETS.avatars, `avatar-${id}`, buf, file.headers.get('content-type') || 'image/png')
+        await putObject(
+          BUCKETS.avatars,
+          `avatar-${id}`,
+          buf,
+          file.headers.get('content-type') || 'image/png',
+        )
       } catch (err) {
         console.warn(`[migrate] avatar skip ${email}: ${err.message}`)
       }
@@ -190,7 +234,11 @@ const main = async () => {
       continue
     }
     const inviteCode =
-      g.inviteCode || g.$id.replace(/[^a-z0-9]/gi, '').slice(0, 10).toUpperCase()
+      g.inviteCode ||
+      g.$id
+        .replace(/[^a-z0-9]/gi, '')
+        .slice(0, 10)
+        .toUpperCase()
     await prisma.group.upsert({
       where: { id: g.$id },
       update: { name: g.name, color: g.color || '#f43f5e', inviteCode, ownerUserId: owner.id },
@@ -262,11 +310,21 @@ const main = async () => {
       try {
         const file = await fetch(
           `${baseUrl()}/storage/buckets/${env('APPWRITE_TAG_ICONS_BUCKET')}/files/${encodeURIComponent(t.imageId)}/download`,
-          { headers: { 'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'), 'X-Appwrite-Key': env('APPWRITE_API_KEY') } },
+          {
+            headers: {
+              'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'),
+              'X-Appwrite-Key': env('APPWRITE_API_KEY'),
+            },
+          },
         )
         if (!file.ok) throw new Error(`Appwrite tag icon download -> ${file.status}`)
         const buf = Buffer.from(await file.arrayBuffer())
-        await putObject(BUCKETS.tagIcons, `tag-${t.$id}`, buf, file.headers.get('content-type') || 'image/png')
+        await putObject(
+          BUCKETS.tagIcons,
+          `tag-${t.$id}`,
+          buf,
+          file.headers.get('content-type') || 'image/png',
+        )
       } catch (err) {
         console.warn(`[migrate] tag icon skip ${t.name}: ${err.message}`)
       }
@@ -313,22 +371,32 @@ const main = async () => {
     report.events++
   }
 
-  // Calendar feeds: reproduce object keys so existing webcal subscriptions keep working
+  // Calendar feeds: copy content but issue fresh unguessable tokens (old
+  // deterministic keys are not served by the API anymore).
   for (const g of groups) {
     const migratedMembers = await prisma.groupMember.findMany({
       where: { groupId: g.$id, userId: { not: null } },
     })
     for (const member of migratedMembers) {
-      const key = getLiveFeedFileId({ groupId: g.$id, userId: member.userId })
-      const src = `${baseUrl()}/storage/buckets/${env('APPWRITE_CALENDAR_FEEDS_BUCKET')}/files/${encodeURIComponent(key)}/download`
+      const src = `${baseUrl()}/storage/buckets/${env('APPWRITE_CALENDAR_FEEDS_BUCKET')}/files/${encodeURIComponent(legacyFeedKey({ groupId: g.$id, userId: member.userId }))}/download`
       try {
         const res = await fetch(src, {
-          headers: { 'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'), 'X-Appwrite-Key': env('APPWRITE_API_KEY') },
+          headers: {
+            'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'),
+            'X-Appwrite-Key': env('APPWRITE_API_KEY'),
+          },
         })
         if (res.ok) {
           const buf = Buffer.from(await res.arrayBuffer())
-          await putObject(BUCKETS.calendarFeeds, key, buf, 'text/calendar; charset=utf-8')
-          report.calendarFeeds++
+          const token = randomBytes(16).toString('hex')
+          const objectKey = `feed-${token}.ics`
+          await putObject(BUCKETS.calendarFeeds, objectKey, buf, 'text/calendar; charset=utf-8')
+          await prisma.calendarFeed.upsert({
+            where: { groupId_userId: { groupId: g.$id, userId: member.userId } },
+            create: { groupId: g.$id, userId: member.userId, token, objectKey },
+            update: { token, objectKey },
+          })
+          report.calendarFeeds = (report.calendarFeeds || 0) + 1
         }
       } catch {
         // no feed yet — fine

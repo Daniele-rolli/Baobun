@@ -32,8 +32,8 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             <button
               v-for="group in userGroups"
-              :key="group.$id"
-              @click="$router.push('/group/' + group.$id)"
+              :key="group.id"
+              @click="$router.push('/group/' + group.id)"
               class="group flex items-center gap-3 p-4 text-left hover:shadow-md active:scale-[0.99] transition-all"
             >
               <div
@@ -47,7 +47,7 @@
                   {{ group.name }}
                 </p>
                 <p class="text-xs text-neutral-400 mt-0.5">
-                  {{ counts[group.$id] || 0 }} member{{ counts[group.$id] !== 1 ? 's' : '' }}
+                  {{ counts[group.id] || 0 }} member{{ counts[group.id] !== 1 ? 's' : '' }}
                 </p>
               </div>
               <ChevronRight
@@ -146,7 +146,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useGroupsStore } from '@/stores/group'
@@ -155,138 +155,109 @@ import { Users, Mail, ChevronRight, Plus } from 'lucide-vue-next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
-export default {
-  components: { Users, Mail, ChevronRight, Plus, Card, CardContent, Button },
-  setup() {
-    const authStore = useAuthStore()
-    const groupsStore = useGroupsStore()
+const authStore = useAuthStore()
+const groupsStore = useGroupsStore()
 
-    const userGroups = ref([])
-    const counts = ref({})
-    const newGroupName = ref('')
-    const newGroupColor = ref('#f43f5e')
-    const inviteCode = ref('')
-    const loadingCreate = ref(false)
-    const loadingJoin = ref(false)
-    const joinError = ref('')
-    const welcomeMessages = [
-      { prefix: 'Hey', subtitle: 'Manage your groups and events.' },
-      { prefix: 'Welcome back', subtitle: 'Ready to plan today?' },
-      { prefix: 'Great to see you', subtitle: 'Your groups are waiting.' },
-      { prefix: 'Let’s get started', subtitle: 'Keep your schedule in sync.' },
-      { prefix: 'Hello again', subtitle: 'Pick up where you left off.' },
-    ]
+const userGroups = ref([])
+const counts = ref({})
+const newGroupName = ref('')
+const newGroupColor = ref('#f43f5e')
+const inviteCode = ref('')
+const loadingCreate = ref(false)
+const loadingJoin = ref(false)
+const joinError = ref('')
+const welcomeMessages = [
+  { prefix: 'Hey', subtitle: 'Manage your groups and events.' },
+  { prefix: 'Welcome back', subtitle: 'Ready to plan today?' },
+  { prefix: 'Great to see you', subtitle: 'Your groups are waiting.' },
+  { prefix: 'Let’s get started', subtitle: 'Keep your schedule in sync.' },
+  { prefix: 'Hello again', subtitle: 'Pick up where you left off.' },
+]
 
-    const firstName = computed(() => authStore.user?.name?.split(' ')[0] || 'there')
-    const selectedWelcome = computed(() => {
-      const now = new Date()
-      const daySeed = Number(
-        `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`,
-      )
-      const nameSeed = firstName.value.length
-      const index = Math.abs(daySeed + nameSeed) % welcomeMessages.length
-      return welcomeMessages[index]
-    })
-    const welcomePrefix = computed(() => selectedWelcome.value.prefix)
-    const welcomeSubtitle = computed(() => selectedWelcome.value.subtitle)
+const firstName = computed(() => authStore.user?.name?.split(' ')[0] || 'there')
+const selectedWelcome = computed(() => {
+  const now = new Date()
+  const daySeed = Number(
+    `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`,
+  )
+  const nameSeed = firstName.value.length
+  const index = Math.abs(daySeed + nameSeed) % welcomeMessages.length
+  return welcomeMessages[index]
+})
+const welcomePrefix = computed(() => selectedWelcome.value.prefix)
+const welcomeSubtitle = computed(() => selectedWelcome.value.subtitle)
 
-    const stringToColor = (str) => {
-      let hash = 0
-      for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash)
-      return `hsl(${Math.abs(hash) % 360}, 90%, 55%)`
-    }
-
-    const loadGroups = async () => {
-      if (!authStore.user) return
-      try {
-        await groupsStore.fetchAll()
-        userGroups.value = groupsStore.items.map((g) => ({
-          ...g,
-          color: g.color || stringToColor(g.$id),
-        }))
-        const countMap = {}
-        await Promise.all(
-          userGroups.value.map(async (g) => {
-            const { members } = await groupService.listMembers(g.$id)
-            countMap[g.$id] = members.length
-          }),
-        )
-        counts.value = countMap
-      } catch (err) {
-        console.error('Failed to load groups:', err)
-      }
-    }
-
-    const createGroup = async () => {
-      loadingCreate.value = true
-      joinError.value = ''
-      try {
-        await groupsStore.createGroup({
-          name: newGroupName.value,
-          color: newGroupColor.value || stringToColor(groupIdFallback()),
-        })
-        newGroupName.value = ''
-        await loadGroups()
-      } catch (err) {
-        joinError.value = 'Failed to create group.'
-        console.error(err)
-      } finally {
-        loadingCreate.value = false
-      }
-    }
-
-    const groupIdFallback = () => `g${Math.random().toString(36).slice(2, 8)}`
-
-    const joinGroup = async () => {
-      loadingJoin.value = true
-      joinError.value = ''
-      try {
-        await groupService.joinByCode(inviteCode.value.toUpperCase())
-        inviteCode.value = ''
-        await loadGroups()
-      } catch (err) {
-        joinError.value =
-          err?.code === 'not_found' ? 'Invalid invite code.' : 'Could not join group.'
-        console.error(err)
-      } finally {
-        loadingJoin.value = false
-      }
-    }
-
-    const colorToRgba = (color, alpha = 1) => {
-      if (!color) return `rgba(244,63,94,${alpha})`
-      if (color.startsWith('#')) {
-        const r = parseInt(color.slice(1, 3), 16)
-        const g = parseInt(color.slice(3, 5), 16)
-        const b = parseInt(color.slice(5, 7), 16)
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`
-      }
-      if (color.startsWith('hsl')) return color.replace('hsl', 'hsla').replace(')', `, ${alpha})`)
-      return color
-    }
-
-    onMounted(async () => {
-      await authStore.initAuth()
-      await loadGroups()
-    })
-
-    return {
-      authStore,
-      userGroups,
-      counts,
-      newGroupName,
-      newGroupColor,
-      inviteCode,
-      colorToRgba,
-      loadingCreate,
-      loadingJoin,
-      joinError,
-      firstName,
-      welcomePrefix,
-      welcomeSubtitle,
-      createGroup,
-      joinGroup,
-    }
-  },
+const stringToColor = (str) => {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash)
+  return `hsl(${Math.abs(hash) % 360}, 90%, 55%)`
 }
+
+const loadGroups = async () => {
+  if (!authStore.user) return
+  try {
+    await groupsStore.fetchAll()
+    userGroups.value = groupsStore.items.map((g) => ({
+      ...g,
+      color: g.color || stringToColor(g.id),
+    }))
+    const countMap = {}
+    for (const g of userGroups.value) countMap[g.id] = g.memberCount ?? 0
+    counts.value = countMap
+  } catch (err) {
+    console.error('Failed to load groups:', err)
+  }
+}
+
+const createGroup = async () => {
+  loadingCreate.value = true
+  joinError.value = ''
+  try {
+    await groupsStore.createGroup({
+      name: newGroupName.value,
+      color: newGroupColor.value || stringToColor(groupIdFallback()),
+    })
+    newGroupName.value = ''
+    await loadGroups()
+  } catch (err) {
+    joinError.value = 'Failed to create group.'
+    console.error(err)
+  } finally {
+    loadingCreate.value = false
+  }
+}
+
+const groupIdFallback = () => `g${Math.random().toString(36).slice(2, 8)}`
+
+const joinGroup = async () => {
+  loadingJoin.value = true
+  joinError.value = ''
+  try {
+    await groupService.joinByCode(inviteCode.value.toUpperCase())
+    inviteCode.value = ''
+    await loadGroups()
+  } catch (err) {
+    joinError.value = err?.code === 'not_found' ? 'Invalid invite code.' : 'Could not join group.'
+    console.error(err)
+  } finally {
+    loadingJoin.value = false
+  }
+}
+
+const colorToRgba = (color, alpha = 1) => {
+  if (!color) return `rgba(244,63,94,${alpha})`
+  if (color.startsWith('#')) {
+    const r = parseInt(color.slice(1, 3), 16)
+    const g = parseInt(color.slice(3, 5), 16)
+    const b = parseInt(color.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
+  }
+  if (color.startsWith('hsl')) return color.replace('hsl', 'hsla').replace(')', `, ${alpha})`)
+  return color
+}
+
+onMounted(async () => {
+  await authStore.initAuth()
+  await loadGroups()
+})
 </script>

@@ -1,17 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import router from '@/router'
 import * as authService from '@/lib/services/auth'
 import * as userService from '@/lib/services/users'
 import { clearSession, markSessionActive } from '@/composable/useSession'
 
-const STORE_VERSION = 3
+const STORE_VERSION = 4
 
 const cachedAuth = localStorage.getItem('auth')
 if (cachedAuth) {
   try {
     const parsed = JSON.parse(cachedAuth)
-    if (!parsed.version || parsed.version < STORE_VERSION || !parsed.user || !parsed.user.$id) {
+    if (!parsed.version || parsed.version < STORE_VERSION || !parsed.user || !parsed.user.id) {
       localStorage.removeItem('auth')
     }
   } catch {
@@ -108,6 +107,7 @@ export const useAuthStore = defineStore(
       user.value = null
       isLoggedIn.value = false
       await new Promise((r) => setTimeout(r, 50))
+      const { default: router } = await import('@/router')
       router.push('/login')
       loading.value = false
     }

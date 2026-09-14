@@ -44,7 +44,7 @@ function notifyEvent({ event, groupId, leadMinutes, dateFormat, timeFormat }) {
 
   const n = new Notification(title, {
     body,
-    tag: `event-${event.$id}`,
+    tag: `event-${event.id}`,
     renotify: false,
     data: { url: groupId ? `/group/${groupId}` : '/' },
   })
@@ -71,7 +71,7 @@ export function scheduleEventNotifications({
 
   const now = Date.now()
   for (const event of events || []) {
-    if (!event?.$id || !event?.start) continue
+    if (!event?.id || !event?.start) continue
 
     const eventStart = new Date(event.start).getTime()
     if (!Number.isFinite(eventStart)) continue
@@ -80,7 +80,7 @@ export function scheduleEventNotifications({
     const delay = remindAt - now
     if (delay <= 0 || delay > MAX_TIMEOUT_MS) continue
 
-    const key = storageKey(event.$id, event.start, leadMinutes)
+    const key = storageKey(event.id, event.start, leadMinutes)
     if (hasBeenNotified(key)) continue
 
     const timeoutId = setTimeout(() => {
