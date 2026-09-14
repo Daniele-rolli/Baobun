@@ -12,6 +12,9 @@ test('a user can register and create a group on a mobile viewport', async ({ pag
   await page.getByRole('button', { name: 'Register' }).click()
 
   await expect(page).toHaveURL(/\/dashboard$/)
+  // First visit auto-opens the PWA install dialog, which aria-hides <main>.
+  // Dismiss it like a user would before asserting on dashboard content.
+  await page.keyboard.press('Escape')
   await expect(page.getByRole('heading', { name: 'Create a Group' })).toBeVisible()
 
   const groupName = `Mobile Group ${unique}`
@@ -45,7 +48,7 @@ test('single-origin API supports groups, recurrence, import, and pull tokens', a
 
   const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
   const end = new Date(start.getTime() + 60 * 60 * 1000)
-  const recurring = await request.post(`/api/groups/${group.$id}/events`, {
+  const recurring = await request.post(`/api/groups/${group.id}/events`, {
     headers: { Cookie: sessionCookie },
     data: {
       title: 'Recurring standup',
@@ -74,7 +77,7 @@ test('single-origin API supports groups, recurrence, import, and pull tokens', a
     'END:VEVENT',
     'END:VCALENDAR',
   ].join('\r\n')
-  const imported = await request.post(`/api/groups/${group.$id}/events/import`, {
+  const imported = await request.post(`/api/groups/${group.id}/events/import`, {
     headers: { Cookie: sessionCookie },
     multipart: {
       file: {
@@ -95,7 +98,7 @@ test('single-origin API supports groups, recurrence, import, and pull tokens', a
   expect(tokenResponse.status()).toBe(201)
   const { secret } = await tokenResponse.json()
 
-  const pulled = await request.get(`/api/v1/groups/${group.$id}/events`, {
+  const pulled = await request.get(`/api/v1/groups/${group.id}/events`, {
     headers: { Authorization: `Bearer ${secret}` },
   })
   expect(pulled.ok()).toBeTruthy()
