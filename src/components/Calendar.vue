@@ -4,24 +4,24 @@
     <div class="flex-1 min-w-0 space-y-4">
       <div
         ref="calendarEl"
-        class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden touch-pan-y"
+        class="bg-card border rounded-2xl overflow-hidden touch-pan-y"
       >
         <!-- Toolbar -->
         <div
-          class="px-3 py-2 flex items-center justify-between gap-2 border-b border-neutral-100 dark:border-neutral-800"
+          class="px-3 py-2 flex items-center justify-between gap-2 border-b"
         >
           <!-- Left: title + view toggle -->
           <div class="flex items-center gap-2 min-w-0">
-            <h3 class="text-base font-semibold dark:text-white truncate">{{ headerTitle }}</h3>
+            <h3 class="text-base font-semibold truncate">{{ headerTitle }}</h3>
             <div
-              class="flex rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700 text-xs flex-shrink-0"
+              class="flex rounded-lg overflow-hidden border text-xs flex-shrink-0"
             >
               <button
                 class="touch-exempt px-2.5 py-1 font-medium transition-colors"
                 :class="
                   viewMode === 'month'
-                    ? 'bg-rose-600 text-white'
-                    : 'bg-white dark:bg-neutral-900 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-card text-muted-foreground hover:bg-muted'
                 "
                 @click="viewMode = 'month'"
               >
@@ -31,8 +31,8 @@
                 class="touch-exempt px-2.5 py-1 font-medium transition-colors"
                 :class="
                   viewMode === 'week'
-                    ? 'bg-rose-600 text-white'
-                    : 'bg-white dark:bg-neutral-900 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-card text-muted-foreground hover:bg-muted'
                 "
                 @click="viewMode = 'week'"
               >
@@ -45,17 +45,17 @@
           <div class="flex items-center gap-1.5 flex-shrink-0">
             <!-- Prev/Next -->
             <div
-              class="flex items-center border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden bg-white dark:bg-neutral-900"
+              class="flex items-center border rounded-xl overflow-hidden bg-card"
             >
               <button
-                class="touch-exempt px-2 py-1 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors dark:text-white"
+                class="touch-exempt px-2 py-1 hover:bg-muted transition-colors"
                 @click="prev"
               >
                 <ChevronLeft class="w-4 h-4" />
               </button>
-              <div class="w-px h-4 bg-neutral-200 dark:bg-neutral-700"></div>
+              <div class="w-px h-4 bg-border"></div>
               <button
-                class="touch-exempt px-2 py-1 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors dark:text-white"
+                class="touch-exempt px-2 py-1 hover:bg-muted transition-colors"
                 @click="next"
               >
                 <ChevronRight class="w-4 h-4" />
@@ -65,18 +65,18 @@
             <!-- Bulk + Spin (desktop only) -->
             <div
               v-if="canEdit"
-              class="hidden sm:flex items-center border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden bg-white dark:bg-neutral-900"
+              class="hidden sm:flex items-center border rounded-xl overflow-hidden bg-card"
             >
               <button
-                class="touch-exempt px-2 py-1 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors dark:text-white"
+                class="touch-exempt px-2 py-1 hover:bg-muted transition-colors"
                 title="Bulk Schedule"
                 @click="$emit('bulk-schedule')"
               >
                 <calendar-check class="w-4 h-4" />
               </button>
-              <div class="w-px h-4 bg-neutral-200 dark:bg-neutral-700"></div>
+              <div class="w-px h-4 bg-border"></div>
               <button
-                class="touch-exempt px-2 py-1 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors dark:text-white"
+                class="touch-exempt px-2 py-1 hover:bg-muted transition-colors"
                 title="Spin Scheduler"
                 @click="$emit('spin-schedule')"
               >
@@ -85,20 +85,21 @@
             </div>
 
             <!-- Add event -->
-            <button
+            <UiButton
               v-if="canEdit"
-              class="touch-exempt flex items-center justify-center w-8 h-8 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white transition-colors shadow-sm shadow-rose-200 dark:shadow-none"
+              size="icon"
+              class="touch-exempt shadow-sm"
               @click="$emit('add-event', selectedDate)"
             >
               <Plus class="w-4 h-4" />
-            </button>
+            </UiButton>
           </div>
         </div>
 
         <!-- Weekday Labels -->
         <div
           v-if="viewMode === 'month'"
-          class="grid grid-cols-7 text-center text-[10px] sm:text-xs font-medium text-neutral-400 dark:text-neutral-500 border-b border-neutral-100 dark:border-neutral-800 select-none"
+          class="grid grid-cols-7 text-center text-[10px] sm:text-xs font-medium text-muted-foreground dark:text-muted-foreground border-b select-none"
         >
           <div v-for="(wd, i) in weekdayLabels" :key="i" class="py-1.5">
             <span class="sm:hidden">{{ wd[0] }}</span>
@@ -111,11 +112,11 @@
           <div
             v-for="day in daysInMonth"
             :key="day.date.getTime()"
-            class="hidden sm:block min-h-14 md:min-h-24 overflow-y-auto border-r border-b border-neutral-200 p-1 text-xs transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800 dark:text-white"
+            class="hidden sm:block min-h-14 md:min-h-24 overflow-y-auto border-r border-b p-1 text-xs transition-all hover:bg-muted"
             :class="{
-              'bg-neutral-50 dark:bg-neutral-800 text-neutral-400': !day.currentMonth,
-              'bg-neutral-50 dark:bg-neutral-800': isToday(day.date),
-              'bg-neutral-200/40': isSelected(day.date),
+              'bg-muted/50  text-muted-foreground': !day.currentMonth,
+              'bg-muted/50 ': isToday(day.date),
+              'bg-muted': isSelected(day.date),
             }"
             @click="selectDate(day.date)"
             @dragover.prevent
@@ -126,8 +127,8 @@
               <span
                 class=""
                 :class="{
-                  'bg-neutral-800 text-white w-fit p-1 px-1.5 rounded-full': isToday(day.date),
-                  'bg-rose-600 text-white w-fit p-1 px-1.5 rounded-full': isSelected(day.date),
+                  'bg-foreground text-background w-fit p-1 px-1.5 rounded-full': isToday(day.date),
+                  'bg-primary text-primary-foreground w-fit p-1 px-1.5 rounded-full': isSelected(day.date),
                 }"
               >
                 {{ day.day }}
@@ -139,7 +140,7 @@
               <div
                 v-for="event in getEventsForDate(day.date)"
                 :key="event.id"
-                class="event-item mb-1 truncate rounded-lg px-2 py-1 text-xs text-auto dark:text-neutral-100 cursor-move"
+                class="event-item mb-1 truncate rounded-lg px-2 py-1 text-xs text-auto cursor-move"
                 :style="{ backgroundColor: getTagColor(event.tagId) }"
                 :draggable="canEdit"
                 @dragstart="onDragStart(event, $event)"
@@ -159,17 +160,17 @@
           <div
             v-for="day in daysInMonth"
             :key="day.date.getTime()"
-            class="flex flex-col items-center justify-start bg-white dark:bg-neutral-900 py-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/80 border-b"
+            class="flex flex-col items-center justify-start bg-card py-4 cursor-pointer hover:bg-muted/50 /80 border-b"
             :class="{
-              'text-neutral-400': !day.currentMonth,
+              'text-muted-foreground': !day.currentMonth,
             }"
             @click="selectDate(day.date)"
           >
             <div
               class="text-xl font-semibold flex items-center justify-center w-10 h-10 rounded-full"
               :class="{
-                'bg-rose-500 text-white': isToday(day.date),
-                'bg-rose-500 text-white': isSelected(day.date),
+                'bg-primary text-primary-foreground': isToday(day.date),
+                'bg-primary text-primary-foreground': isSelected(day.date),
               }"
             >
               {{ day.day }}
@@ -187,9 +188,9 @@
         </div>
 
         <!-- iOS-style Week View Grid -->
-        <div v-if="viewMode === 'week'" class="bg-white dark:bg-neutral-900">
+        <div v-if="viewMode === 'week'" class="bg-card">
           <!-- Time Column + Day Columns Header -->
-          <div class="grid grid-cols-8 border-b border-t border-neutral-200">
+          <div class="grid grid-cols-8 border-b border-t">
             <!-- Empty corner for time column -->
             <div class="border-r p-2"></div>
             <!-- Day headers -->
@@ -198,15 +199,15 @@
               :key="day.getTime()"
               class="text-center p-2 border-r last:border-r-0"
             >
-              <div class="text-xs text-neutral-500 uppercase tracking-wide">
+              <div class="text-xs text-muted-foreground uppercase tracking-wide">
                 {{ weekdayLabelsByIndex[day.getDay()].slice(0, 3) }}
               </div>
               <div
                 class="text-lg font-semibold mt-1"
                 :class="{
-                  'bg-rose-500 text-white w-8 h-8 rounded-full flex items-center justify-center mx-auto':
+                  'bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center mx-auto':
                     isToday(day),
-                  'bg-rose-500 text-white w-8 h-8 rounded-full flex items-center justify-center mx-auto':
+                  'bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center mx-auto':
                     isSelected(day),
                 }"
                 @click="selectDate(day)"
@@ -223,7 +224,7 @@
               <div
                 v-for="hour in timeSlots"
                 :key="hour"
-                class="h-12 border-b border-neutral-100 p-1 text-xs text-neutral-500 text-right pr-2"
+                class="h-12 border-b p-1 text-xs text-muted-foreground text-right pr-2"
               >
                 <div class="relative">{{ formatHour(hour) }}</div>
               </div>
@@ -245,7 +246,7 @@
               <div
                 v-for="hour in timeSlots"
                 :key="hour"
-                class="h-12 border-b border-neutral-100"
+                class="h-12 border-b"
               ></div>
 
               <!-- Events positioned absolutely -->
@@ -274,7 +275,7 @@
       </div>
 
       <div
-        class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 lg:hidden"
+        class="bg-card border rounded-2xl p-4 lg:hidden"
       >
         <UpcomingEvents
           :events="events"

@@ -1,9 +1,6 @@
 <template>
-  <div
-    class="flex min-h-screen items-center justify-center px-4 py-12 bg-neutral-50 dark:bg-neutral-900"
-  >
+  <div class="flex min-h-screen items-center justify-center bg-background px-4 py-12">
     <div class="w-full max-w-sm space-y-4">
-      <!-- Error banner -->
       <transition
         enter-active-class="transition duration-200 ease-out"
         enter-from-class="opacity-0 -translate-y-1"
@@ -11,28 +8,27 @@
       >
         <div
           v-if="authStore.error"
-          class="flex items-center gap-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl text-sm"
+          role="alert"
+          class="flex gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
         >
-          <HeartCrack class="w-4 h-4 flex-shrink-0" />
-          {{ authStore.error }}
+          <HeartCrack class="h-5 w-5 shrink-0" />
+          <p>{{ authStore.error }}</p>
         </div>
       </transition>
 
-      <!-- Card -->
-      <Card class="p-6 sm:p-8">
-        <CardContent>
-          <div class="text-center mb-8">
-            <img
-              class="mx-auto mb-4 h-16 w-16"
-              src="/icons/icon_128x128.png"
-              alt="Baobun"
-              width="64"
-              height="64"
-            />
-            <h1 class="text-2xl font-bold text-neutral-900 dark:text-white">Welcome back</h1>
-            <p class="text-sm text-neutral-500 mt-1">Sign in to your account</p>
-          </div>
-
+      <UiCard>
+        <UiCardHeader class="items-center text-center">
+          <img
+            class="mb-2 h-16 w-16"
+            src="/icons/icon_128x128.png"
+            alt="Baobun"
+            width="64"
+            height="64"
+          />
+          <UiCardTitle class="text-2xl">Welcome back</UiCardTitle>
+          <UiCardDescription>Sign in to your account</UiCardDescription>
+        </UiCardHeader>
+        <UiCardContent>
           <form @submit.prevent="handleLogin" class="space-y-4">
             <div class="space-y-1.5">
               <UiLabel for="email">Email</UiLabel>
@@ -57,43 +53,23 @@
               />
             </div>
 
-            <div class="pt-1">
-              <Button type="submit" :disabled="authStore.loading" class="w-full">
-                <svg
-                  v-if="authStore.loading"
-                  class="animate-spin w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    class="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="4"
-                  />
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                {{ authStore.loading ? 'Signing in…' : 'Sign In' }}
-              </Button>
-            </div>
+            <UiButton type="submit" :disabled="authStore.loading" class="w-full">
+              <LoaderCircle v-if="authStore.loading" class="h-4 w-4 animate-spin" />
+              {{ authStore.loading ? 'Signing in…' : 'Sign In' }}
+            </UiButton>
 
-            <p class="text-center text-sm text-neutral-500 mt-1">
-              <router-link
-                to="/forgot-password"
-                class="text-rose-600 hover:text-rose-700 font-medium"
-              >
+            <p class="text-center text-sm text-muted-foreground">
+              <router-link to="/forgot-password" class="font-medium text-primary hover:underline">
                 Forgot password?
               </router-link>
             </p>
           </form>
-        </CardContent>
-      </Card>
+        </UiCardContent>
+      </UiCard>
 
-      <p class="text-center text-sm text-neutral-500">
+      <p class="text-center text-sm text-muted-foreground">
         Don't have an account?
-        <router-link to="/register" class="ml-1 font-medium text-rose-600 hover:text-rose-700">
+        <router-link to="/register" class="ml-1 font-medium text-primary hover:underline">
           Register
         </router-link>
       </p>
@@ -105,9 +81,7 @@
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
-import { HeartCrack } from 'lucide-vue-next'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { HeartCrack, LoaderCircle } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const router = useRouter()

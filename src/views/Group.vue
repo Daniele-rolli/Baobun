@@ -5,7 +5,7 @@
       <div class="flex items-center gap-2">
         <UiSelect v-model="selectedGroupId" @update:model-value="changeGroup">
           <UiSelectTrigger
-            class="w-full h-auto flex-1 rounded-2xl bg-rose-500 py-2.5 text-white border-transparent hover:bg-rose-600 focus-visible:ring-rose-300 data-placeholder:text-white/80 [&_svg]:text-white/80"
+            class="w-full h-auto flex-1 rounded-2xl bg-primary py-2.5 text-primary-foreground border-transparent hover:bg-primary/90 focus-visible:ring-ring data-placeholder:text-primary-foreground/80 [&_svg]:text-primary-foreground/80"
           >
             <UiSelectValue placeholder="Select a group..." />
           </UiSelectTrigger>
@@ -15,20 +15,24 @@
             </UiSelectItem>
           </UiSelectContent>
         </UiSelect>
-        <button
-          @click="showCalendarIntegrations = true"
-          class="touch-exempt flex-shrink-0 flex items-center justify-center w-10 h-10 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 dark:text-white rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+        <UiButton
+          variant="outline"
+          size="icon"
+          class="touch-exempt shrink-0"
           aria-label="Calendar integrations"
+          @click="showCalendarIntegrations = true"
         >
           <CalendarPlus class="w-4 h-4" />
-        </button>
-        <button
-          @click="showInviteModal = true"
-          class="touch-exempt flex-shrink-0 flex items-center justify-center w-10 h-10 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 dark:text-white rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+        </UiButton>
+        <UiButton
+          variant="outline"
+          size="icon"
+          class="touch-exempt shrink-0"
           aria-label="Share invite code"
+          @click="showInviteModal = true"
         >
           <Share2 class="w-4 h-4" />
-        </button>
+        </UiButton>
       </div>
 
       <CalendarView
@@ -53,15 +57,15 @@
     <UiDialog :open="showCalendarIntegrations" @update:open="showCalendarIntegrations = false">
       <UiDialogContent class="sm:max-w-md">
         <UiDialogHeader>
-          <UiDialogTitle class="dark:text-white">Calendar Integrations</UiDialogTitle>
+          <UiDialogTitle>Calendar Integrations</UiDialogTitle>
         </UiDialogHeader>
 
         <div class="space-y-4">
-          <p class="text-sm text-neutral-600 dark:text-neutral-300">
+          <p class="text-sm text-muted-foreground">
             No additional login needed in Baobun. This integration is a live personal feed.
           </p>
 
-          <div class="rounded-xl border border-neutral-200 p-3 dark:border-neutral-700">
+          <div class="rounded-xl border p-3">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p class="text-sm font-medium">Import calendar</p>
@@ -87,61 +91,67 @@
             </div>
           </div>
 
-          <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-3 space-y-3">
+          <div class="rounded-xl border p-3 space-y-3">
             <div class="flex items-center justify-between gap-3">
               <div>
-                <p class="text-sm font-medium text-neutral-800 dark:text-neutral-100">
+                <p class="text-sm font-medium">
                   Live updates
                 </p>
-                <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                <p class="text-xs text-muted-foreground">
                   Publishes only events for you + everyone, refreshed about every 30 minutes.
                 </p>
               </div>
-              <button
+              <UiButton
                 type="button"
-                class="touch-exempt rounded-lg border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                variant="outline"
+                size="sm"
+                class="touch-exempt"
                 :disabled="!selectedGroupId || liveFeedBusy"
                 @click="toggleLiveUpdates"
               >
                 {{ liveFeedEnabledForGroup ? 'Disable' : 'Enable' }}
-              </button>
+              </UiButton>
             </div>
 
             <div v-if="liveFeedEnabledForGroup" class="space-y-2">
-              <label class="text-xs font-medium text-neutral-600 dark:text-neutral-300"
+              <label class="text-xs font-medium text-muted-foreground"
                 >Subscription URL (webcal)</label
               >
               <div class="flex items-center gap-2">
-                <input
-                  :value="liveFeedWebcalUrl"
+                <UiInput
+                  :model-value="liveFeedWebcalUrl"
                   readonly
-                  class="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-2.5 py-2 text-xs text-neutral-700 dark:text-neutral-200"
+                  class="w-full text-xs"
                 />
-                <button
+                <UiButton
                   type="button"
-                  class="touch-exempt rounded-lg border border-neutral-200 dark:border-neutral-700 px-2.5 py-2 text-xs font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                  variant="outline"
+                  size="sm"
+                  class="touch-exempt shrink-0"
                   @click="copyText(liveFeedWebcalUrl)"
                 >
                   Copy
-                </button>
+                </UiButton>
               </div>
               <div
-                class="flex items-center justify-between gap-2 text-xs text-neutral-500 dark:text-neutral-400"
+                class="flex items-center justify-between gap-2 text-xs text-muted-foreground"
               >
                 <span> Last sync: {{ liveFeedLastSyncedLabel }} </span>
-                <button
+                <UiButton
                   type="button"
-                  class="touch-exempt inline-flex items-center gap-1 rounded-lg border border-neutral-200 dark:border-neutral-700 px-2.5 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  variant="outline"
+                  size="sm"
+                  class="touch-exempt"
                   :disabled="liveFeedBusy"
                   @click="refreshLiveFeedNow"
                 >
                   <Link class="w-3.5 h-3.5" />
                   Sync now
-                </button>
+                </UiButton>
               </div>
             </div>
 
-            <p v-if="liveFeedError" class="text-xs text-red-500">
+            <p v-if="liveFeedError" class="text-xs text-destructive">
               {{ liveFeedError }}
             </p>
           </div>

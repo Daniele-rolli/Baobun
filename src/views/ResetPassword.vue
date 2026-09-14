@@ -5,7 +5,7 @@
         <UiCardContent class="p-6">
           <div v-if="successMessage" class="space-y-6 text-center">
             <div class="flex justify-center">
-              <div class="rounded-xl border bg-emerald-500/10 p-3 text-emerald-600">
+              <div class="rounded-xl border bg-primary/10 p-3 text-primary">
                 <PartyPopper class="h-6 w-6" />
               </div>
             </div>

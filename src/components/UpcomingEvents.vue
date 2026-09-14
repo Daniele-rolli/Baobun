@@ -1,37 +1,40 @@
 <template>
   <div>
     <div class="flex items-center justify-between gap-3 mb-3">
-      <h3 class="text-base font-semibold dark:text-white">
+      <h3 class="text-base font-semibold">
         {{ selectedDate ? 'Events from ' + formatDateShort(selectedDate) : 'Upcoming Events' }}
       </h3>
       <div class="flex items-center gap-2 flex-shrink-0">
-        <button
+        <UiButton
           v-if="matchingEvents.length && !selectionMode"
           type="button"
-          class="rounded-lg border border-neutral-200 dark:border-neutral-700 px-2.5 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+          variant="outline"
+          size="sm"
           @click="selectionMode = true"
         >
           Select
-        </button>
-        <button
+        </UiButton>
+        <UiButton
           v-if="selectionMode"
           type="button"
-          class="flex items-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 px-2.5 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="outline"
+          size="sm"
           :disabled="!selectedEvents.length"
           @click="exportSelectedEvents"
         >
           <DownloadIcon class="w-3.5 h-3.5" />
           <span>Export{{ selectedEvents.length ? ` (${selectedEvents.length})` : '' }}</span>
-        </button>
-        <button
+        </UiButton>
+        <UiButton
           v-if="selectionMode"
           type="button"
-          class="rounded-lg border border-transparent px-2 py-1.5 text-xs font-medium text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors"
+          variant="ghost"
+          size="sm"
           @click="clearSelection"
         >
           Cancel
-        </button>
-        <span class="text-xs text-neutral-400 tabular-nums">{{ matchingEvents.length }}</span>
+        </UiButton>
+        <span class="text-xs text-muted-foreground tabular-nums">{{ matchingEvents.length }}</span>
       </div>
     </div>
 
@@ -43,8 +46,8 @@
           class="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors"
           :class="
             selectedUserIdLocal === member.id
-              ? 'bg-rose-500 text-white border-rose-500'
-              : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:border-rose-300'
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-card text-muted-foreground hover:border-primary'
           "
           @click="selectedUserIdLocal = member.id"
         >
@@ -60,12 +63,12 @@
 
       <div v-if="!compact" class="relative">
         <SearchIcon
-          class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400 pointer-events-none"
+          class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none"
         />
-        <input
+        <UiInput
           v-model="search"
           placeholder="Search events..."
-          class="w-full pl-9 pr-3 py-2 rounded-lg text-sm border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 dark:text-white outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"
+          class="pl-9"
         />
       </div>
     </div>
@@ -80,7 +83,7 @@
         :key="event.id"
         class="w-full flex items-center gap-3 p-3 rounded-xl cursor-pointer text-left transition-all active:scale-[0.98]"
         :class="{
-          'ring-2 ring-rose-500 ring-inset': selectionMode && isEventSelected(event.id),
+          'ring-2 ring-primary ring-inset': selectionMode && isEventSelected(event.id),
         }"
         :style="{ background: getTagColor(event.tagId) }"
         @click="handleEventClick(event)"
@@ -90,8 +93,8 @@
           class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-sm border text-[10px] font-bold"
           :class="
             isEventSelected(event.id)
-              ? 'border-rose-500 bg-rose-500 text-white'
-              : 'border-neutral-300 dark:border-neutral-600 text-transparent'
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'border-border text-transparent'
           "
         >
           <CheckIcon class="h-4 w-4" />
@@ -119,26 +122,27 @@
         </div>
 
         <div class="flex-1 min-w-0">
-          <div class="font-medium text-sm truncate dark:text-white">{{ event.title }}</div>
-          <div class="text-xs mt-0.5 text-neutral-600 dark:text-neutral-400">
+          <div class="font-medium text-sm truncate">{{ event.title }}</div>
+          <div class="text-xs mt-0.5 text-muted-foreground">
             {{ formatEventDateRange(event) }} · {{ getTagLabel(event.tagId) }}
           </div>
         </div>
 
-        <ChevronRightIcon v-if="!selectionMode" class="w-4 h-4 text-neutral-400 flex-shrink-0" />
+        <ChevronRightIcon v-if="!selectionMode" class="w-4 h-4 text-muted-foreground flex-shrink-0" />
       </button>
     </div>
 
-    <div v-else class="flex flex-col items-center justify-center py-8 text-neutral-400">
+    <div v-else class="flex flex-col items-center justify-center py-8 text-muted-foreground">
       <CalendarIcon class="w-8 h-8 mb-2 opacity-50" />
       <p class="text-sm">No events found</p>
-      <button
+      <UiButton
         v-if="selectedUserIdLocal !== 'everyone' || search"
-        class="mt-2 text-xs text-rose-500 hover:underline"
+        variant="link"
+        size="sm"
         @click="clearFilters"
       >
         Clear filters
-      </button>
+      </UiButton>
     </div>
   </div>
 </template>

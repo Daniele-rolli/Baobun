@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen dark:text-white">
+  <div class="min-h-screen">
     <div class="max-w-xl mx-auto px-4 py-6 space-y-6">
       <!-- ── Profile card ── -->
-      <Card class="p-5">
-        <CardContent>
+      <UiCard class="p-5">
+        <UiCardContent>
           <div class="flex items-center gap-4">
             <img
               :src="
@@ -14,31 +14,31 @@
               class="w-16 h-16 rounded-2xl object-cover flex-shrink-0 shadow-sm"
             />
             <div class="flex-1 min-w-0">
-              <p class="font-semibold text-neutral-900 dark:text-white truncate">
+              <p class="font-semibold truncate">
                 {{ authStore.user?.name || '—' }}
               </p>
-              <p class="text-sm text-neutral-500 truncate mt-0.5">{{ authStore.user?.email }}</p>
+              <p class="text-sm text-muted-foreground truncate mt-0.5">{{ authStore.user?.email }}</p>
             </div>
             <router-link
               to="/profile"
-              class="flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 text-sm font-medium hover:bg-rose-100 dark:hover:bg-rose-500/25 transition-colors"
+              class="flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium hover:bg-primary/15 transition-colors"
               style="min-height: 0"
             >
               Edit
               <ChevronRightIcon class="w-4 h-4" />
             </router-link>
           </div>
-        </CardContent>
-      </Card>
+        </UiCardContent>
+      </UiCard>
 
       <!-- ── Appearance ── -->
       <div class="space-y-2">
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Appearance
         </p>
-        <Card class="overflow-hidden">
+        <UiCard class="overflow-hidden">
           <!-- Theme row -->
-          <div class="px-4 py-3.5 border-b border-neutral-100 dark:border-neutral-700/50">
+          <div class="px-4 py-3.5 border-b">
             <p class="text-sm font-medium mb-3">Theme</p>
             <div class="grid grid-cols-3 gap-2">
               <button
@@ -49,8 +49,8 @@
                 style="min-height: 0; min-width: 0"
                 :class="
                   selectedTheme === theme.value
-                    ? 'border-rose-500 bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400'
-                    : 'border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700/50'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : ' text-muted-foreground hover:bg-muted'
                 "
               >
                 <component
@@ -66,61 +66,67 @@
           <!-- Calendar & date/time preferences -->
           <div class="flex min-h-16 items-center gap-3 px-4 py-3">
             <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500 dark:bg-blue-500/15"
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
             >
               <CalendarDays class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Week starts on</p>
             </div>
-            <select
-              v-model.number="weekStartsOnModel"
-              class="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-200"
-            >
-              <option v-for="opt in weekStartOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+            <UiSelect v-model="weekStartsOnModel">
+              <UiSelectTrigger class="w-auto text-xs sm:text-sm">
+                <UiSelectValue />
+              </UiSelectTrigger>
+              <UiSelectContent>
+                <UiSelectItem v-for="opt in weekStartOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </UiSelectItem>
+              </UiSelectContent>
+            </UiSelect>
           </div>
 
           <div class="flex min-h-16 items-center gap-3 px-4 py-3">
             <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500 dark:bg-indigo-500/15"
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
             >
               <Calendar class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Date format</p>
             </div>
-            <select
-              v-model="dateFormatModel"
-              class="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-200"
-            >
-              <option v-for="opt in dateFormatOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+            <UiSelect v-model="dateFormatModel">
+              <UiSelectTrigger class="w-auto text-xs sm:text-sm">
+                <UiSelectValue />
+              </UiSelectTrigger>
+              <UiSelectContent>
+                <UiSelectItem v-for="opt in dateFormatOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </UiSelectItem>
+              </UiSelectContent>
+            </UiSelect>
           </div>
 
           <div class="flex min-h-16 items-center gap-3 px-4 py-3">
             <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-500 dark:bg-cyan-500/15"
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
             >
               <Clock3 class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Time format</p>
             </div>
-            <select
-              v-model="timeFormatModel"
-              class="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-200"
-            >
-              <option v-for="opt in timeFormatOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+            <UiSelect v-model="timeFormatModel">
+              <UiSelectTrigger class="w-auto text-xs sm:text-sm">
+                <UiSelectValue />
+              </UiSelectTrigger>
+              <UiSelectContent>
+                <UiSelectItem v-for="opt in timeFormatOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </UiSelectItem>
+              </UiSelectContent>
+            </UiSelect>
           </div>
-        </Card>
+        </UiCard>
       </div>
 
       <!-- ── Groups ── -->
@@ -128,22 +134,22 @@
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Groups
         </p>
-        <Card class="overflow-hidden">
+        <UiCard class="overflow-hidden">
           <router-link
             to="/groupSettings"
             class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
           >
             <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-500 dark:bg-violet-500/15"
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
             >
               <Users class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Manage Groups</p>
-              <p class="text-xs text-neutral-400 mt-0.5">Settings, members &amp; tags</p>
+              <p class="text-xs text-muted-foreground mt-0.5">Settings, members &amp; tags</p>
             </div>
             <ChevronRightIcon
-              class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0"
+              class="w-4 h-4 text-muted-foreground flex-shrink-0"
             />
           </router-link>
 
@@ -152,16 +158,16 @@
             class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
           >
             <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500 dark:bg-emerald-500/15"
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
             >
               <LayoutDashboard class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Dashboard</p>
-              <p class="text-xs text-neutral-400 mt-0.5">Create or join a group</p>
+              <p class="text-xs text-muted-foreground mt-0.5">Create or join a group</p>
             </div>
             <ChevronRightIcon
-              class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0"
+              class="w-4 h-4 text-muted-foreground flex-shrink-0"
             />
           </router-link>
 
@@ -170,19 +176,19 @@
             class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
           >
             <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-500/15"
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
             >
               <Database class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Migration</p>
-              <p class="text-xs text-neutral-400 mt-0.5">Appwrite import report</p>
+              <p class="text-xs text-muted-foreground mt-0.5">Appwrite import report</p>
             </div>
             <ChevronRightIcon
-              class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0"
+              class="w-4 h-4 text-muted-foreground flex-shrink-0"
             />
           </router-link>
-        </Card>
+        </UiCard>
       </div>
 
       <!-- ── Notifications ── -->
@@ -190,16 +196,16 @@
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Notifications
         </p>
-        <Card class="overflow-hidden">
+        <UiCard class="overflow-hidden">
           <div class="flex min-h-16 items-center gap-3 px-4 py-3">
             <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-500 dark:bg-rose-500/15"
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
             >
               <Bell class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Push Notifications</p>
-              <p class="text-xs text-neutral-400 mt-0.5">
+              <p class="text-xs text-muted-foreground mt-0.5">
                 {{
                   notificationsStore.unsupported
                     ? 'Not supported on this browser'
@@ -208,7 +214,7 @@
               </p>
             </div>
             <!-- toggle -->
-            <Switch
+            <UiSwitch
               :model-value="notificationsStore.enabled"
               :disabled="notificationsStore.unsupported"
               @update:model-value="toggleNotifications"
@@ -216,24 +222,25 @@
           </div>
           <div class="flex min-h-16 items-center gap-3 px-4 py-3">
             <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-300"
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground"
             >
               <Clock3 class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Remind me before</p>
             </div>
-            <select
-              v-model.number="notificationLeadModel"
-              :disabled="!notificationsStore.enabled"
-              class="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1.5 text-xs sm:text-sm text-neutral-700 dark:text-neutral-200 disabled:opacity-50"
-            >
-              <option :value="2880">2 days before</option>
-              <option :value="1440">1 day before</option>
-              <option :value="0">Same day</option>
-            </select>
+            <UiSelect v-model="notificationLeadModel" :disabled="!notificationsStore.enabled">
+              <UiSelectTrigger class="w-auto text-xs sm:text-sm">
+                <UiSelectValue />
+              </UiSelectTrigger>
+              <UiSelectContent>
+                <UiSelectItem :value="2880">2 days before</UiSelectItem>
+                <UiSelectItem :value="1440">1 day before</UiSelectItem>
+                <UiSelectItem :value="0">Same day</UiSelectItem>
+              </UiSelectContent>
+            </UiSelect>
           </div>
-        </Card>
+        </UiCard>
       </div>
 
       <!-- ── Account ── -->
@@ -241,22 +248,22 @@
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Account
         </p>
-        <Card class="overflow-hidden">
+        <UiCard class="overflow-hidden">
           <router-link
             to="/profile"
             class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
           >
             <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-300"
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground"
             >
               <UserCircle class="w-[1.125rem] h-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">Edit Profile</p>
-              <p class="text-xs text-neutral-400 mt-0.5">Name, email, password, avatar</p>
+              <p class="text-xs text-muted-foreground mt-0.5">Name, email, password, avatar</p>
             </div>
             <ChevronRightIcon
-              class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0"
+              class="w-4 h-4 text-muted-foreground flex-shrink-0"
             />
           </router-link>
 
@@ -265,16 +272,16 @@
             class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
           >
             <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/15"
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
             >
               <KeyRound class="h-[1.125rem] w-[1.125rem]" />
             </span>
             <div class="flex-1">
               <p class="text-sm font-medium">API Access</p>
-              <p class="mt-0.5 text-xs text-neutral-400">Read-only integration tokens</p>
+              <p class="mt-0.5 text-xs text-muted-foreground">Read-only integration tokens</p>
             </div>
             <ChevronRightIcon
-              class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0"
+              class="w-4 h-4 text-muted-foreground flex-shrink-0"
             />
           </router-link>
 
@@ -283,17 +290,17 @@
             @click="confirmLogout"
           >
             <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-500 dark:bg-red-500/15"
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive"
             >
               <LogOut class="w-[1.125rem] h-[1.125rem]" />
             </span>
-            <span class="flex-1 text-sm font-medium text-red-500">Log Out</span>
+            <span class="flex-1 text-sm font-medium text-destructive">Log Out</span>
           </div>
-        </Card>
+        </UiCard>
       </div>
 
       <!-- ── App info ── -->
-      <p class="text-center text-xs text-neutral-300 dark:text-neutral-600 pb-2">Baobun · v1.0.0</p>
+      <p class="text-center text-xs text-muted-foreground pb-2">Baobun · v1.0.0</p>
     </div>
   </div>
 </template>
@@ -321,8 +328,6 @@ import {
   KeyRound,
   Database,
 } from 'lucide-vue-next'
-import { Card, CardContent } from '@/components/ui/card'
-import { Switch } from '@/components/ui/switch'
 
 export default {
   name: 'Settings',
@@ -340,9 +345,7 @@ export default {
     Calendar,
     Clock3,
     KeyRound,
-    Card,
-    CardContent,
-    Switch,
+    Database,
   },
   setup() {
     const authStore = useAuthStore()
@@ -351,9 +354,9 @@ export default {
     const router = useRouter()
 
     const themes = [
-      { label: 'Light', value: 'light', icon: Sun, iconClass: 'text-yellow-500' },
-      { label: 'Dark', value: 'dark', icon: Moon, iconClass: 'text-blue-500' },
-      { label: 'System', value: 'system', icon: Monitor, iconClass: 'text-neutral-500' },
+      { label: 'Light', value: 'light', icon: Sun, iconClass: 'text-primary' },
+      { label: 'Dark', value: 'dark', icon: Moon, iconClass: 'text-primary' },
+      { label: 'System', value: 'system', icon: Monitor, iconClass: 'text-muted-foreground' },
     ]
     const selectedTheme = ref('system')
     const weekStartOptions = [

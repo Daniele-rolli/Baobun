@@ -14,13 +14,13 @@
           toast.variant === 'destructive'
             ? 'border-destructive/40'
             : toast.variant === 'success'
-              ? 'border-emerald-500/40'
+              ? 'border-primary/40'
               : ''
         "
       >
         <CircleCheck
           v-if="toast.variant === 'success'"
-          class="mt-0.5 h-5 w-5 shrink-0 text-emerald-500"
+          class="mt-0.5 h-5 w-5 shrink-0 text-primary"
         />
         <CircleAlert
           v-else-if="toast.variant === 'destructive'"

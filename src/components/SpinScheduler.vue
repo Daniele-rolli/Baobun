@@ -6,23 +6,26 @@
         <UiDialogHeader class="flex-row items-start justify-between text-left">
           <div class="flex items-center gap-3">
             <div
-              class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center"
+              class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"
             >
-              <Shuffle class="w-5 h-5 text-rose-600" />
+              <Shuffle class="w-5 h-5 text-primary" />
             </div>
             <div>
               <UiDialogTitle class="text-lg font-bold">Spin Scheduler</UiDialogTitle>
-              <p class="text-xs text-neutral-500">
+              <p class="text-xs text-muted-foreground">
                 Auto-assign groups to dates by spinning the wheel
               </p>
             </div>
           </div>
-          <button
+          <UiButton
+            variant="ghost"
+            size="icon"
+            class="h-8 w-8"
+            aria-label="Close"
             @click="$emit('update:modelValue', false)"
-            class="text-neutral-400 hover:text-neutral-600 p-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
           >
             <X class="w-5 h-5" />
-          </button>
+          </UiButton>
         </UiDialogHeader>
 
         <!-- Step indicator -->
@@ -32,32 +35,32 @@
               class="w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-colors"
               :class="
                 currentStep === i
-                  ? 'bg-rose-600 text-white'
+                  ? 'bg-primary text-primary-foreground'
                   : currentStep > i
-                    ? 'bg-green-500 text-white'
-                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
               "
             >
               <Check v-if="currentStep > i" class="w-3.5 h-3.5" />
               <span v-else>{{ i + 1 }}</span>
             </div>
-            <span class="text-xs text-neutral-500 hidden sm:block">{{ step }}</span>
-            <div v-if="i < steps.length - 1" class="w-8 h-px bg-neutral-200 dark:bg-neutral-700" />
+            <span class="text-xs text-muted-foreground hidden sm:block">{{ step }}</span>
+            <div v-if="i < steps.length - 1" class="w-8 h-px bg-border" />
           </div>
         </div>
 
         <!-- ─── STEP 0: Enter Groups ─── -->
         <div v-if="currentStep === 0" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium mb-1.5"
-              >Groups <span class="text-neutral-400">(one per line or comma-separated)</span></label
+            <UiLabel class="mb-1.5 block"
+              >Groups <span class="text-muted-foreground">(one per line or comma-separated)</span></UiLabel
             >
-            <textarea
+            <UiTextarea
               v-model="groupsRaw"
-              class="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 dark:text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none placeholder-neutral-400 min-h-[120px]"
+              class="min-h-[120px]"
               placeholder="Team Alpha&#10;Team Beta&#10;Team Gamma"
             />
-            <p class="text-xs text-neutral-400 mt-1">
+            <p class="text-xs text-muted-foreground mt-1">
               {{ parsedGroups.length }} group{{ parsedGroups.length !== 1 ? 's' : '' }} detected
             </p>
           </div>
@@ -78,27 +81,19 @@
         <!-- ─── STEP 1: Date Range / Interval ─── -->
         <div v-if="currentStep === 1" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium mb-1.5">Start Date</label>
-              <input
-                type="date"
-                v-model="dateStart"
-                class="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 dark:text-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 min-h-[44px]"
-              />
+            <div class="space-y-1.5">
+              <UiLabel for="spin-start">Start Date</UiLabel>
+              <UiInput id="spin-start" type="date" v-model="dateStart" class="min-h-[44px]" />
             </div>
-            <div>
-              <label class="block text-sm font-medium mb-1.5">End Date</label>
-              <input
-                type="date"
-                v-model="dateEnd"
-                class="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 dark:text-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 min-h-[44px]"
-              />
+            <div class="space-y-1.5">
+              <UiLabel for="spin-end">End Date</UiLabel>
+              <UiInput id="spin-end" type="date" v-model="dateEnd" class="min-h-[44px]" />
             </div>
           </div>
 
           <!-- Interval or specific dates -->
           <div>
-            <label class="block text-sm font-medium mb-2">Scheduling Mode</label>
+            <UiLabel class="mb-2 block">Scheduling Mode</UiLabel>
             <div class="grid grid-cols-2 gap-2">
               <button
                 v-for="m in scheduleModes"
@@ -107,8 +102,8 @@
                 class="px-4 py-2.5 rounded-xl border text-sm font-medium transition-all"
                 :class="
                   scheduleMode === m.value
-                    ? 'border-rose-600 bg-rose-50 dark:bg-rose-900/20 text-rose-600'
-                    : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : ' hover:border-border'
                 "
               >
                 {{ m.label }}
@@ -118,7 +113,7 @@
 
           <!-- Weekday picker (interval mode) -->
           <div v-if="scheduleMode === 'weekdays'" class="space-y-2">
-            <label class="block text-sm font-medium">Repeat on</label>
+            <UiLabel class="block">Repeat on</UiLabel>
             <div class="flex flex-wrap gap-2">
               <button
                 v-for="day in weekdays"
@@ -127,8 +122,8 @@
                 class="min-w-[44px] min-h-[44px] rounded-full text-sm font-medium transition-all"
                 :class="
                   selectedWeekdays.includes(day.value)
-                    ? 'bg-rose-600 text-white'
-                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted'
                 "
               >
                 {{ day.label.slice(0, 2) }}
@@ -138,31 +133,31 @@
 
           <!-- Every N days (interval mode) -->
           <div v-if="scheduleMode === 'interval'" class="flex items-center gap-3">
-            <label class="text-sm font-medium whitespace-nowrap">Every</label>
-            <input
+            <UiLabel class="whitespace-nowrap text-sm">Every</UiLabel>
+            <UiInput
               type="number"
               v-model.number="intervalDays"
               min="1"
               max="365"
-              class="w-20 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 text-center"
+              class="w-20 text-center"
             />
-            <label class="text-sm font-medium">day{{ intervalDays !== 1 ? 's' : '' }}</label>
+            <UiLabel class="text-sm">day{{ intervalDays !== 1 ? 's' : '' }}</UiLabel>
           </div>
 
           <!-- Date preview -->
           <div v-if="previewDates.length" class="space-y-1.5">
-            <p class="text-xs text-neutral-500 font-medium">
+            <p class="text-xs text-muted-foreground font-medium">
               {{ previewDates.length }} slots generated
             </p>
             <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
               <span
                 v-for="d in previewDates.slice(0, 20)"
                 :key="d"
-                class="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-300"
+                class="px-2 py-0.5 rounded-md bg-muted text-xs text-muted-foreground"
               >
                 {{ formatShort(d) }}
               </span>
-              <span v-if="previewDates.length > 20" class="px-2 py-0.5 text-xs text-neutral-400">
+              <span v-if="previewDates.length > 20" class="px-2 py-0.5 text-xs text-muted-foreground">
                 +{{ previewDates.length - 20 }} more
               </span>
             </div>
@@ -177,7 +172,7 @@
               <!-- Pointer -->
               <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
                 <div
-                  class="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[20px] border-l-transparent border-r-transparent border-b-rose-600 drop-shadow-sm"
+                  class="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[20px] border-l-transparent border-r-transparent border-b-primary drop-shadow-sm"
                 />
               </div>
               <canvas ref="wheelCanvas" width="280" height="280" class="rounded-full shadow-lg" />
@@ -196,24 +191,24 @@
 
           <!-- Result table -->
           <div v-if="assignments.length" class="space-y-2">
-            <p class="text-xs font-medium text-neutral-500 uppercase tracking-wide">Assignments</p>
+            <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Assignments</p>
             <div class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
               <div
                 v-for="(a, i) in assignments"
                 :key="i"
-                class="flex items-center gap-3 px-3 py-2 rounded-xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl border bg-card"
               >
                 <div
                   class="w-3 h-3 rounded-full flex-shrink-0"
                   :style="{ backgroundColor: groupColor(a.groupIndex) }"
                 />
                 <span class="font-medium text-sm flex-1">{{ a.group }}</span>
-                <span class="text-xs text-neutral-400">{{ formatShort(a.date) }}</span>
+                <span class="text-xs text-muted-foreground">{{ formatShort(a.date) }}</span>
               </div>
             </div>
           </div>
 
-          <div v-else-if="!spinning" class="text-center text-sm text-neutral-400 py-4">
+          <div v-else-if="!spinning" class="text-center text-sm text-muted-foreground py-4">
             Press Spin to assign groups to dates!
           </div>
         </div>
@@ -227,42 +222,40 @@
               v-model="eventTitle"
               placeholder="e.g. Training Session"
             />
-            <p class="text-xs text-neutral-400">Group name will be appended automatically.</p>
+            <p class="text-xs text-muted-foreground">Group name will be appended automatically.</p>
           </div>
           <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium mb-1.5">Start Time</label>
-              <input
-                type="time"
-                v-model="eventStartTime"
-                class="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 dark:text-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 min-h-[44px]"
-              />
+            <div class="space-y-1.5">
+              <UiLabel for="spin-time">Start Time</UiLabel>
+              <UiInput id="spin-time" type="time" v-model="eventStartTime" class="min-h-[44px]" />
             </div>
-            <div>
-              <label class="block text-sm font-medium mb-1.5">Duration</label>
-              <select
-                v-model="eventDuration"
-                class="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 dark:text-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 min-h-[44px]"
-              >
-                <option value="30">30 min</option>
-                <option value="60">1 hour</option>
-                <option value="90">1.5 hours</option>
-                <option value="120">2 hours</option>
-                <option value="180">3 hours</option>
-              </select>
+            <div class="space-y-1.5">
+              <UiLabel>Duration</UiLabel>
+              <UiSelect v-model="eventDuration">
+                <UiSelectTrigger class="min-h-[44px]">
+                  <UiSelectValue />
+                </UiSelectTrigger>
+                <UiSelectContent>
+                  <UiSelectItem value="30">30 min</UiSelectItem>
+                  <UiSelectItem value="60">1 hour</UiSelectItem>
+                  <UiSelectItem value="90">1.5 hours</UiSelectItem>
+                  <UiSelectItem value="120">2 hours</UiSelectItem>
+                  <UiSelectItem value="180">3 hours</UiSelectItem>
+                </UiSelectContent>
+              </UiSelect>
             </div>
           </div>
 
           <!-- Summary -->
-          <div class="bg-neutral-50 dark:bg-neutral-800/60 rounded-xl p-4 space-y-2">
+          <div class="bg-muted rounded-xl p-4 space-y-2">
             <p class="text-sm font-medium">Summary</p>
-            <p class="text-sm text-neutral-500">
+            <p class="text-sm text-muted-foreground">
               Creating
-              <strong class="text-neutral-800 dark:text-neutral-100"
+              <strong
                 >{{ assignments.length }} events</strong
               >
               for
-              <strong class="text-neutral-800 dark:text-neutral-100"
+              <strong
                 >{{ parsedGroups.length }} groups</strong
               >
               from {{ formatShort(dateStart) }} to {{ formatShort(dateEnd) }}.

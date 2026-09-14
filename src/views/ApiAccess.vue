@@ -30,7 +30,7 @@
       </UiCardContent>
     </UiCard>
 
-    <UiCard v-if="newSecret" class="border-emerald-500/40">
+    <UiCard v-if="newSecret" class="border-primary/40">
       <UiCardHeader>
         <UiCardTitle>Copy your token now</UiCardTitle>
         <UiCardDescription

@@ -13,12 +13,10 @@
             class="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl object-cover flex-shrink-0 shadow-sm"
           />
           <div>
-            <h2
-              class="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white leading-tight"
-            >
-              {{ welcomePrefix }}, <span class="text-rose-600">{{ firstName }}!</span>
+            <h2 class="text-xl sm:text-2xl font-bold leading-tight">
+              {{ welcomePrefix }}, <span class="text-primary">{{ firstName }}!</span>
             </h2>
-            <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+            <p class="text-sm text-muted-foreground mt-0.5">
               {{ welcomeSubtitle }}
             </p>
           </div>
@@ -43,45 +41,45 @@
                 {{ group.name.charAt(0).toUpperCase() }}
               </div>
               <div class="flex-1 min-w-0">
-                <p class="font-semibold text-sm text-neutral-800 dark:text-white truncate">
+                <p class="font-semibold text-sm truncate">
                   {{ group.name }}
                 </p>
-                <p class="text-xs text-neutral-400 mt-0.5">
+                <p class="text-xs text-muted-foreground mt-0.5">
                   {{ counts[group.id] || 0 }} member{{ counts[group.id] !== 1 ? 's' : '' }}
                 </p>
               </div>
               <ChevronRight
-                class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0 opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 transition-opacity"
+                class="w-4 h-4 text-muted-foreground flex-shrink-0 opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 transition-opacity"
               />
             </button>
           </div>
         </div>
 
         <!-- ── Empty state ── -->
-        <Card v-else class="p-8 text-center">
-          <CardContent>
+        <UiCard v-else>
+          <UiCardContent class="p-8 text-center">
             <div
-              class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-500/15 text-rose-500 flex items-center justify-center mx-auto mb-3"
+              class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3"
             >
               <Users class="w-6 h-6" />
             </div>
-            <p class="font-semibold text-neutral-800 dark:text-white mb-1">No groups yet</p>
-            <p class="text-sm text-neutral-400">Create one or join with an invite code below.</p>
-          </CardContent>
-        </Card>
+            <p class="font-semibold mb-1">No groups yet</p>
+            <p class="text-sm text-muted-foreground">Create one or join with an invite code below.</p>
+          </UiCardContent>
+        </UiCard>
 
         <!-- ── Create + Join ── -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <!-- Create Group -->
-          <Card class="p-5">
-            <CardContent>
+          <UiCard>
+            <UiCardContent class="p-5">
               <div class="flex items-center gap-3 mb-4">
                 <span
-                  class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-500 dark:bg-rose-500/15"
+                  class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
                 >
                   <Plus class="w-[1.125rem] h-[1.125rem]" />
                 </span>
-                <h3 class="font-semibold text-neutral-800 dark:text-white">Create a Group</h3>
+                <h3 class="font-semibold">Create a Group</h3>
               </div>
               <form @submit.prevent="createGroup" class="space-y-3">
                 <div class="flex gap-2 items-start">
@@ -97,28 +95,29 @@
                   <label class="inline-flex items-center cursor-pointer flex-shrink-0 mt-0.5">
                     <input type="color" v-model="newGroupColor" class="sr-only" />
                     <span
-                      class="w-11 h-11 rounded-xl shadow-inner border border-neutral-200 dark:border-neutral-700 block"
+                      class="w-11 h-11 rounded-xl shadow-inner border block"
                       :style="{ backgroundColor: newGroupColor }"
                     ></span>
                   </label>
                 </div>
-                <Button type="submit" :disabled="loadingCreate" class="w-full">
+                <UiButton type="submit" :disabled="loadingCreate" class="w-full">
+                  <LoaderCircle v-if="loadingCreate" class="h-4 w-4 animate-spin" />
                   {{ loadingCreate ? 'Creating…' : 'Create Group' }}
-                </Button>
+                </UiButton>
               </form>
-            </CardContent>
-          </Card>
+            </UiCardContent>
+          </UiCard>
 
           <!-- Join Group -->
-          <Card class="p-5">
-            <CardContent>
+          <UiCard>
+            <UiCardContent class="p-5">
               <div class="flex items-center gap-3 mb-4">
                 <span
-                  class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500 dark:bg-emerald-500/15"
+                  class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
                 >
                   <Mail class="w-[1.125rem] h-[1.125rem]" />
                 </span>
-                <h3 class="font-semibold text-neutral-800 dark:text-white">Join with Code</h3>
+                <h3 class="font-semibold">Join with Code</h3>
               </div>
               <form @submit.prevent="joinGroup" class="space-y-3">
                 <UiInput
@@ -128,18 +127,14 @@
                   placeholder="Enter code (e.g. ABC123)"
                   required
                 />
-                <p v-if="joinError" class="text-red-500 text-xs -mt-1">{{ joinError }}</p>
-                <button
-                  type="submit"
-                  :disabled="loadingJoin"
-                  class="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-medium rounded-xl px-4 py-3 text-sm transition-colors disabled:opacity-50"
-                  style="min-height: 44px"
-                >
+                <p v-if="joinError" class="text-destructive text-xs -mt-1">{{ joinError }}</p>
+                <UiButton type="submit" :disabled="loadingJoin" class="w-full">
+                  <LoaderCircle v-if="loadingJoin" class="h-4 w-4 animate-spin" />
                   {{ loadingJoin ? 'Joining…' : 'Join Group' }}
-                </button>
+                </UiButton>
               </form>
-            </CardContent>
-          </Card>
+            </UiCardContent>
+          </UiCard>
         </div>
       </div>
     </div>
@@ -151,9 +146,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useGroupsStore } from '@/stores/group'
 import * as groupService from '@/lib/services/groups'
-import { Users, Mail, ChevronRight, Plus } from 'lucide-vue-next'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Users, Mail, ChevronRight, Plus, LoaderCircle } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const groupsStore = useGroupsStore()

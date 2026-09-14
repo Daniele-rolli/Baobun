@@ -1,15 +1,15 @@
 <template>
-  <div class="min-h-screen dark:text-white">
+  <div class="min-h-screen">
     <div class="max-w-xl mx-auto px-4 py-6 space-y-6">
       <div class="space-y-2">
         <router-link
           to="/settings"
-          class="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-white transition-colors"
+          class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft class="w-4 h-4" />
           Back to Settings
         </router-link>
-        <h1 class="text-xl font-semibold text-neutral-900 dark:text-white">Edit Profile</h1>
+        <h1 class="text-xl font-semibold">Edit Profile</h1>
       </div>
 
       <transition
@@ -25,8 +25,8 @@
           :class="[
             'p-3.5 rounded-xl text-sm font-medium flex items-center gap-2',
             message.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800'
-              : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800',
+              ? 'bg-primary/10 text-primary border border-primary/20'
+              : 'bg-destructive/10 text-destructive border border-destructive/20',
           ]"
         >
           <svg
@@ -65,8 +65,8 @@
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Profile
         </p>
-        <Card class="p-5">
-          <CardContent>
+        <UiCard class="p-5">
+          <UiCardContent>
             <div class="flex items-center gap-4">
               <div class="relative group flex-shrink-0">
                 <img
@@ -76,35 +76,40 @@
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'User')}&background=random`
                   "
                   alt="Profile Avatar"
-                  class="h-20 w-20 rounded-2xl object-cover border border-neutral-200 dark:border-neutral-700 shadow-sm"
+                  class="h-20 w-20 rounded-2xl object-cover border shadow-sm"
                 />
-                <button
+                <UiButton
                   @click="triggerAvatarUpload"
-                  class="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity touch-exempt"
+                  variant="secondary"
+                  size="sm"
+                  class="absolute inset-x-4 bottom-4 w-auto opacity-0 group-hover:opacity-100 transition-opacity touch-exempt"
                 >
                   Change
-                </button>
-                <button
+                </UiButton>
+                <UiButton
                   v-if="previewAvatar || avatarUrl"
                   @click="removeAvatar"
                   type="button"
-                  class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-red-600 transition-colors touch-exempt"
+                  variant="destructive"
+                  size="icon"
+                  class="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full shadow touch-exempt"
                   title="Remove avatar"
                 >
                   <X class="w-3.5 h-3.5" />
-                </button>
+                </UiButton>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="font-semibold text-neutral-900 dark:text-white truncate">
+                <p class="font-semibold truncate">
                   {{ authStore.user?.name }}
                 </p>
-                <p class="text-sm text-neutral-500 truncate">{{ authStore.user?.email }}</p>
-                <button
+                <p class="text-sm text-muted-foreground truncate">{{ authStore.user?.email }}</p>
+                <UiButton
                   @click="triggerAvatarUpload"
-                  class="mt-1.5 text-sm text-rose-600 hover:text-rose-700 font-medium touch-exempt"
+                  variant="link"
+                  class="mt-1.5 h-auto p-0 touch-exempt"
                 >
                   Upload photo
-                </button>
+                </UiButton>
               </div>
               <input
                 ref="avatarInput"
@@ -114,48 +119,48 @@
                 @change="handleAvatarChange"
               />
             </div>
-          </CardContent>
-        </Card>
+          </UiCardContent>
+        </UiCard>
       </div>
 
       <div class="space-y-2">
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Account
         </p>
-        <Card class="p-5">
-          <CardContent class="space-y-4">
+        <UiCard class="p-5">
+          <UiCardContent class="space-y-4">
             <div>
-              <Label class="text-sm font-medium">Full Name</Label>
-              <Input v-model="form.name" type="text" placeholder="Your full name" class="mt-1.5" />
+              <UiLabel class="text-sm font-medium">Full Name</UiLabel>
+              <UiInput v-model="form.name" type="text" placeholder="Your full name" class="mt-1.5" />
             </div>
 
             <div>
-              <Label class="text-sm font-medium">Email</Label>
-              <Input
+              <UiLabel class="text-sm font-medium">Email</UiLabel>
+              <UiInput
                 v-model="form.email"
                 type="email"
                 placeholder="your@email.com"
                 class="mt-1.5"
               />
             </div>
-          </CardContent>
-        </Card>
+          </UiCardContent>
+        </UiCard>
       </div>
 
       <div class="space-y-2">
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Security
         </p>
-        <Card class="p-5">
-          <CardContent class="space-y-4">
+        <UiCard class="p-5">
+          <UiCardContent class="space-y-4">
             <div>
-              <Label class="text-sm font-medium">
+              <UiLabel class="text-sm font-medium">
                 Current Password
-                <span class="text-neutral-400 font-normal ml-1"
+                <span class="text-muted-foreground font-normal ml-1"
                   >(required to change email or password)</span
                 >
-              </Label>
-              <Input
+              </UiLabel>
+              <UiInput
                 v-model="form.currentPassword"
                 type="password"
                 placeholder="Enter current password"
@@ -166,8 +171,8 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label class="text-sm font-medium">New Password</Label>
-                <Input
+                <UiLabel class="text-sm font-medium">New Password</UiLabel>
+                <UiInput
                   v-model="form.password"
                   type="password"
                   placeholder="Leave blank to keep"
@@ -176,8 +181,8 @@
                 />
               </div>
               <div>
-                <Label class="text-sm font-medium">Confirm Password</Label>
-                <Input
+                <UiLabel class="text-sm font-medium">Confirm Password</UiLabel>
+                <UiInput
                   v-model="form.confirmPassword"
                   type="password"
                   placeholder="Confirm new password"
@@ -186,24 +191,24 @@
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </UiCardContent>
+        </UiCard>
       </div>
 
       <div class="space-y-2">
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Actions
         </p>
-        <Card class="p-4">
-          <CardContent class="space-y-2">
-            <Button @click="submitProfile" :disabled="authStore.loading" class="w-full">
+        <UiCard class="p-4">
+          <UiCardContent class="space-y-2">
+            <UiButton @click="submitProfile" :disabled="authStore.loading" class="w-full">
               {{ authStore.loading ? 'Saving…' : 'Save Changes' }}
-            </Button>
-            <Button @click="authStore.logout()" variant="secondary" class="w-full">
+            </UiButton>
+            <UiButton @click="authStore.logout()" variant="secondary" class="w-full">
               Log Out
-            </Button>
-          </CardContent>
-        </Card>
+            </UiButton>
+          </UiCardContent>
+        </UiCard>
       </div>
     </div>
   </div>
@@ -213,10 +218,6 @@
 import { ref, reactive } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { X, ChevronLeft } from 'lucide-vue-next'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 const authStore = useAuthStore()
 const avatarInput = ref(null)

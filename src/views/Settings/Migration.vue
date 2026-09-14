@@ -4,61 +4,61 @@
       <div class="flex items-center justify-between gap-2">
         <div>
           <h1 class="text-lg font-semibold">Appwrite migration</h1>
-          <p class="text-sm text-neutral-500">
+          <p class="text-sm text-muted-foreground">
             Paste a dry-run log or migration-report.json to review counts before running the CLI.
           </p>
         </div>
-        <Badge v-if="parsed" variant="secondary">{{ sourceLabel }}</Badge>
+        <UiBadge v-if="parsed" variant="secondary">{{ sourceLabel }}</UiBadge>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle class="text-sm">Report input</CardTitle>
-          <CardDescription
+      <UiCard>
+        <UiCardHeader>
+          <UiCardTitle class="text-sm">Report input</UiCardTitle>
+          <UiCardDescription
             >Paste stdout from --dry-run or the contents of migration-report.json. Nothing leaves
-            your browser.</CardDescription
+            your browser.</UiCardDescription
           >
-        </CardHeader>
-        <CardContent class="space-y-3">
-          <Textarea
+        </UiCardHeader>
+        <UiCardContent class="space-y-3">
+          <UiTextarea
             v-model="raw"
             placeholder='{"users": 12, "groups": 3, ...} or [migrate] (dry run) users=12 groups=3 ...'
             class="min-h-32 font-mono text-xs"
           />
           <div class="flex flex-wrap gap-2">
-            <Button size="sm" @click="parse" :disabled="!raw.trim()">Parse report</Button>
-            <Button size="sm" variant="outline" @click="clear" :disabled="!raw && !parsed"
-              >Clear</Button
+            <UiButton size="sm" @click="parse" :disabled="!raw.trim()">Parse report</UiButton>
+            <UiButton size="sm" variant="outline" @click="clear" :disabled="!raw && !parsed"
+              >Clear</UiButton
             >
           </div>
-          <p v-if="error" class="text-sm text-red-500">{{ error }}</p>
-        </CardContent>
-      </Card>
+          <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
+        </UiCardContent>
+      </UiCard>
 
-      <Card v-if="parsed">
-        <CardHeader>
-          <CardTitle class="text-sm">Counts</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <UiCard v-if="parsed">
+        <UiCardHeader>
+          <UiCardTitle class="text-sm">Counts</UiCardTitle>
+        </UiCardHeader>
+        <UiCardContent>
           <dl class="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <div
               v-for="row in statRows"
               :key="row.label"
-              class="rounded-xl border border-neutral-200 dark:border-neutral-700 px-3 py-2"
+              class="rounded-xl border border-border px-3 py-2"
             >
-              <dt class="text-xs text-neutral-500 capitalize">{{ row.label }}</dt>
+              <dt class="text-xs text-muted-foreground capitalize">{{ row.label }}</dt>
               <dd class="text-lg font-semibold tabular-nums">{{ row.value }}</dd>
             </div>
           </dl>
-        </CardContent>
-      </Card>
+        </UiCardContent>
+      </UiCard>
 
-      <Card v-if="logLines.length">
-        <CardHeader>
-          <CardTitle class="text-sm">Log lines</CardTitle>
-          <CardDescription>{{ warnCount }} warning{{ warnCount === 1 ? '' : 's' }}</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <UiCard v-if="logLines.length">
+        <UiCardHeader>
+          <UiCardTitle class="text-sm">Log lines</UiCardTitle>
+          <UiCardDescription>{{ warnCount }} warning{{ warnCount === 1 ? '' : 's' }}</UiCardDescription>
+        </UiCardHeader>
+        <UiCardContent>
           <ul class="space-y-1.5 max-h-64 overflow-auto">
             <li
               v-for="(line, i) in logLines"
@@ -66,46 +66,42 @@
               class="flex items-start gap-2 text-xs font-mono rounded-lg px-2 py-1.5"
               :class="
                 line.warn
-                  ? 'bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300'
-                  : 'bg-neutral-100/70 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'
+                  ? 'bg-primary/10 text-primary'
+                  : 'bg-muted/70 text-muted-foreground'
               "
             >
-              <Badge v-if="line.warn" variant="outline" class="shrink-0">warn</Badge>
+              <UiBadge v-if="line.warn" variant="outline" class="shrink-0">warn</UiBadge>
               <span class="break-all">{{ line.text }}</span>
             </li>
           </ul>
-        </CardContent>
-      </Card>
+        </UiCardContent>
+      </UiCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle class="text-sm">Run it (CLI)</CardTitle>
-          <CardDescription
-            >Migration writes Postgres + MinIO. UI is review-only for now.</CardDescription
+      <UiCard>
+        <UiCardHeader>
+          <UiCardTitle class="text-sm">Run it (CLI)</UiCardTitle>
+          <UiCardDescription
+            >Migration writes Postgres + local file storage. UI is review-only for now.</UiCardDescription
           >
-        </CardHeader>
-        <CardContent class="space-y-2 text-xs font-mono">
-          <p class="rounded-lg bg-neutral-100 dark:bg-neutral-800 px-2 py-1.5 break-all">
+        </UiCardHeader>
+        <UiCardContent class="space-y-2 text-xs font-mono">
+          <p class="rounded-lg bg-muted px-2 py-1.5 break-all">
             node --env-file=.env scripts/migrate-from-appwrite.js --dry-run
           </p>
-          <p class="rounded-lg bg-neutral-100 dark:bg-neutral-800 px-2 py-1.5 break-all">
+          <p class="rounded-lg bg-muted px-2 py-1.5 break-all">
             node --env-file=.env scripts/migrate-from-appwrite.js
           </p>
-          <p class="font-sans text-xs text-neutral-500">
+          <p class="font-sans text-xs text-muted-foreground">
             Full env list: apps/api/scripts/migrate-README.md
           </p>
-        </CardContent>
-      </Card>
+        </UiCardContent>
+      </UiCard>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
 
 const raw = ref('')
 const error = ref('')

@@ -13,13 +13,9 @@
         </div>
 
         <!-- Start Date -->
-        <div>
-          <label class="block text-sm font-medium mb-1.5">Start Date</label>
-          <input
-            type="date"
-            v-model="start"
-            class="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 dark:text-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 min-h-[44px]"
-          />
+        <div class="space-y-1.5">
+          <UiLabel for="bulk-start">Start Date</UiLabel>
+          <UiInput id="bulk-start" type="date" v-model="start" class="min-h-[44px]" />
         </div>
 
         <!-- Max People per Event -->
@@ -29,18 +25,18 @@
         </div>
 
         <!-- Notes -->
-        <div>
-          <label class="block text-sm font-medium mb-1.5">Notes</label>
-          <textarea
+        <div class="space-y-1.5">
+          <UiLabel for="bulk-notes">Notes</UiLabel>
+          <UiTextarea
+            id="bulk-notes"
             v-model="notes"
             rows="3"
             placeholder="Add notes for all generated events"
-            class="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 dark:text-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
-          ></textarea>
+          />
         </div>
 
         <!-- Tags Dropdown -->
-        <label class="block text-sm font-semibold mb-2">Tags</label>
+        <UiLabel class="mb-2 block">Tags</UiLabel>
         <UiSelect v-model="tagId" autocomplete="both">
           <UiSelectTrigger class="w-full">
             <UiSelectValue placeholder="Search tags..." />
@@ -54,7 +50,7 @@
             >
               <span class="flex items-center gap-2">
                 <span
-                  class="w-5 h-5 rounded-full border-2 border-white shadow-sm flex-shrink-0"
+                  class="w-5 h-5 rounded-full border-2 border-card shadow-sm flex-shrink-0"
                   :style="{ backgroundColor: item.color }"
                 >
                   <img
@@ -72,9 +68,7 @@
 
         <!-- Select Days -->
         <div class="my-4 mx-2 space-y-3">
-          <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200"
-            >Select Days</label
-          >
+          <UiLabel class="block">Select Days</UiLabel>
           <div class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-7">
             <button
               v-for="day in daysOfWeek"
@@ -82,8 +76,8 @@
               @click="toggleDay(day)"
               class="flex items-center justify-center px-3 py-2 rounded-full text-sm font-medium transition-all duration-200"
               :class="{
-                'bg-rose-500 text-white shadow-sm': selectedDays[day],
-                'bg-neutral-100 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700':
+                'bg-primary text-primary-foreground shadow-sm': selectedDays[day],
+                'bg-muted hover:bg-muted/70':
                   !selectedDays[day],
               }"
             >

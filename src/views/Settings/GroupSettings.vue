@@ -3,7 +3,7 @@
     <div class="max-w-3xl mx-auto p-4 sm:p-6 space-y-5">
       <router-link
         to="/settings"
-        class="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-white transition-colors"
+        class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ChevronLeft class="w-4 h-4" />
         Back to Settings
@@ -11,7 +11,7 @@
 
       <UiSelect v-model="selectedGroupId" @update:model-value="changeGroup">
         <UiSelectTrigger
-          class="w-full h-auto rounded-xl bg-rose-500 py-2 px-3 text-white border-transparent hover:bg-rose-600 focus-visible:ring-rose-300 data-placeholder:text-white/80 [&_svg]:text-white/80"
+          class="w-full h-auto rounded-xl bg-primary py-2 px-3 text-primary-foreground border-transparent hover:bg-primary/90 focus-visible:ring-ring data-placeholder:text-primary-foreground/80 [&_svg]:text-primary-foreground/80"
         >
           <UiSelectValue placeholder="Select a group..." />
         </UiSelectTrigger>
@@ -24,7 +24,7 @@
 
       <!-- Header with Save Button -->
       <header class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold text-neutral-900 dark:text-white">Group Settings</h1>
+        <h1 class="text-3xl font-bold">Group Settings</h1>
         <transition name="fade">
           <UiButton v-if="dirty && canEditGroup" @click="saveGroup" :disabled="saving">
             {{ saving ? 'Saving…' : 'Save Changes' }}
@@ -35,16 +35,9 @@
       <transition name="fade">
         <div
           v-if="savedAt"
-          class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-2 rounded-xl flex items-center gap-2"
+          class="bg-primary/10 border border-primary/20 text-primary p-2 rounded-xl flex items-center gap-2"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M5 13l4 4L19 7"
-            ></path>
-          </svg>
+          <CircleCheck class="w-5 h-5 shrink-0" />
           <span>Changes saved successfully at {{ savedAt }}</span>
         </div>
       </transition>
@@ -52,39 +45,22 @@
       <transition name="fade">
         <div
           v-if="error"
-          class="bg-red-50 border border-red-200 text-red-800 p-2 rounded-xl flex items-center gap-2"
+          class="bg-destructive/10 border border-destructive/20 text-destructive p-2 rounded-xl flex items-center gap-2"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            ></path>
-          </svg>
+          <CircleAlert class="w-5 h-5 shrink-0" />
           <span>{{ error }}</span>
         </div>
       </transition>
 
-      <div v-if="!selectedGroupId" class="p-12 bg-white rounded-xl shadow-sm text-center">
-        <svg
-          class="mx-auto h-12 w-12 text-neutral-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-          ></path>
-        </svg>
-        <h3 class="mt-4 text-lg font-medium text-neutral-900">No group selected</h3>
-        <p class="mt-2 text-neutral-600">
-          Select a group from the dropdown above to manage its settings.
-        </p>
-      </div>
+      <UiCard v-if="!selectedGroupId">
+        <UiCardContent class="p-12 text-center">
+          <Users class="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 class="mt-4 text-lg font-medium">No group selected</h3>
+          <p class="mt-2 text-muted-foreground">
+            Select a group from the dropdown above to manage its settings.
+          </p>
+        </UiCardContent>
+      </UiCard>
 
       <div v-else class="space-y-6">
         <!-- Group Info & Invite -->
@@ -94,16 +70,12 @@
             <div>
               <div class="flex items-center gap-2 pb-3 mb-4">
                 <BadgeInfo />
-                <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">Group Info</h2>
+                <h2 class="text-lg font-semibold">Group Info</h2>
               </div>
 
               <div class="space-y-4">
                 <div>
-                  <label
-                    for="group-name"
-                    class="block text-sm font-medium text-neutral-700 dark:text-white mb-2"
-                    >Group Name</label
-                  >
+                  <UiLabel for="group-name" class="mb-2 block">Group Name</UiLabel>
                   <UiInput
                     id="group-name"
                     v-model="groupForm.name"
@@ -115,8 +87,8 @@
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-neutral-700 dark:text-white mb-2"
-                    >Group Color</label
+                  <UiLabel class="mb-2 block"
+                    >Group Color</UiLabel
                   >
                   <div class="flex items-center gap-3">
                     <label class="inline-flex items-center cursor-pointer">
@@ -149,115 +121,58 @@
             <!-- Invite Section -->
             <div>
               <div class="flex items-center gap-2 pb-3 mb-4">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                  ></path>
-                </svg>
-                <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">
+                <ArrowLeftRight class="w-5 h-5" />
+                <h2 class="text-lg font-semibold">
                   Invite Members
                 </h2>
               </div>
 
               <div class="space-y-4">
                 <div>
-                  <label class="block text-sm font-medium text-neutral-700 dark:text-white mb-2"
-                    >Invite Code</label
+                  <UiLabel class="mb-2 block"
+                    >Invite Code</UiLabel
                   >
                   <div class="flex gap-2">
                     <div
-                      class="flex-1 p-2 bg-neutral-100 dark:bg-neutral-800 rounded-xl font-mono text-lg font-semibold text-neutral-900 dark:text-white flex items-center justify-center"
+                      class="flex-1 p-2 bg-muted rounded-xl font-mono text-lg font-semibold flex items-center justify-center"
                     >
                       {{ inviteCode || 'Loading...' }}
                     </div>
-                    <button
+                    <UiButton
+                      variant="outline"
+                      size="icon"
                       @click="copyInviteCode"
-                      class="p-2 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 rounded-xl transition-colors"
-                      :class="{ 'bg-emerald-100 dark:bg-emerald-900': codeCopied }"
+                      aria-label="Copy invite code"
                     >
-                      <svg
-                        v-if="!codeCopied"
-                        class="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        ></path>
-                      </svg>
-                      <svg
-                        v-else
-                        class="w-5 h-5 text-emerald-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M5 13l4 4L19 7"
-                        ></path>
-                      </svg>
-                    </button>
+                      <Check v-if="codeCopied" class="w-5 h-5 text-primary" />
+                      <Copy v-else class="w-5 h-5" />
+                    </UiButton>
                   </div>
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-neutral-700 dark:text-white mb-2"
-                    >Invite Link</label
+                  <UiLabel class="mb-2 block"
+                    >Invite Link</UiLabel
                   >
                   <div class="flex gap-2">
                     <div
-                      class="flex-1 p-2 bg-neutral-100 dark:bg-neutral-800 rounded-xl text-sm text-neutral-600 dark:text-neutral-300 truncate"
+                      class="flex-1 p-2 bg-muted rounded-xl text-sm text-muted-foreground truncate"
                     >
                       {{ inviteLink }}
                     </div>
-                    <button
+                    <UiButton
+                      variant="outline"
+                      size="icon"
                       @click="copyInviteLink"
-                      class="p-2 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 rounded-xl transition-colors"
-                      :class="{ 'bg-emerald-100 dark:bg-emerald-900': linkCopied }"
+                      aria-label="Copy invite link"
                     >
-                      <svg
-                        v-if="!linkCopied"
-                        class="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        ></path>
-                      </svg>
-                      <svg
-                        v-else
-                        class="w-5 h-5 text-emerald-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M5 13l4 4L19 7"
-                        ></path>
-                      </svg>
-                    </button>
+                      <Check v-if="linkCopied" class="w-5 h-5 text-primary" />
+                      <Copy v-else class="w-5 h-5" />
+                    </UiButton>
                   </div>
                 </div>
 
-                <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                <p class="text-xs text-muted-foreground">
                   Share this code or link with people you want to invite to this group.
                 </p>
               </div>
@@ -272,8 +187,8 @@
             <div>
               <div class="flex items-center gap-2 pb-3 mb-4">
                 <Users />
-                <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">Members</h2>
-                <span class="ml-auto text-sm text-neutral-500">{{ members.length }}</span>
+                <h2 class="text-lg font-semibold">Members</h2>
+                <span class="ml-auto text-sm text-muted-foreground">{{ members.length }}</span>
               </div>
 
               <div
@@ -283,7 +198,7 @@
                 <div
                   v-for="m in members"
                   :key="m.id"
-                  class="flex items-center justify-between p-3 rounded-xl bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-900 dark:hover:bg-neutral-900/70 transition-colors group"
+                  class="flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted  transition-colors group"
                 >
                   <div class="flex items-center gap-3">
                     <img
@@ -294,7 +209,7 @@
                       class="w-8 h-8 rounded-full border-2 border shadow-sm"
                       :alt="m.name"
                     />
-                    <span class="font-medium text-neutral-900 dark:text-white">{{
+                    <span class="font-medium">{{
                       m.name || m.userId
                     }}</span>
                   </div>
@@ -315,44 +230,34 @@
                       </UiSelectContent>
                     </UiSelect>
                     <UiBadge v-else variant="secondary">{{ formatRole(m.role) }}</UiBadge>
-                    <button
+                    <UiButton
                       v-if="canManageMembers && m.role !== 'OWNER'"
+                      variant="ghost"
+                      size="sm"
+                      class="text-destructive hover:text-destructive"
                       @click="removeMember(m.id)"
-                      class="text-red-600 hover:text-red-700 transition-opacity font-medium text-sm"
                       :disabled="memberBusy === m.id"
                     >
                       {{ memberBusy === m.id ? 'Removing…' : 'Remove' }}
-                    </button>
+                    </UiButton>
                   </div>
                 </div>
               </div>
 
-              <div v-else class="text-center py-8 text-neutral-500">
-                <svg
-                  class="mx-auto h-10 w-10 text-neutral-400 mb-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  ></path>
-                </svg>
+              <div v-else class="text-center py-8 text-muted-foreground">
+                <Users class="mx-auto h-10 w-10 text-muted-foreground mb-2" />
                 <p class="text-sm">No members yet. Share the invite code to add members.</p>
               </div>
 
-              <p v-if="memberError" class="text-sm text-red-600 mt-3">{{ memberError }}</p>
+              <p v-if="memberError" class="text-sm text-destructive mt-3">{{ memberError }}</p>
             </div>
 
             <!-- Tags Section -->
             <div>
               <div class="flex items-center gap-2 pb-3 mb-4">
                 <Tag />
-                <h2 class="text-lg font-semibold text-neutral-900 dark:text-white">Tags</h2>
-                <span class="ml-auto text-sm text-neutral-500">{{ tags.length }}</span>
+                <h2 class="text-lg font-semibold">Tags</h2>
+                <span class="ml-auto text-sm text-muted-foreground">{{ tags.length }}</span>
               </div>
 
               <!-- Create New Tag Section -->
@@ -360,37 +265,24 @@
                 <button
                   type="button"
                   @click="showCreateTag = !showCreateTag"
-                  class="w-full flex items-center justify-between p-3 rounded-xl bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors"
+                  class="w-full flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                 >
-                  <span class="text-sm font-medium text-neutral-900 dark:text-white"
+                  <span class="text-sm font-medium"
                     >Create New Tag</span
                   >
-                  <svg
-                    class="w-4 h-4 transition-transform duration-200 text-neutral-600"
+                  <ChevronDown
+                    class="w-4 h-4 transition-transform duration-200 text-muted-foreground"
                     :class="{ 'rotate-180': showCreateTag }"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 9l-7 7-7-7"
-                    ></path>
-                  </svg>
+                  />
                 </button>
 
                 <transition name="expand">
                   <div
                     v-if="showCreateTag"
-                    class="mt-3 p-4 border rounded-xl bg-neutral-50 dark:bg-neutral-800 space-y-3"
+                    class="mt-3 p-4 border rounded-xl bg-muted/50 space-y-3"
                   >
                     <div>
-                      <label
-                        class="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1"
-                        >Tag Name</label
-                      >
+                      <UiLabel class="mb-1 block text-xs">Tag Name</UiLabel>
                       <UiInput
                         v-model="newTagName"
                         placeholder="e.g., Important, Urgent"
@@ -400,29 +292,23 @@
 
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label
-                          class="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1"
-                          >Color</label
-                        >
+                        <UiLabel class="mb-1 block text-xs">Color</UiLabel>
                         <label class="inline-flex items-center cursor-pointer">
                           <input v-model="newTagColor" type="color" class="sr-only" />
                           <span
-                            class="w-full h-10 rounded-full shadow-sm border-2 border-white ring-2 ring-neutral-200 hover:ring-neutral-300 transition-all"
+                            class="w-full h-10 rounded-full shadow-sm border-2 border-white ring-2 ring-border hover:ring-ring transition-all"
                             :style="{ backgroundColor: newTagColor }"
                           ></span>
                         </label>
                       </div>
 
                       <div>
-                        <label
-                          class="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1"
-                          >Image</label
-                        >
+                        <UiLabel class="mb-1 block text-xs">Image</UiLabel>
                         <input
                           type="file"
                           accept="image/*"
                           @change="handleTagImageUpload"
-                          class="w-full text-xs file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 transition-colors"
+                          class="w-full text-xs file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-muted file:text-foreground hover:file:bg-muted transition-colors"
                         />
                       </div>
                     </div>
@@ -431,7 +317,7 @@
                       <img
                         :src="previewImage"
                         alt="Preview"
-                        class="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm"
+                        class="h-12 w-12 rounded-full object-cover border-2 border-card shadow-sm"
                       />
                     </div>
 
@@ -455,7 +341,7 @@
                 <div
                   v-for="t in tags"
                   :key="t.id"
-                  class="flex items-center gap-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-3 hover:border-neutral-300 dark:hover:border-neutral-600 transition-colors group"
+                  class="flex items-center gap-3 rounded-xl border p-3 hover:border-border  transition-colors group"
                 >
                   <label
                     class="inline-flex items-center"
@@ -477,47 +363,31 @@
                   <input
                     :id="`tag-name-${t.id}`"
                     v-model="t.name"
-                    class="flex-1 decoration-none bg-transparent border-0 border-dashed border-neutral-300 focus:border-solid focus:ring-0 focus:outline-none text-neutral-900 dark:text-white"
+                    class="flex-1 decoration-none bg-transparent border-0 border-dashed border-border focus:border-solid focus:ring-0 focus:outline-none"
                     @change="updateTag(t)"
                     :disabled="!canEditContent"
                   />
 
-                  <button
+                  <UiButton
                     v-if="canEditContent"
+                    variant="ghost"
+                    size="icon"
+                    class="text-destructive hover:text-destructive"
                     @click="removeTag(t.id)"
-                    class="text-red-600 hover:text-red-700 transition-opacity"
                     :disabled="tagBusy === t.id"
+                    aria-label="Remove tag"
                   >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      ></path>
-                    </svg>
-                  </button>
+                    <Trash2 class="w-5 h-5" />
+                  </UiButton>
                 </div>
               </div>
 
-              <div v-else class="text-center py-8 text-neutral-500">
-                <svg
-                  class="mx-auto h-10 w-10 text-neutral-400 mb-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                  ></path>
-                </svg>
+              <div v-else class="text-center py-8 text-muted-foreground">
+                <Tag class="mx-auto h-10 w-10 text-muted-foreground mb-2" />
                 <p class="text-sm">No tags yet. Create one to get started.</p>
               </div>
 
-              <p v-if="tagError" class="text-sm text-red-600 mt-3">{{ tagError }}</p>
+              <p v-if="tagError" class="text-sm text-destructive mt-3">{{ tagError }}</p>
             </div>
           </div>
         </UiCard>
@@ -526,10 +396,10 @@
         <UiCard v-if="canEditGroup" class="p-6">
           <div class="flex flex-col md:flex-row items-start gap-4">
             <div class="flex-1">
-              <h3 class="text-lg font-semibold text-neutral-900 dark:text-white mb-1">
+              <h3 class="text-lg font-semibold mb-1">
                 Delete Group
               </h3>
-              <p class="text-sm text-neutral-600 dark:text-neutral-400">
+              <p class="text-sm text-muted-foreground">
                 Permanently delete this group and all its data. This action cannot be undone.
               </p>
             </div>
@@ -552,7 +422,19 @@ import { useTagsStore } from '@/stores/tag'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useToastStore } from '@/stores/toast'
 import { formatTime } from '@/lib/dateTimePreferences'
-import { Users, BadgeInfo, Tag, ChevronLeft } from 'lucide-vue-next'
+import {
+  Users,
+  BadgeInfo,
+  Tag,
+  ChevronLeft,
+  ChevronDown,
+  CircleCheck,
+  CircleAlert,
+  Copy,
+  Check,
+  Trash2,
+  ArrowLeftRight,
+} from 'lucide-vue-next'
 
 // --- stores ---
 const authStore = useAuthStore()

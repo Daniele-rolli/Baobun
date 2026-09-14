@@ -20,40 +20,42 @@
           shadow-DOM padding that causes overflow (see <style> below).
         -->
         <div class="flex flex-col sm:grid sm:grid-cols-2 gap-4 min-w-0">
-          <div class="min-w-0">
-            <label class="block text-sm font-medium mb-2">Start Time</label>
-            <input
+          <div class="min-w-0 space-y-1.5">
+            <UiLabel for="event-start">Start Time</UiLabel>
+            <UiInput
+              id="event-start"
               v-model="start"
               type="datetime-local"
-              class="datetime-input w-full min-w-0 rounded-xl border px-4 py-3 focus:border-rose-600 focus:ring-2 focus:ring-rose-600 focus:outline-none transition-colors"
+              class="datetime-input w-full min-w-0"
               required
             />
           </div>
-          <div class="min-w-0">
-            <label class="block text-sm font-medium mb-2">End Time</label>
-            <input
+          <div class="min-w-0 space-y-1.5">
+            <UiLabel for="event-end">End Time</UiLabel>
+            <UiInput
+              id="event-end"
               v-model="end"
               type="datetime-local"
-              class="datetime-input w-full min-w-0 rounded-xl border px-4 py-3 focus:border-rose-600 focus:ring-2 focus:ring-rose-600 focus:outline-none transition-colors"
+              class="datetime-input w-full min-w-0"
               required
             />
           </div>
         </div>
 
         <!-- Notes -->
-        <div>
-          <label class="block text-sm font-medium mb-2">Notes</label>
-          <textarea
+        <div class="space-y-1.5">
+          <UiLabel for="event-notes">Notes</UiLabel>
+          <UiTextarea
+            id="event-notes"
             v-model="notes"
-            class="w-full rounded-xl border px-4 py-3 placeholder-neutral-400 focus:border-rose-600 focus:ring-2 focus:ring-rose-600 focus:outline-none transition-colors resize-none"
             rows="3"
             placeholder="Add any additional notes..."
-          ></textarea>
+          />
         </div>
 
         <!-- People (multi-select) -->
-        <div>
-          <label class="block text-sm font-medium mb-2">People</label>
+        <div class="space-y-1.5">
+          <UiLabel>People</UiLabel>
           <UiSelect v-model="people" multiple autocomplete="both">
             <UiSelectTrigger class="w-full">
               <UiSelectValue placeholder="Select people..." />
@@ -75,8 +77,8 @@
         </div>
 
         <!-- Tag (single-select with create option) -->
-        <div>
-          <label class="block text-sm font-medium mb-2">Tag</label>
+        <div class="space-y-1.5">
+          <UiLabel>Tag</UiLabel>
           <UiSelect v-model="tagId" autocomplete="both">
             <UiSelectTrigger class="w-full">
               <UiSelectValue placeholder="Select or create tag..." />
@@ -107,40 +109,41 @@
           <!-- Optional: Expandable Create Tag Form -->
           <!-- Toggle button -->
           <div class="mt-2">
-            <button
+            <UiButton
               type="button"
-              class="text-sm text-rose-600 hover:underline"
+              variant="link"
+              class="h-auto p-0 text-sm"
               @click="showCreateTag = !showCreateTag"
             >
               {{ showCreateTag ? 'Hide Create Tag' : 'Create New Tag' }}
-            </button>
+            </UiButton>
           </div>
 
           <!-- Collapsible form -->
           <div
             v-show="showCreateTag"
-            class="mt-3 p-4 border rounded-xl bg-neutral-50 dark:bg-neutral-800 space-y-3"
+            class="mt-3 p-4 border rounded-xl bg-muted/50 space-y-3"
           >
             <UiInput v-model="newTagName" placeholder="Tag name" />
             <div class="flex justify-between">
               <div>
-                <label class="block text-xs font-medium mb-1">Image</label>
+                <UiLabel class="mb-1 block text-xs">Image</UiLabel>
                 <input
                   type="file"
                   accept="image/*"
                   @change="handleFileUpload"
-                  class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 transition-colors"
+                  class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-muted file:text-foreground hover:file:bg-muted/70 transition-colors"
                 />
                 <div v-if="previewImage" class="mt-2">
                   <img
                     :src="previewImage"
                     alt="Preview"
-                    class="h-8 w-8 rounded-full object-cover border border-neutral-200"
+                    class="h-8 w-8 rounded-full object-cover border"
                   />
                 </div>
               </div>
               <div>
-                <label class="block text-xs font-medium mb-1">Color</label>
+                <UiLabel class="mb-1 block text-xs">Color</UiLabel>
                 <label class="inline-flex items-center cursor-pointer">
                   <input v-model="newTagColor" type="color" class="sr-only" />
                   <span
