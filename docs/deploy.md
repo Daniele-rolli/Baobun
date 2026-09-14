@@ -89,7 +89,7 @@ Point your domain to the Baobun application:
 
 | Path                                               | Upstream             |
 | -------------------------------------------------- | -------------------- |
-| `/` (all paths, including `/api/*` and `/feeds/*`) | `http://<host>:4173` |
+| `/` (all paths, including `/api/*`) | `http://<host>:4173` |
 
 No CORS allowlist or path-specific reverse-proxy rules are needed. PostgreSQL is not
 published by the production Compose file.
