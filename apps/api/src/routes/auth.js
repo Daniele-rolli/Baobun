@@ -95,7 +95,7 @@ auth.post('/login', authLimiter, async (c) => {
       const hasPending = await prisma.passwordResetToken.findFirst({
         where: { userId: user.id, usedAt: null, expiresAt: { gte: new Date() } },
       })
-      if (!hasPending) await emailSetPasswordLink(c, user).catch(() => {})
+      if (!hasPending) await emailSetPasswordLink(c, user).catch((err) => console.error('[mail] set-password send failed:', err?.message ?? err))
       throw new AppError(
         401,
         ERROR_CODES.passwordSetRequired,
@@ -144,7 +144,7 @@ auth.post('/forgot', authLimiter, async (c) => {
         subject: 'Reset your Baobun password',
         text: `Click this link to reset your password: ${url}\nThis link expires in 1 hour.`,
         html: `<p>Click <a href="${url}">here</a> to reset your password. This link expires in 1 hour.</p>`,
-      }).catch(() => {})
+      }).catch((err) => console.error('[mail] reset send failed:', err?.message ?? err))
     }
   }
   return c.json({ ok: true })
