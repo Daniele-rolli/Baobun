@@ -74,6 +74,16 @@ Only the first two values are required:
 | `MAIL_SENDER`       | `Baobun <no-reply@baobun.local>` | From-address for email.                                                         |
 | `MAIL_HOST`         | _(empty)_                        | Optional SMTP host.                                                             |
 | `MAIL_PORT`         | `587`                            | SMTP port.                                                                      |
+
+When merging into an existing stack with `docker-compose.baobun.yml`, the same
+settings use `BAOBUN_`-prefixed names (`BAOBUN_DB_PASSWORD`,
+`BAOBUN_PUBLIC_URL`, `BAOBUN_MAIL_DEBUG`, `BAOBUN_MAIL_SENDER`,
+`BAOBUN_MAIL_HOST`, `BAOBUN_MAIL_PORT`, `BAOBUN_MAIL_SECURE`,
+`BAOBUN_MAIL_USER`, `BAOBUN_MAIL_PASSWORD`, `BAOBUN_PORT`,
+`BAOBUN_LISTEN_ADDRESS`). The two schemes are per-file, not interchangeable:
+a `POSTGRES_PASSWORD` in `.env` is invisible to the baobun file, and Compose
+fails fast naming the exact missing `BAOBUN_*` variable. Do not mix both
+schemes in one `.env` — pick the file, use its names.
 | `MAIL_SECURE`       | `false`                          | Use implicit TLS, normally for port 465. STARTTLS on port 587 does not need it. |
 | `MAIL_USER`         | _(empty)_                        | SMTP username.                                                                  |
 | `MAIL_PASSWORD`     | _(empty)_                        | SMTP password.                                                                  |

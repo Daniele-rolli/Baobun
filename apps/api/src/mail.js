@@ -27,6 +27,11 @@ const buildTransport = () => {
     host,
     port,
     secure,
+    // ponytail: bounded so a dead SMTP server fails into the caller's .catch
+    // instead of hanging the request until the client gives up
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
     auth: user ? { user, pass: password } : undefined,
     tls: { rejectUnauthorized: rejectSelfSigned },
   })
