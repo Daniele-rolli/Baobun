@@ -5,19 +5,24 @@
         <!-- ── Welcome header ── -->
         <div class="flex items-center gap-3 sm:gap-4 mb-2">
           <img
-            :src="
-              authStore.user?.avatarUrl ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'User')}&background=random`
-            "
+            v-if="authStore.user?.avatarUrl"
+            :src="authStore.user.avatarUrl"
             alt="Avatar"
             class="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl object-cover flex-shrink-0 shadow-sm"
           />
+          <div
+            v-else
+            aria-hidden="true"
+            class="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl flex-shrink-0 flex items-center justify-center text-lg font-bold bg-primary/10 text-primary"
+          >
+            {{ initials }}
+          </div>
           <div>
             <h2 class="text-xl sm:text-2xl font-bold leading-tight">
-              {{ welcomePrefix }}, <span class="text-primary">{{ firstName }}!</span>
+              {{ daypart }}, <span class="text-primary">{{ firstName }}!</span>
             </h2>
             <p class="text-sm text-muted-foreground mt-0.5">
-              {{ welcomeSubtitle }}
+              {{ groupsLine }}
             </p>
           </div>
         </div>
@@ -32,7 +37,7 @@
               v-for="group in userGroups"
               :key="group.id"
               @click="$router.push('/group/' + group.id)"
-              class="group flex items-center gap-3 p-4 text-left hover:shadow-md active:scale-[0.99] transition-all"
+              class="group flex items-center gap-3 p-4 text-left rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-sm active:scale-[0.99] transition-all"
             >
               <div
                 class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-sm"
@@ -49,7 +54,7 @@
                 </p>
               </div>
               <ChevronRight
-                class="w-4 h-4 text-muted-foreground flex-shrink-0 opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 transition-opacity"
+                class="w-4 h-4 text-muted-foreground/60 flex-shrink-0"
               />
             </button>
           </div>
@@ -104,6 +109,7 @@
                   <LoaderCircle v-if="loadingCreate" class="h-4 w-4 animate-spin" />
                   {{ loadingCreate ? 'Creating…' : 'Create Group' }}
                 </UiButton>
+                <p v-if="createError" class="text-destructive text-xs">{{ createError }}</p>
               </form>
             </UiCardContent>
           </UiCard>
@@ -159,26 +165,28 @@ const inviteCode = ref('')
 const loadingCreate = ref(false)
 const loadingJoin = ref(false)
 const joinError = ref('')
-const welcomeMessages = [
-  { prefix: 'Hey', subtitle: 'Manage your groups and events.' },
-  { prefix: 'Welcome back', subtitle: 'Ready to plan today?' },
-  { prefix: 'Great to see you', subtitle: 'Your groups are waiting.' },
-  { prefix: 'Let’s get started', subtitle: 'Keep your schedule in sync.' },
-  { prefix: 'Hello again', subtitle: 'Pick up where you left off.' },
-]
+const createError = ref('')
 
 const firstName = computed(() => authStore.user?.name?.split(' ')[0] || 'there')
-const selectedWelcome = computed(() => {
-  const now = new Date()
-  const daySeed = Number(
-    `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`,
-  )
-  const nameSeed = firstName.value.length
-  const index = Math.abs(daySeed + nameSeed) % welcomeMessages.length
-  return welcomeMessages[index]
+const initials = computed(() =>
+  (authStore.user?.name || 'U')
+    .split(' ')
+    .map((w) => w.charAt(0))
+    .slice(0, 2)
+    .join('')
+    .toUpperCase(),
+)
+const daypart = computed(() => {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 18) return 'Good afternoon'
+  return 'Good evening'
 })
-const welcomePrefix = computed(() => selectedWelcome.value.prefix)
-const welcomeSubtitle = computed(() => selectedWelcome.value.subtitle)
+const groupsLine = computed(() => {
+  const n = userGroups.value.length
+  if (n === 0) return 'Create your first group to get started.'
+  return `${n} group${n === 1 ? '' : 's'} · pick one to see what's on.`
+})
 
 const stringToColor = (str) => {
   let hash = 0
@@ -204,23 +212,21 @@ const loadGroups = async () => {
 
 const createGroup = async () => {
   loadingCreate.value = true
-  joinError.value = ''
+  createError.value = ''
   try {
     await groupsStore.createGroup({
       name: newGroupName.value,
-      color: newGroupColor.value || stringToColor(groupIdFallback()),
+      color: newGroupColor.value || '#f43f5e',
     })
     newGroupName.value = ''
     await loadGroups()
   } catch (err) {
-    joinError.value = 'Failed to create group.'
+    createError.value = 'Failed to create group.'
     console.error(err)
   } finally {
     loadingCreate.value = false
   }
 }
-
-const groupIdFallback = () => `g${Math.random().toString(36).slice(2, 8)}`
 
 const joinGroup = async () => {
   loadingJoin.value = true
