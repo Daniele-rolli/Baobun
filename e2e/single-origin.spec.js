@@ -12,9 +12,6 @@ test('a user can register and create a group on a mobile viewport', async ({ pag
   await page.getByRole('button', { name: 'Register' }).click()
 
   await expect(page).toHaveURL(/\/dashboard$/)
-  // First visit auto-opens the PWA install dialog, which aria-hides <main>.
-  // Dismiss it like a user would before asserting on dashboard content.
-  await page.keyboard.press('Escape')
   await expect(page.getByRole('heading', { name: 'Create a Group' })).toBeVisible()
 
   const groupName = `Mobile Group ${unique}`

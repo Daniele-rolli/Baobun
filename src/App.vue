@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="min-h-screen bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
-  >
+  <div class="min-h-screen bg-background text-foreground">
     <div v-if="isAuthRoute" class="min-h-screen w-full flex items-center justify-center p-4">
       <router-view />
     </div>
@@ -26,11 +24,11 @@
           </router-view>
         </div>
 
-        <footer class="p-4 text-center text-xs text-neutral-400">&copy; 2026 Your App Name</footer>
+        <footer class="p-4 text-center text-xs text-muted-foreground">&copy; 2026 Baobun</footer>
       </main>
 
       <ToastViewport />
-      <UiDialog v-model:open="showInstallModal" @update:open="onInstallOpenChange">
+      <UiDialog v-model:open="installOpen">
         <UiDialogContent class="sm:max-w-md">
           <UiDialogHeader>
             <UiDialogTitle class="flex items-center gap-2">
@@ -110,7 +108,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   Download,
@@ -126,12 +124,13 @@ import {
 import Navigator from '@/components/Home/Navigator.vue'
 import ToastViewport from '@/components/ToastViewport.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useInstallPrompt } from '@/composable/useInstallPrompt'
 
 const authStore = useAuthStore()
 const route = useRoute()
+const { installOpen } = useInstallPrompt()
 
 const isCollapsed = ref(false)
-const showInstallModal = ref(false)
 const platform = ref(null)
 const theme = ref('system')
 
@@ -156,28 +155,10 @@ const applyTheme = (value) => {
   document.documentElement.classList.toggle('dark', isDark)
 }
 
-const dismissInstallModal = () => {
-  localStorage.setItem('installModalDismissed', 'true')
-  showInstallModal.value = false
-}
-
-const onInstallOpenChange = (open) => {
-  if (!open) dismissInstallModal()
-}
-
-watch(theme, (newTheme) => {
-  localStorage.setItem('theme', newTheme)
-  applyTheme(newTheme)
-})
-
 onMounted(() => {
   theme.value = localStorage.getItem('theme') || 'system'
   applyTheme(theme.value)
   platform.value = detectPlatform()
-
-  if (!localStorage.getItem('installModalDismissed')) {
-    showInstallModal.value = true
-  }
 })
 </script>
 

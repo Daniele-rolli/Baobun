@@ -287,6 +287,24 @@
 
           <div
             class="flex min-h-16 cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
+            @click="openInstall"
+          >
+            <span
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+            >
+              <Download class="w-[1.125rem] h-[1.125rem]" />
+            </span>
+            <div class="flex-1">
+              <p class="text-sm font-medium">Install app</p>
+              <p class="mt-0.5 text-xs text-muted-foreground">Add Baobun to your home screen</p>
+            </div>
+            <ChevronRightIcon
+              class="w-4 h-4 text-muted-foreground flex-shrink-0"
+            />
+          </div>
+
+          <div
+            class="flex min-h-16 cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
             @click="confirmLogout"
           >
             <span
@@ -311,6 +329,7 @@ import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useRouter } from 'vue-router'
+import { useInstallPrompt } from '@/composable/useInstallPrompt'
 import { formatDateNumeric, formatTime } from '@/lib/dateTimePreferences'
 import {
   ChevronRightIcon,
@@ -327,6 +346,7 @@ import {
   Clock3,
   KeyRound,
   Database,
+  Download,
 } from 'lucide-vue-next'
 
 export default {
@@ -346,12 +366,14 @@ export default {
     Clock3,
     KeyRound,
     Database,
+    Download,
   },
   setup() {
     const authStore = useAuthStore()
     const preferencesStore = usePreferencesStore()
     const notificationsStore = useNotificationsStore()
     const router = useRouter()
+    const { openInstall } = useInstallPrompt()
 
     const themes = [
       { label: 'Light', value: 'light', icon: Sun, iconClass: 'text-primary' },
@@ -448,6 +470,7 @@ export default {
       notificationsStore,
       notificationLeadModel,
       toggleNotifications,
+      openInstall,
     }
   },
 }
