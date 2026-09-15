@@ -33,7 +33,7 @@ async function waitForShell(page, slot, trigger) {
         }
         return await page.locator(`[data-slot="${slot}"]`).count()
       },
-      { timeouts: [15000] },
+      { timeout: 15000 },
     )
     .toBe(1)
 }
