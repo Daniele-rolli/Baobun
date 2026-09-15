@@ -11,5 +11,10 @@ await ensureStorage().catch((err) => {
 
 serve({ fetch: app.fetch, port: config.port }, (info) => {
   console.log(`API listening on http://localhost:${info.port}`)
+  // Non-secret effective config — makes stale .env (compose doesn't recreate
+  // on env change) visible at a glance. Never log passwords or API keys here.
+  console.log(
+    `[config] publicUrl=${config.publicUrl} mail.debug=${config.mail.debug} mail.sender=${config.mail.sender} mail.host=${config.mail.host || '(unset)'} mail.port=${config.mail.port} mail.secure=${config.mail.secure} mail.user=${config.mail.user || '(unset)'}`,
+  )
   startReminderWorker()
 })

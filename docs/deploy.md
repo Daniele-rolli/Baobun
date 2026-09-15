@@ -38,6 +38,17 @@ docker compose pull
 docker compose up -d
 ```
 
+After changing `.env`, always recreate so the new values take effect —
+Compose does not restart containers on env change, and `up -d` alone will
+silently keep the old environment (it prints `Running`, not `Recreated`):
+
+```sh
+docker compose up -d --force-recreate
+```
+
+Verify with the `[config]` line at the top of `docker compose logs baobun`:
+it prints the effective non-secret configuration the API booted with.
+
 ## From source (development)
 
 Clone the repo and use the dev compose:
