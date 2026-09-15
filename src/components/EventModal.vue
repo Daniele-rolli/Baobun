@@ -1,9 +1,6 @@
 <template>
-  <UiDialog :open="visible" @update:open="$emit('close')">
-    <UiDialogContent class="sm:max-w-lg">
-      <UiDialogHeader>
-        <UiDialogTitle>{{ event ? 'Edit Event' : 'Add New Event' }}</UiDialogTitle>
-      </UiDialogHeader>
+  <AdaptiveModal :open="visible" dialog-class="sm:max-w-lg" @update:open="$emit('close')">
+    <template #title>{{ event ? 'Edit Event' : 'Add New Event' }}</template>
 
       <form @submit.prevent="saveEvent" class="space-y-5">
         <!-- Title -->
@@ -231,7 +228,6 @@
           </UiButton>
         </div>
       </form>
-    </UiDialogContent>
 
     <UiAlertDialog v-model:open="showDeleteConfirm">
       <UiAlertDialogContent>
@@ -249,11 +245,12 @@
         </UiAlertDialogFooter>
       </UiAlertDialogContent>
     </UiAlertDialog>
-  </UiDialog>
+  </AdaptiveModal>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import AdaptiveModal from './AdaptiveModal.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useEventsStore } from '@/stores/event'
 import { useTagsStore } from '@/stores/tag'

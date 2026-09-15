@@ -1,9 +1,9 @@
 <template>
-  <UiDialog :open="modelValue" @update:open="$emit('update:modelValue', false)">
-    <UiDialogContent class="sm:max-w-2xl">
+  <AdaptiveModal :open="modelValue" dialog-class="sm:max-w-2xl" @update:open="$emit('update:modelValue', false)">
+    <template #title>Spin Scheduler</template>
       <div class="space-y-6 p-1">
         <!-- Header -->
-        <UiDialogHeader class="flex-row items-start justify-between text-left">
+        <div class="flex flex-row items-start justify-between text-left">
           <div class="flex items-center gap-3">
             <div
               class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"
@@ -11,7 +11,6 @@
               <Shuffle class="w-5 h-5 text-primary" />
             </div>
             <div>
-              <UiDialogTitle class="text-lg font-bold">Spin Scheduler</UiDialogTitle>
               <p class="text-xs text-muted-foreground">
                 Auto-assign groups to dates by spinning the wheel
               </p>
@@ -26,7 +25,7 @@
           >
             <X class="w-5 h-5" />
           </UiButton>
-        </UiDialogHeader>
+        </div>
 
         <!-- Step indicator -->
         <div class="flex items-center gap-2">
@@ -287,8 +286,7 @@
           </UiButton>
         </div>
       </div>
-    </UiDialogContent>
-  </UiDialog>
+  </AdaptiveModal>
 </template>
 
 <script setup>
@@ -301,6 +299,7 @@ import {
   rotateWeekdayLabels,
   formatDateShort as formatDateShortByPreference,
 } from '@/lib/dateTimePreferences'
+import AdaptiveModal from './AdaptiveModal.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
