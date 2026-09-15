@@ -305,9 +305,9 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import UpcomingEvents from './UpcomingEvents.vue'
-import { useSwipe } from '@/composable/useSwipe'
+import { usePointerSwipe } from '@vueuse/core'
 import {
   WEEKDAY_LABELS_SHORT,
   rotateWeekdayLabels,
@@ -641,12 +641,12 @@ const onDrop = (targetDate, domEvent) => {
 }
 
 // ── Touch swipe navigation ───────────────────────────────
-const { attachSwipe } = useSwipe({
-  onLeft: () => next(),
-  onRight: () => prev(),
-})
-
-onMounted(() => {
-  if (calendarEl.value) attachSwipe(calendarEl.value)
+usePointerSwipe(calendarEl, {
+  threshold: 40,
+  pointerTypes: ['touch'],
+  onSwipeEnd(e, direction) {
+    if (direction === 'left') next()
+    else if (direction === 'right') prev()
+  },
 })
 </script>
