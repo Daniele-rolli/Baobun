@@ -87,8 +87,8 @@
       <!-- Actions -->
     <template #footer>
         <div class="flex gap-3 w-full">
-          <UiButton @click="$emit('close')" variant="outline" class="flex-1"> Close </UiButton>
-          <UiButton @click="handleBulkSchedule" class="flex-1"> Schedule </UiButton>
+          <UiButton @click="$emit('close')" variant="outline" class="flex-1 min-h-[44px]"> Close </UiButton>
+          <UiButton @click="handleBulkSchedule" class="flex-1 min-h-[44px]"> Schedule </UiButton>
         </div>
     </template>
   </AdaptiveModal>

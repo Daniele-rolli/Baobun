@@ -152,7 +152,7 @@
             </div>
             <UiButton
               type="button"
-              class="w-full"
+              class="w-full min-h-[44px]"
               :disabled="!newTagName.trim()"
               @click="createTag"
             >
@@ -212,7 +212,7 @@
           <UiButton
             type="button"
             variant="destructive"
-            class="w-full"
+            class="w-full min-h-[44px]"
             @click="showDeleteConfirm = true"
           >
             Delete
@@ -220,10 +220,10 @@
         </div>
 
         <div class="flex gap-3">
-          <UiButton type="button" variant="outline" class="flex-1" @click="$emit('close')">
+          <UiButton type="button" variant="outline" class="flex-1 min-h-[44px]" @click="$emit('close')">
             Cancel
           </UiButton>
-          <UiButton type="submit" class="flex-1" :disabled="saving">
+          <UiButton type="submit" class="flex-1 min-h-[44px]" :disabled="saving">
             {{ saving ? 'Saving…' : event ? 'Update Event' : 'Add Event' }}
           </UiButton>
         </div>

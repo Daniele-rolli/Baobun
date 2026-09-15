@@ -14,8 +14,8 @@
       </div>
 
     <template #footer>
-        <UiButton variant="outline" class="flex-1" @click="$emit('close')"> Close </UiButton>
-        <UiButton class="flex-1" @click="copyLink"> {{ copied ? 'Copied' : 'Copy' }} </UiButton>
+        <UiButton variant="outline" class="flex-1 min-h-[44px]" @click="$emit('close')"> Close </UiButton>
+        <UiButton class="flex-1 min-h-[44px]" @click="copyLink"> {{ copied ? 'Copied' : 'Copy' }} </UiButton>
     </template>
   </AdaptiveModal>
 </template>

@@ -181,7 +181,7 @@
               @click="spinWheel"
               :disabled="spinning || !canSpin"
               size="lg"
-              class="w-40 rounded-full"
+              class="w-40 rounded-full min-h-[44px]"
             >
               <Shuffle v-if="!spinning" class="w-4 h-4 mr-2" />
               <span>{{ spinning ? 'Spinning…' : spinCount === 0 ? 'Spin All!' : 'Re-spin' }}</span>
@@ -264,13 +264,13 @@
 
         <!-- Navigation -->
         <div class="flex gap-3 pt-2">
-          <UiButton v-if="currentStep > 0" @click="currentStep--" variant="outline" class="flex-1">
+          <UiButton v-if="currentStep > 0" @click="currentStep--" variant="outline" class="flex-1 min-h-[44px]">
             Back
           </UiButton>
           <UiButton
             v-if="currentStep < steps.length - 1"
             @click="nextStep"
-            class="flex-1"
+            class="flex-1 min-h-[44px]"
             :disabled="!canProceed"
           >
             {{ currentStep === 2 && assignments.length === 0 ? 'Skip' : 'Next' }}
@@ -278,7 +278,7 @@
           <UiButton
             v-if="currentStep === steps.length - 1"
             @click="createAllEvents"
-            class="flex-1"
+            class="flex-1 min-h-[44px]"
             :disabled="creating"
           >
             <CalendarCheck class="w-4 h-4 mr-2" />
