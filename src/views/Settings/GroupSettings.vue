@@ -719,7 +719,7 @@ onMounted(async () => {
 
 .expand-enter-active,
 .expand-leave-active {
-  transition: all 0.3s ease;
+  transition: max-height 250ms ease-out, opacity 250ms ease-out;
   max-height: 500px;
   overflow: hidden;
 }
