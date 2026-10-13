@@ -23,7 +23,7 @@ beforeAll(async () => {
   })
   cookie = reg.headers.get('set-cookie') || ''
   const create = await req('/api/groups', { method: 'POST', body: { name: 'TagsG' } })
-  groupId = (await create.json()).group.$id
+  groupId = (await create.json()).group.id
 })
 
 describe('tags', () => {
@@ -38,12 +38,12 @@ describe('tags', () => {
     })
     expect(create.status).toBe(201)
     const { tag } = await create.json()
-    tagId = tag.$id
+    tagId = tag.id
     expect(tag.name).toBe('Urgent')
     expect(tag.imageUrl).toBeNull()
 
     const list = await req(`/api/groups/${groupId}/tags`)
-    expect((await list.json()).tags.some((t) => t.$id === tagId)).toBe(true)
+    expect((await list.json()).tags.some((t) => t.id === tagId)).toBe(true)
 
     const patchForm = new FormData()
     patchForm.append('color', '#f97316')

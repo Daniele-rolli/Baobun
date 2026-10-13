@@ -1,12 +1,11 @@
-import { formatDateNumeric, formatTime } from '@/lib/dateTimePreferences'
-import { data } from 'autoprefixer'
+import { formatDateNumeric } from '@/lib/dateTimePreferences'
 
 const normalizePeopleIds = (people) => {
   if (!Array.isArray(people)) return []
   return people
     .map((person) => {
       if (typeof person === 'string') return person
-      if (person?.$id) return person.$id
+      if (person?.id) return person.id
       return ''
     })
     .filter(Boolean)
@@ -34,23 +33,18 @@ export const buildEventsCsvFileName = (label = 'events') => {
 
 export const downloadEventsCsv = ({
   events = [],
-  tags = [],
   members = [],
   filename = buildEventsCsvFileName(),
   dateFormat = 'mdy',
-  timeFormat = '12h',
 }) => {
   if (!Array.isArray(events) || !events.length || typeof document === 'undefined') return false
 
-  const tagNameById = Object.fromEntries(
-    (tags || []).filter((tag) => tag?.$id).map((tag) => [tag.$id, tag.name || 'General']),
-  )
   const memberNameById = {
     everyone: 'Everyone',
     ...Object.fromEntries(
       (members || [])
-        .filter((member) => member?.$id)
-        .map((member) => [member.$id, member.name || member.email || member.$id]),
+        .filter((member) => member?.id)
+        .map((member) => [member.id, member.name || member.email || member.id]),
     ),
   }
 

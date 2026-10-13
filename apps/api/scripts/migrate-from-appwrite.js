@@ -1,7 +1,15 @@
 import { PrismaClient } from '@prisma/client'
 import { randomBytes } from 'crypto'
-import { getLiveFeedFileId } from '@baobun/shared'
 import { ensureBuckets, putObject, BUCKETS } from '../src/s3.js'
+
+// Legacy Appwrite-side feed key format (source data only — the new scheme uses
+// random tokens, see routes/calendarFeeds.js). Kept to locate existing files.
+const legacyFeedKey = ({ groupId, userId = '' } = {}) => {
+  const norm = (v) => String(v).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  let hash = 0
+  for (const ch of `${groupId}:${userId}`) hash = ((hash << 5) - hash + ch.charCodeAt(0)) | 0
+  return `cal-feed-${norm(groupId).slice(0, 10) || 'group'}-${norm(userId).slice(0, 8) || 'all'}-${Math.abs(hash).toString(36).slice(0, 10)}`.slice(0, 36)
+}
 
 const prisma = new PrismaClient()
 
@@ -243,18 +251,25 @@ const main = async () => {
     })
   }
 
-  // Calendar feeds: reproduce object keys so existing webcal subscriptions keep working
+  // Calendar feeds: copy content but issue fresh unguessable tokens (old
+  // deterministic keys are not served by the API anymore).
   for (const g of groups) {
     for (const m of members.filter((mm) => mm.groupId === g.$id && mm.userId)) {
-      const key = getLiveFeedFileId({ groupId: g.$id, userId: m.userId })
-      const src = `${baseUrl()}/storage/buckets/${env('APPWRITE_CALENDAR_FEEDS_BUCKET')}/files/${encodeURIComponent(key)}/download`
+      const src = `${baseUrl()}/storage/buckets/${env('APPWRITE_CALENDAR_FEEDS_BUCKET')}/files/${encodeURIComponent(legacyFeedKey({ groupId: g.$id, userId: m.userId }))}/download`
       try {
         const res = await fetch(src, {
           headers: { 'X-Appwrite-Project': env('APPWRITE_PROJECT_ID'), 'X-Appwrite-Key': env('APPWRITE_API_KEY') },
         })
         if (res.ok) {
           const buf = Buffer.from(await res.arrayBuffer())
-          await putObject(BUCKETS.calendarFeeds, key, buf, 'text/calendar; charset=utf-8')
+          const token = randomBytes(16).toString('hex')
+          const objectKey = `feed-${token}.ics`
+          await putObject(BUCKETS.calendarFeeds, objectKey, buf, 'text/calendar; charset=utf-8')
+          await prisma.calendarFeed.upsert({
+            where: { groupId_userId: { groupId: g.$id, userId: m.userId } },
+            create: { groupId: g.$id, userId: m.userId, token, objectKey },
+            update: { token, objectKey },
+          })
           report.calendarFeeds = (report.calendarFeeds || 0) + 1
         }
       } catch {

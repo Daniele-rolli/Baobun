@@ -7,7 +7,7 @@ export const useGroupsStore = defineStore('groups', () => {
   const loading = ref(false)
   const error = ref(null)
 
-  const byId = computed(() => Object.fromEntries(items.value.map((g) => [g.$id, g])))
+  const byId = computed(() => Object.fromEntries(items.value.map((g) => [g.id, g])))
 
   async function fetchAll() {
     loading.value = true
@@ -30,14 +30,14 @@ export const useGroupsStore = defineStore('groups', () => {
 
   async function updateGroup(id, patch) {
     const res = await groupService.update(id, patch)
-    const ix = items.value.findIndex((x) => x.$id === id)
+    const ix = items.value.findIndex((x) => x.id === id)
     if (ix !== -1) items.value[ix] = res.group
     return res.group
   }
 
   async function deleteGroup(id) {
     await groupService.remove(id)
-    items.value = items.value.filter((g) => g.$id !== id)
+    items.value = items.value.filter((g) => g.id !== id)
   }
 
   async function listMembers(groupId) {
@@ -48,7 +48,7 @@ export const useGroupsStore = defineStore('groups', () => {
   async function getMembers(groupId) {
     const res = await groupService.listMembers(groupId)
     return res.members.map((doc) => ({
-      $id: doc.$id,
+      id: doc.id,
       email: doc.email,
       name: doc.name || doc.email.split('@')[0],
       avatarUrl:

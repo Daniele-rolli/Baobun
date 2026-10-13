@@ -9,7 +9,6 @@ export const config = {
     region: env('S3_REGION', 'us-east-1'),
     accessKey: env('S3_ACCESS_KEY', 'baobun'),
     secretKey: env('S3_SECRET_KEY', 'baobun_dev'),
-    publicEndpoint: env('S3_PUBLIC_ENDPOINT', 'http://localhost:9100'),
     bucketAvatars: env('S3_BUCKET_AVATARS', 'avatars'),
     bucketTagIcons: env('S3_BUCKET_TAG_ICONS', 'tag-icons'),
     bucketCalendarFeeds: env('S3_BUCKET_CALENDAR_FEEDS', 'calendar-feeds'),

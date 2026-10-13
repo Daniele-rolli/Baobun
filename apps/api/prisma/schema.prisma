@@ -57,6 +57,7 @@ model Group {
   members     GroupMember[]
   events      Event[]
   tags        Tag[]
+  feeds       CalendarFeed[]
 }
 
 model GroupMember {
@@ -100,4 +101,16 @@ model Tag {
   imageObjectKey String?  @map("image_object_key")
 
   @@index([groupId])
+}
+
+model CalendarFeed {
+  id        String   @id @default(uuid())
+  groupId   String   @map("group_id")
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id")
+  token     String   @unique
+  objectKey String   @map("object_key")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([groupId, userId])
 }

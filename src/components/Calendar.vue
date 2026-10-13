@@ -136,7 +136,7 @@
             <div class="hidden md:block">
               <div
                 v-for="event in getEventsForDate(day.date)"
-                :key="event.$id"
+                :key="event.id"
                 class="event-item mb-1 truncate rounded-lg px-2 py-1 text-xs text-auto dark:text-neutral-100 cursor-move"
                 :style="{ backgroundColor: getTagColor(event.tagId) }"
                 draggable="true"
@@ -176,7 +176,7 @@
             <div class="flex items-center justify-center mt-2 space-x-1">
               <span
                 v-for="event in getEventsForDate(day.date)"
-                :key="event.$id"
+                :key="event.id"
                 class="w-2 h-2 rounded-full"
                 :style="{ backgroundColor: getTagColor(event.tagId) }"
               ></span>
@@ -249,7 +249,7 @@
               <!-- Events positioned absolutely -->
               <div
                 v-for="segment in getVisibleWeekSegmentsForDate(day)"
-                :key="`${segment.event.$id}-${day.getTime()}`"
+                :key="`${segment.event.id}-${day.getTime()}`"
                 class="absolute left-1 right-1 rounded-md text-xs cursor-move shadow-sm px-2 py-1 z-10"
                 :style="{
                   backgroundColor: getTagColor(segment.event.tagId),
@@ -301,7 +301,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { computed, ref, onMounted } from 'vue'
 import UpcomingEvents from './UpcomingEvents.vue'
 import { useSwipe } from '@/composable/useSwipe'
@@ -323,42 +323,23 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  ChevronUp,
-  Share2,
-  EllipsisVertical,
   CalendarCheck,
-  Grid3x3,
-  Grid3x2Icon,
   Shuffle,
 } from 'lucide-vue-next'
 
-export default {
-  components: {
-    ChevronLeft,
-    ChevronRight,
-    Plus,
-    ChevronUp,
-    UpcomingEvents,
-    Share2,
-    EllipsisVertical,
-    CalendarCheck,
-    Shuffle,
-  },
-  props: {
-    events: { type: Array, default: () => [] },
-    tags: { type: Array, default: () => [] },
-    currentUserId: { type: String, required: true },
-    groupId: { type: String, required: true },
-    weekStartsOn: { type: Number, default: 0 },
-    dateFormat: { type: String, default: 'mdy' },
-    timeFormat: { type: String, default: '12h' },
-  },
-  emits: ['add-event', 'edit-event', 'event-moved', 'bulk-schedule', 'spin-schedule'],
-  setup(props, { emit }) {
+const props = defineProps({
+  events: { type: Array, default: () => [] },
+  tags: { type: Array, default: () => [] },
+  currentUserId: { type: String, required: true },
+  groupId: { type: String, required: true },
+  weekStartsOn: { type: Number, default: 0 },
+  dateFormat: { type: String, default: 'mdy' },
+  timeFormat: { type: String, default: '12h' },
+})
+const emit = defineEmits(['add-event', 'edit-event', 'event-moved', 'bulk-schedule', 'spin-schedule'])
     const today = new Date()
     const month = ref(today.getMonth())
     const year = ref(today.getFullYear())
-    const avatarActive = ref(false)
     const groupId = ref(props.groupId)
     const calendarEl = ref(null)
 
@@ -396,24 +377,17 @@ export default {
       setCalendarDate(targetMonthDate)
     }
 
-    // Start-of-today in local time
-    const startOfToday = computed(() => {
-      const d = new Date()
-      d.setHours(0, 0, 0, 0)
-      return d
-    })
-
     const tagsMap = computed(() => {
       const map = {}
       ;(props.tags || []).forEach((tag) => {
-        if (tag && tag.$id) map[tag.$id] = tag
+        if (tag && tag.id) map[tag.id] = tag
       })
       return map
     })
 
     function normalizeTagId(tagId) {
       if (Array.isArray(tagId)) return tagId[0]
-      if (typeof tagId === 'object' && tagId?.$id) return tagId.$id
+      if (typeof tagId === 'object' && tagId?.id) return tagId.id
       return tagId
     }
 
@@ -552,8 +526,6 @@ export default {
         .filter(Boolean)
     }
 
-    const selectedDayEvents = computed(() => getEventsForDate(selectedDate.value))
-
     const isToday = (date) => {
       const now = new Date()
       return (
@@ -623,10 +595,6 @@ export default {
       return Math.max(20, durationHours * pixelsPerHour) // Minimum 20px height
     }
 
-    function toggleView() {
-      viewMode.value = viewMode.value === 'month' ? 'week' : 'month'
-    }
-
     const formatEventTime = (startTime, endTime) => {
       if (!startTime) return ''
 
@@ -641,14 +609,14 @@ export default {
 
     // --- Drag & Drop to move events between days (desktop) ---
     const onDragStart = (eventObj, domEvent) => {
-      domEvent.dataTransfer.setData('text/plain', JSON.stringify({ id: eventObj.$id }))
+      domEvent.dataTransfer.setData('text/plain', JSON.stringify({ id: eventObj.id }))
       domEvent.dataTransfer.effectAllowed = 'move'
     }
 
     const onDrop = (targetDate, domEvent) => {
       try {
         const payload = JSON.parse(domEvent.dataTransfer.getData('text/plain'))
-        const ev = props.events.find((e) => e.$id === payload.id)
+        const ev = props.events.find((e) => e.id === payload.id)
         if (!ev) return
         // Preserve local clock time and apply it to the dropped local date.
         // Avoids day-shift bugs caused by timezone-bearing ISO string slicing.
@@ -665,7 +633,7 @@ export default {
 
         const newStart = newStartDate.toISOString()
         emit('event-moved', { event: ev, newStart })
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
@@ -680,56 +648,4 @@ export default {
       if (calendarEl.value) attachSwipe(calendarEl.value)
     })
 
-    return {
-      // state
-      calendarEl,
-      viewMode,
-      selectedDate,
-      month,
-      year,
-
-      // labels/titles
-      headerTitle,
-      weekdayLabels,
-      weekdayLabelsByIndex,
-      showDesktopSidebar,
-      timeSlots,
-
-      // data & helpers
-      daysInMonth,
-      daysInWeek,
-      getEventsForDate,
-      getEventSegmentsForDate,
-      getVisibleWeekSegmentsForDate,
-      selectedDayEvents,
-      getTagColor,
-      hexToRgba,
-      isToday,
-      isSelected,
-
-      // actions
-      prev,
-      next,
-      selectDate,
-      onDragStart,
-      onDrop,
-
-      // week view helpers
-      toggleView,
-      formatHour,
-      calculateEventTop,
-      calculateEventHeight,
-      formatEventTime,
-
-      // other
-      tagsMap,
-      startOfToday,
-      avatarActive,
-      Grid3x3,
-      Grid3x2Icon,
-      groupId,
-      Shuffle,
-    }
-  },
-}
 </script>

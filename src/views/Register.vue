@@ -65,7 +65,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
@@ -73,9 +73,6 @@ import { HeartCrack } from 'lucide-vue-next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
-export default {
-  components: { HeartCrack, Card, CardContent, Button },
-  setup() {
     const authStore = useAuthStore()
     const router = useRouter()
     const name = ref('')
@@ -92,8 +89,4 @@ export default {
         else router.push('/dashboard')
       }
     }
-
-    return { authStore, name, email, password, confirmPassword, handleRegister }
-  },
-}
 </script>

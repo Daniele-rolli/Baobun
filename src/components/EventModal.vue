@@ -66,8 +66,8 @@
             <UiSelectContent>
               <UiSelectItem
                 v-for="m in members"
-                :key="m.$id"
-                :value="m.$id"
+                :key="m.id"
+                :value="m.id"
                 :text-value="m.name"
               >
                 <img
@@ -94,8 +94,8 @@
             <UiSelectContent>
               <UiSelectItem
                 v-for="t in tagsStore.items"
-                :key="t.$id"
-                :value="t.$id"
+                :key="t.id"
+                :value="t.id"
                 :text-value="t.name"
               >
                 <div
@@ -199,22 +199,20 @@
   </UiDialog>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useEventsStore } from '@/stores/event'
 import { useTagsStore } from '@/stores/tag'
 import { useGroupsStore } from '@/stores/group'
 
-export default {
-  props: {
-    groupId: { type: String, required: true },
-    visible: { type: Boolean, default: true },
-    event: { type: Object, default: null },
-    defaultDate: { type: Date, default: null },
-  },
-  emits: ['close', 'event-added', 'event-updated', 'tag-created', 'event-deleted'],
-  setup(props, { emit }) {
+const props = defineProps({
+  groupId: { type: String, required: true },
+  visible: { type: Boolean, default: true },
+  event: { type: Object, default: null },
+  defaultDate: { type: Date, default: null },
+})
+const emit = defineEmits(['close', 'event-added', 'event-updated', 'tag-created', 'event-deleted'])
     const authStore = useAuthStore()
     const eventsStore = useEventsStore()
     const tagsStore = useTagsStore()
@@ -256,7 +254,7 @@ export default {
         icon: null,
       })
 
-      tagId.value = tag.$id
+      tagId.value = tag.id
       emit('tag-created', tag)
 
       // Reset form & collapse
@@ -282,12 +280,12 @@ export default {
         tagId: tagId.value || '',
       }
       if (props.event) {
-        await eventsStore.updateEvent(props.event.$id, eventData)
+        await eventsStore.updateEvent(props.event.id, eventData)
         emit('event-updated')
       } else {
         await eventsStore.createEvent({
           ...eventData,
-          userId: authStore.user.$id,
+          userId: authStore.user.id,
           groupId: props.groupId,
         })
         emit('event-added')
@@ -298,7 +296,7 @@ export default {
     const confirmDeleteEvent = async () => {
       if (!props.event) return
       showDeleteConfirm.value = false
-      await eventsStore.deleteEvent(props.event.$id)
+      await eventsStore.deleteEvent(props.event.id)
       emit('event-deleted')
       emit('close')
     }
@@ -339,7 +337,7 @@ export default {
       const fetchedMembers = await groupStore.getMembers(props.groupId, authStore.user)
       members.value = [
         {
-          $id: 'everyone',
+          id: 'everyone',
           name: 'Everyone',
           avatarUrl: 'https://ui-avatars.com/api/?name=Everyone&background=f1f5f9&color=64748b',
         },
@@ -363,28 +361,6 @@ export default {
       }
     })
 
-    return {
-      title,
-      start,
-      end,
-      notes,
-      people,
-      members,
-      tagsStore,
-      tagId,
-      showDeleteConfirm,
-      showCreateTag,
-      newTagName,
-      newTagColor,
-      newTagImageFile,
-      previewImage,
-      handleFileUpload,
-      createTag,
-      saveEvent,
-      confirmDeleteEvent,
-    }
-  },
-}
 </script>
 
 <!--

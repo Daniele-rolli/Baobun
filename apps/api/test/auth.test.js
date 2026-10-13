@@ -30,7 +30,7 @@ describe('auth', () => {
     expect(me.status).toBe(200)
     const meBody = await me.json()
     expect(meBody.user.email).toBe(testUser.email)
-    expect(meBody.user.$id).toBeTruthy()
+    expect(meBody.user.id).toBeTruthy()
 
     await json('/api/auth/logout', { method: 'POST', cookie: regCookie })
 

@@ -4,6 +4,7 @@ import { prisma } from '../db.js'
 import { hashPassword, verifyPassword, validatePassword } from '../password.js'
 import { createSession, destroySession } from '../session.js'
 import { requireAuth } from '../middleware/auth.js'
+import { authLimiter } from '../middleware/rateLimit.js'
 import { unauthorized, conflict, validationError, AppError } from '../errors.js'
 import { sendMail } from '../mail.js'
 import { config } from '../config.js'
@@ -12,7 +13,7 @@ import { randomBytes, createHash } from 'crypto'
 import { ERROR_CODES } from '@baobun/shared'
 
 export const serializeUser = (user, avatarUrl = null) => ({
-  $id: user.id,
+  id: user.id,
   name: user.name,
   email: user.email,
   avatarUrl,
@@ -51,7 +52,7 @@ const emailSetPasswordLink = async (user) => {
 
 const auth = new Hono()
 
-auth.post('/register', async (c) => {
+auth.post('/register', authLimiter, async (c) => {
   const body = await c.req.json().catch(() => ({}))
   const parsed = z
     .object({ name: z.string().trim().min(1), email: z.string().trim().email(), password: z.string() })
@@ -77,7 +78,7 @@ auth.post('/register', async (c) => {
   return c.json({ user: serializeUser(user, null) }, 201)
 })
 
-auth.post('/login', async (c) => {
+auth.post('/login', authLimiter, async (c) => {
   const body = await c.req.json().catch(() => ({}))
   const parsed = z
     .object({ email: z.string().trim().email(), password: z.string() })
@@ -117,7 +118,7 @@ auth.post('/logout', async (c) => {
   return c.json({ ok: true })
 })
 
-auth.post('/forgot', async (c) => {
+auth.post('/forgot', authLimiter, async (c) => {
   const body = await c.req.json().catch(() => ({}))
   const email = String(body.email ?? '').trim().toLowerCase()
   if (email) {
@@ -143,7 +144,7 @@ auth.post('/forgot', async (c) => {
   return c.json({ ok: true })
 })
 
-auth.post('/reset', async (c) => {
+auth.post('/reset', authLimiter, async (c) => {
   const body = await c.req.json().catch(() => ({}))
   const parsed = z
     .object({ userId: z.string().min(1), token: z.string().min(1), newPassword: z.string() })

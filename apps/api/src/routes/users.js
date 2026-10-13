@@ -40,7 +40,7 @@ users.put('/me/avatar', requireAuth, async (c) => {
   const user = c.get('user')
   const form = await c.req.formData().catch(() => null)
   const file = form?.get('file')
-  if (!file || !(file instanceof File) || file.size === 0) {
+  if (!(file instanceof File) || file.size === 0) {
     throw validationError('Please provide an image file.')
   }
   const ext = (file.name.split('.').pop() || 'bin').toLowerCase()

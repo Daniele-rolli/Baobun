@@ -23,7 +23,7 @@ beforeAll(async () => {
   })
   cookie = reg.headers.get('set-cookie') || ''
   const create = await req('/api/groups', { method: 'POST', body: { name: 'EventsG' } })
-  groupId = (await create.json()).group.$id
+  groupId = (await create.json()).group.id
 })
 
 describe('events', () => {
@@ -39,7 +39,7 @@ describe('events', () => {
     })
     expect(create.status).toBe(201)
     const { event } = await create.json()
-    eventId = event.$id
+    eventId = event.id
     expect(event.people).toEqual(['everyone'])
 
     const list = await req(`/api/groups/${groupId}/events`)

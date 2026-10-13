@@ -5,7 +5,7 @@ import { requireAuth } from '../middleware/auth.js'
 import { notFound, forbidden, validationError } from '../errors.js'
 
 export const eventToJson = (event) => ({
-  $id: event.id,
+  id: event.id,
   groupId: event.groupId,
   title: event.title,
   start: event.start.toISOString(),

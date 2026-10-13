@@ -39,17 +39,17 @@
       <div class="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
         <button
           v-for="member in members"
-          :key="member.$id"
+          :key="member.id"
           class="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors"
           :class="
-            selectedUserIdLocal === member.$id
+            selectedUserIdLocal === member.id
               ? 'bg-rose-500 text-white border-rose-500'
               : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:border-rose-300'
           "
-          @click="selectedUserIdLocal = member.$id"
+          @click="selectedUserIdLocal = member.id"
         >
           <img
-            v-if="member.avatarUrl && member.$id !== 'everyone'"
+            v-if="member.avatarUrl && member.id !== 'everyone'"
             :src="member.avatarUrl"
             :alt="member.name"
             class="w-4 h-4 rounded-full object-cover"
@@ -77,10 +77,10 @@
     >
       <button
         v-for="event in filteredEvents"
-        :key="event.$id"
+        :key="event.id"
         class="w-full flex items-center gap-3 p-3 rounded-xl cursor-pointer text-left transition-all active:scale-[0.98]"
         :class="{
-          'ring-2 ring-rose-500 ring-inset': selectionMode && isEventSelected(event.$id),
+          'ring-2 ring-rose-500 ring-inset': selectionMode && isEventSelected(event.id),
         }"
         :style="{ background: getTagColor(event.tagId) }"
         @click="handleEventClick(event)"
@@ -89,7 +89,7 @@
           v-if="selectionMode"
           class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-sm border text-[10px] font-bold"
           :class="
-            isEventSelected(event.$id)
+            isEventSelected(event.id)
               ? 'border-rose-500 bg-rose-500 text-white'
               : 'border-neutral-300 dark:border-neutral-600 text-transparent'
           "
@@ -143,7 +143,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useGroupsStore } from '@/stores/group'
 import { useAuthStore } from '@/stores/auth'
@@ -164,24 +164,15 @@ import {
   DownloadIcon,
 } from 'lucide-vue-next'
 
-export default {
-  props: {
-    events: { type: Array, required: true },
-    tags: { type: Array, required: true },
-    currentUserId: { type: String, default: null },
-    selectedDate: { type: [Date, String], default: null },
-    groupId: { type: String, required: true },
-    compact: { type: Boolean, default: false },
-  },
-  components: {
-    CheckIcon,
-    SearchIcon,
-    ChevronRightIcon,
-    CalendarIcon,
-    DownloadIcon,
-  },
-  emits: ['event-clicked', 'update:selectedUserId'],
-  setup(props, { emit }) {
+const props = defineProps({
+  events: { type: Array, required: true },
+  tags: { type: Array, required: true },
+  currentUserId: { type: String, default: null },
+  selectedDate: { type: [Date, String], default: null },
+  groupId: { type: String, required: true },
+  compact: { type: Boolean, default: false },
+})
+const emit = defineEmits(['event-clicked', 'update:selectedUserId'])
     const authStore = useAuthStore()
     const groupStore = useGroupsStore()
     const preferencesStore = usePreferencesStore()
@@ -197,7 +188,7 @@ export default {
       const fetchedMembers = await groupStore.getMembers(props.groupId, authStore.user)
       members.value = [
         {
-          $id: 'everyone',
+          id: 'everyone',
           name: 'Everyone',
           avatarUrl: null,
         },
@@ -207,7 +198,7 @@ export default {
 
     const tagsMap = computed(() => {
       return props.tags.reduce((map, tag) => {
-        map[tag.$id] = tag
+        map[tag.id] = tag
         return map
       }, {})
     })
@@ -217,7 +208,7 @@ export default {
       return people
         .map((person) => {
           if (typeof person === 'string') return person
-          if (person?.$id) return person.$id
+          if (person?.id) return person.id
           return ''
         })
         .filter(Boolean)
@@ -263,7 +254,7 @@ export default {
     }
 
     const selectedEvents = computed(() =>
-      filteredEvents.value.filter((event) => selectedEventIds.value.includes(event.$id)),
+      filteredEvents.value.filter((event) => selectedEventIds.value.includes(event.id)),
     )
 
     const isEventSelected = (eventId) => selectedEventIds.value.includes(eventId)
@@ -284,20 +275,18 @@ export default {
     const exportSelectedEvents = () => {
       downloadEventsCsv({
         events: selectedEvents.value,
-        tags: props.tags,
         members: members.value,
         filename: buildEventsCsvFileName(
           props.selectedDate ? 'events-from-selected-date' : 'events',
         ),
         dateFormat: preferencesStore.dateFormat,
-        timeFormat: preferencesStore.timeFormat,
       })
       clearSelection()
     }
 
     const handleEventClick = (event) => {
       if (selectionMode.value) {
-        toggleEventSelection(event.$id)
+        toggleEventSelection(event.id)
         return
       }
       emit('event-clicked', event)
@@ -305,7 +294,7 @@ export default {
 
     const normalizeTagId = (tagId) => {
       if (Array.isArray(tagId)) return tagId[0]
-      if (typeof tagId === 'object' && tagId?.$id) return tagId.$id
+      if (typeof tagId === 'object' && tagId?.id) return tagId.id
       return tagId
     }
 
@@ -354,31 +343,4 @@ export default {
     const formatDateShort = (date) =>
       formatDateShortByPreference(date, preferencesStore.dateFormat, false)
 
-    return {
-      search,
-      members,
-      selectionMode,
-      selectedEvents,
-      selectedUserIdLocal,
-      isEventSelected,
-      handleEventClick,
-      matchingEvents,
-      filteredEvents,
-      eventListStyle,
-      tagsMap,
-      brokenIcons,
-      normalizePeopleIds,
-      normalizeTagId,
-      getTagLabel,
-      getTagColor,
-      getTagIconUrl,
-      formatDate,
-      formatEventDateRange,
-      formatDateShort,
-      clearFilters,
-      exportSelectedEvents,
-      clearSelection,
-    }
-  },
-}
 </script>

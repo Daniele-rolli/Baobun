@@ -16,7 +16,7 @@ services:
       retries: 10
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-baobun}
@@ -36,7 +36,6 @@ services:
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: ${MINIO_ROOT_USER:-baobun}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-baobun_dev}
-      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://localhost:9100}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:4173}
       MAIL_DEBUG: ${MAIL_DEBUG:-true}
       MAIL_SENDER: ${MAIL_SENDER:-"Baobun <no-reply@baobun.local>"}

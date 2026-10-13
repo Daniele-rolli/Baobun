@@ -108,7 +108,9 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   Download,
   CheckCircle,
@@ -123,77 +125,58 @@ import {
 import Navigator from '@/components/Home/Navigator.vue'
 import { useAuthStore } from '@/stores/auth'
 
-export default {
-  name: 'App',
-  components: {
-    Download,
-    CheckCircle,
-    Smartphone,
-    Monitor,
-    Laptop,
-    Share,
-    Box,
-    PlusSquare,
-    Dock,
-    Navigator,
-  },
-  data() {
-    return {
-      isCollapsed: false,
-      showInstallModal: false,
-      platform: null,
-      theme: 'system',
-    }
-  },
-  computed: {
-    isLoggedIn() {
-      const authStore = useAuthStore()
-      return authStore.isLoggedIn
-    },
-    isAuthRoute() {
-      const authPaths = ['/login', '/register', '/forgot-password', '/reset-password']
-      return authPaths.includes(this.$route.path)
-    },
-  },
-  watch: {
-    theme(newTheme) {
-      localStorage.setItem('theme', newTheme)
-      this.applyTheme(newTheme)
-    },
-  },
-  mounted() {
-    this.theme = localStorage.getItem('theme') || 'system'
-    this.applyTheme(this.theme)
-    this.platform = this.detectPlatform()
+const authStore = useAuthStore()
+const route = useRoute()
 
-    if (!localStorage.getItem('installModalDismissed')) {
-      this.showInstallModal = true
-    }
-  },
-  methods: {
-    detectPlatform() {
-      const ua = navigator.userAgent.toLowerCase()
-      if (/android/.test(ua)) return 'android'
-      if (/iphone|ipad|ipod/.test(ua)) return 'ios'
-      if (/macintosh/.test(ua)) return 'macos'
-      if (/win|linux/.test(ua)) return 'desktop'
-      return 'unknown'
-    },
-    dismissInstallModal() {
-      localStorage.setItem('installModalDismissed', 'true')
-      this.showInstallModal = false
-    },
-    onInstallOpenChange(open) {
-      if (!open) this.dismissInstallModal()
-    },
-    applyTheme(theme) {
-      const isDark =
-        theme === 'dark' ||
-        (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
-      document.documentElement.classList.toggle('dark', isDark)
-    },
-  },
+const isCollapsed = ref(false)
+const showInstallModal = ref(false)
+const platform = ref(null)
+const theme = ref('system')
+
+const isLoggedIn = computed(() => authStore.isLoggedIn)
+const isAuthRoute = computed(() =>
+  ['/login', '/register', '/forgot-password', '/reset-password'].includes(route.path),
+)
+
+const detectPlatform = () => {
+  const ua = navigator.userAgent.toLowerCase()
+  if (/android/.test(ua)) return 'android'
+  if (/iphone|ipad|ipod/.test(ua)) return 'ios'
+  if (/macintosh/.test(ua)) return 'macos'
+  if (/win|linux/.test(ua)) return 'desktop'
+  return 'unknown'
 }
+
+const applyTheme = (value) => {
+  const isDark =
+    value === 'dark' ||
+    (value === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  document.documentElement.classList.toggle('dark', isDark)
+}
+
+const dismissInstallModal = () => {
+  localStorage.setItem('installModalDismissed', 'true')
+  showInstallModal.value = false
+}
+
+const onInstallOpenChange = (open) => {
+  if (!open) dismissInstallModal()
+}
+
+watch(theme, (newTheme) => {
+  localStorage.setItem('theme', newTheme)
+  applyTheme(newTheme)
+})
+
+onMounted(() => {
+  theme.value = localStorage.getItem('theme') || 'system'
+  applyTheme(theme.value)
+  platform.value = detectPlatform()
+
+  if (!localStorage.getItem('installModalDismissed')) {
+    showInstallModal.value = true
+  }
+})
 </script>
 
 <style>

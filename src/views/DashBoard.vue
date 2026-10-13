@@ -26,8 +26,8 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             <button
               v-for="group in userGroups"
-              :key="group.$id"
-              @click="$router.push('/group/' + group.$id)"
+              :key="group.id"
+              @click="$router.push('/group/' + group.id)"
               class="group flex items-center gap-3 p-4 text-left hover:shadow-md active:scale-[0.99] transition-all"
             >
               <div
@@ -38,7 +38,7 @@
               </div>
               <div class="flex-1 min-w-0">
                 <p class="font-semibold text-sm text-neutral-800 dark:text-white truncate">{{ group.name }}</p>
-                <p class="text-xs text-neutral-400 mt-0.5">{{ counts[group.$id] || 0 }} member{{ counts[group.$id] !== 1 ? 's' : '' }}</p>
+                <p class="text-xs text-neutral-400 mt-0.5">{{ counts[group.id] || 0 }} member{{ counts[group.id] !== 1 ? 's' : '' }}</p>
               </div>
               <ChevronRight class="w-4 h-4 text-neutral-300 dark:text-neutral-600 flex-shrink-0 opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 transition-opacity" />
             </button>
@@ -134,7 +134,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useGroupsStore } from '@/stores/group'
@@ -143,9 +143,6 @@ import { Users, Mail, ChevronRight, Plus } from 'lucide-vue-next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
-export default {
-  components: { Users, Mail, ChevronRight, Plus, Card, CardContent, Button },
-  setup() {
     const authStore = useAuthStore()
     const groupsStore = useGroupsStore()
 
@@ -190,15 +187,10 @@ export default {
         await groupsStore.fetchAll()
         userGroups.value = groupsStore.items.map((g) => ({
           ...g,
-          color: g.color || stringToColor(g.$id),
+          color: g.color || stringToColor(g.id),
         }))
         const countMap = {}
-        await Promise.all(
-          userGroups.value.map(async (g) => {
-            const { members } = await groupService.listMembers(g.$id)
-            countMap[g.$id] = members.length
-          }),
-        )
+        for (const g of userGroups.value) countMap[g.id] = g.memberCount ?? 0
         counts.value = countMap
       } catch (err) {
         console.error('Failed to load groups:', err)
@@ -256,14 +248,4 @@ export default {
       await authStore.initAuth()
       await loadGroups()
     })
-
-    return {
-      authStore, userGroups, counts,
-      newGroupName, newGroupColor, inviteCode,
-      colorToRgba, loadingCreate, loadingJoin, joinError,
-      firstName, welcomePrefix, welcomeSubtitle,
-      createGroup, joinGroup,
-    }
-  },
-}
 </script>

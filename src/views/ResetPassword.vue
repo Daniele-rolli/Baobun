@@ -82,7 +82,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { Unlink, PartyPopper, Asterisk, Eye, EyeClosed } from 'lucide-vue-next'
+import { PartyPopper, Asterisk, Eye, EyeClosed } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -94,7 +94,6 @@ const userId = ref(null)
 const secret = ref(null)
 const successMessage = ref('')
 
-// Toggle states for show/hide
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 
@@ -117,7 +116,6 @@ const handleSubmit = async () => {
     userId.value,
     secret.value,
     password.value,
-    confirmPassword.value,
   )
 
   if (result.success) {

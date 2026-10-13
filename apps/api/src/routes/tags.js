@@ -11,11 +11,11 @@ export const tagToJson = async (tag) => {
       await getObject(BUCKETS.tagIcons, tag.imageObjectKey)
       imageUrl = await presignGetUrl(BUCKETS.tagIcons, tag.imageObjectKey)
     } catch {
-      imageUrl = null
+      // missing object → null
     }
   }
   return {
-    $id: tag.id,
+    id: tag.id,
     name: tag.name,
     color: tag.color,
     icon: tag.icon ?? null,

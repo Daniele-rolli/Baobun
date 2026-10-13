@@ -29,27 +29,15 @@ export const BUCKETS = {
   calendarFeeds: config.s3.bucketCalendarFeeds,
 }
 
-const PUBLIC_READ_POLICY = (bucket) => ({
-  Version: '2012-10-17',
-  Statement: [
-    {
-      Effect: 'Allow',
-      Principal: { AWS: ['*'] },
-      Action: ['s3:GetObject'],
-      Resource: [`arn:aws:s3:::${bucket}/*`],
-    },
-  ],
-})
-
 export const ensureBuckets = async () => {
   const s3 = getS3()
   for (const bucket of Object.values(BUCKETS)) {
     const exists = await s3.bucketExists(bucket).catch(() => false)
     if (!exists) await s3.makeBucket(bucket, config.s3.region)
   }
-  const feeds = BUCKETS.calendarFeeds
-  const policy = PUBLIC_READ_POLICY(feeds)
-  await s3.setBucketPolicy(feeds, JSON.stringify(policy))
+  // ponytail: feeds stay private — ICS bytes are served via the API token route.
+  // Existing deployments: remove the old PUBLIC_READ policy on the feeds bucket
+  // and delete orphaned cal-feed-* objects at cutover.
 }
 
 export const putObject = async (bucket, key, data, contentType = 'application/octet-stream') => {
@@ -71,11 +59,6 @@ export const getObject = async (bucket, key) => {
 export const deleteObject = async (bucket, key) => {
   const s3 = getS3()
   await s3.removeObject(bucket, key)
-}
-
-export const publicUrl = (bucket, key) => {
-  const base = config.s3.publicEndpoint.replace(/\/$/, '')
-  return `${base}/${bucket}/${key}`
 }
 
 export const presignGetUrl = async (bucket, key, { expiresInSeconds = 900 } = {}) => {

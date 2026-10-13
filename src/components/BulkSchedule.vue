@@ -58,8 +58,8 @@
           <UiSelectContent>
             <UiSelectItem
               v-for="item in tagsStore.items"
-              :key="item.$id"
-              :value="item.$id"
+              :key="item.id"
+              :value="item.id"
               :text-value="item.name"
             >
               <span class="flex items-center gap-2">
@@ -118,20 +118,16 @@
   </UiDialog>
 </template>
 
-<script>
+<script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useEventsStore } from '@/stores/event'
 import { useAuthStore } from '@/stores/auth'
 import { useTagsStore } from '@/stores/tag'
 import { useGroupsStore } from '@/stores/group'
 
-export default {
-  props: { groupId: { type: String, required: true } },
-  data() {
-    return { showModal: true }
-  },
-  emits: ['close', 'event-added'],
-  setup(props, { emit }) {
+const props = defineProps({ groupId: { type: String, required: true } })
+const emit = defineEmits(['close', 'event-added'])
+const showModal = ref(true)
     const tagsStore = useTagsStore()
     const groupStore = useGroupsStore()
     const eventsStore = useEventsStore()
@@ -217,6 +213,7 @@ export default {
 
       const eventDates = getNextEventDates(start.value, chosenDays, totalEvents)
 
+      const payloads = []
       let startIndex = 0
       for (let i = 0; i < totalEvents; i++) {
         let size = normalizedGroupSize
@@ -230,17 +227,18 @@ export default {
         const startTime = new Date(eventDate)
         const endTime = new Date(startTime.getTime() + 60 * 60 * 1000)
 
-        await eventsStore.createEvent({
+        payloads.push({
           title: `${title.value} #${i + 1}`,
           notes: notes.value || '',
           start: startTime.toISOString(),
           end: endTime.toISOString(),
-          people: assigned.map((p) => p.$id),
+          people: assigned.map((p) => p.id),
           tagId: tagId.value,
           groupId: props.groupId,
-          userId: authStore.user.$id,
+          userId: authStore.user.id,
         })
       }
+      await Promise.all(payloads.map((p) => eventsStore.createEvent(p)))
 
       emit('close')
     }
@@ -251,19 +249,4 @@ export default {
       members.value = await groupStore.getMembers(props.groupId, authStore.user)
     })
 
-    return {
-      start,
-      title,
-      groupSize,
-      notes,
-      tagId,
-      members,
-      selectedDays,
-      daysOfWeek,
-      toggleDay,
-      tagsStore,
-      handleBulkSchedule,
-    }
-  },
-}
 </script>
