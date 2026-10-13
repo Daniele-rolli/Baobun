@@ -29,7 +29,6 @@ RUN yarn install --frozen-lockfile --production=true
 RUN yarn workspace @baobun/api prisma generate
 
 COPY apps/api/src apps/api/src
-COPY apps/api/scripts apps/api/scripts
 COPY apps/api/entrypoint.sh apps/api/entrypoint.sh
 COPY --from=builder /app/dist /app/dist
 
