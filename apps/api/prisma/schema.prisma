@@ -48,10 +48,12 @@ model PasswordResetToken {
 }
 
 model Group {
-  id          String        @id @default(uuid())
-  name        String
-  color       String        @default("#f43f5e")
-  ownerUserId String        @map("owner_user_id")
+  id             String        @id @default(uuid())
+  name           String
+  color          String        @default("#f43f5e")
+  icon           String?
+  imageObjectKey String?       @map("image_object_key")
+  ownerUserId    String        @map("owner_user_id")
   owner       User          @relation("Owner", fields: [ownerUserId], references: [id], onDelete: Cascade)
   inviteCode  String        @unique @map("invite_code")
   createdAt   DateTime      @default(now()) @map("created_at")
@@ -131,6 +133,7 @@ enum MemberRole {
   OWNER
   ADMIN
   MEMBER
+  EDITOR
   VIEWER
 }
 

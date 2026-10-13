@@ -1,11 +1,11 @@
 <template>
   <div class="flex-1 flex flex-col min-h-0 overflow-y-auto">
-    <div class="w-full max-w-full p-3 sm:p-4 md:max-w-7xl md:mx-auto space-y-3 sm:space-y-4">
+    <div class="w-full max-w-full md:max-w-7xl md:mx-auto space-y-4">
       <!-- Group selector bar -->
       <div class="flex items-center gap-2">
         <UiSelect v-model="selectedGroupId" @update:model-value="changeGroup">
           <UiSelectTrigger
-            class="w-full h-auto flex-1 rounded-2xl bg-primary py-2.5 text-primary-foreground border-transparent hover:bg-primary/90 focus-visible:ring-ring data-placeholder:text-primary-foreground/80 [&_svg]:text-primary-foreground/80"
+            class="w-full h-auto min-w-0 flex-1 rounded-full bg-primary py-2.5 text-primary-foreground border-transparent hover:bg-primary/90 focus-visible:ring-ring data-placeholder:text-primary-foreground/80 [&_svg]:text-primary-foreground/80"
           >
             <UiSelectValue placeholder="Select a group..." />
           </UiSelectTrigger>
@@ -34,6 +34,12 @@
           <Share2 class="w-4 h-4" />
         </UiButton>
       </div>
+      <p
+        v-if="!canEdit"
+        class="text-xs text-muted-foreground text-center bg-muted/50 rounded-full px-4 py-2"
+      >
+        You have view-only access to this group.
+      </p>
 
       <CalendarView
         :events="eventsStore.items"
@@ -44,6 +50,7 @@
         :date-format="preferencesStore.dateFormat"
         :time-format="preferencesStore.timeFormat"
         :can-edit="canEdit"
+        :can-add="canAdd"
         @add-event="openAddEvent"
         @edit-event="handleEditEvent"
         @bulk-schedule="showBulkScheduleModal = true"
@@ -65,7 +72,7 @@
             No additional login needed in Baobun. This integration is a live personal feed.
           </p>
 
-          <div class="rounded-xl border p-3">
+          <div class="rounded-2xl border p-3">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p class="text-sm font-medium">Import calendar</p>
@@ -74,7 +81,7 @@
                 </p>
               </div>
               <label
-                v-if="canEdit"
+                v-if="canAdd"
                 class="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border bg-background px-3 text-sm font-medium hover:bg-muted"
                 :class="{ 'pointer-events-none opacity-50': importBusy }"
               >
@@ -91,7 +98,7 @@
             </div>
           </div>
 
-          <div class="rounded-xl border p-3 space-y-3">
+          <div class="rounded-2xl border p-3 space-y-3">
             <div class="flex items-center justify-between gap-3">
               <div>
                 <p class="text-sm font-medium">
@@ -136,12 +143,12 @@
               <div
                 class="flex items-center justify-between gap-2 text-xs text-muted-foreground"
               >
-                <span> Last sync: {{ liveFeedLastSyncedLabel }} </span>
+                <span class="min-w-0 truncate"> Last sync: {{ liveFeedLastSyncedLabel }} </span>
                 <UiButton
                   type="button"
                   variant="outline"
                   size="sm"
-                  class="touch-exempt"
+                  class="touch-exempt shrink-0"
                   :disabled="liveFeedBusy"
                   @click="refreshLiveFeedNow"
                 >
@@ -241,6 +248,9 @@ const selectedGroup = computed(() =>
   groupsStore.items.find((group) => group.id === selectedGroupId.value),
 )
 const canEdit = computed(() => selectedGroup.value?.role !== 'VIEWER')
+const canAdd = computed(() =>
+  ['OWNER', 'ADMIN', 'MEMBER'].includes(selectedGroup.value?.role),
+)
 
 const importCalendar = async (event) => {
   const file = event.target.files?.[0]
@@ -360,6 +370,10 @@ onUnmounted(() => {
 })
 
 const openAddEvent = (dateOrEvent) => {
+  if (!canAdd.value) {
+    toast.error('Editors cannot add events.', 'Ask a member or admin to create it.')
+    return
+  }
   selectedEvent.value = null
   // dateOrEvent could be a Date (from calendar click) or a CustomEvent (from FAB)
   preselectedDate.value = dateOrEvent instanceof Date ? dateOrEvent : new Date()

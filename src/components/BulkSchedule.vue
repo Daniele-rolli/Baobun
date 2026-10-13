@@ -1,9 +1,6 @@
 <template>
-  <UiDialog :open="showModal" @update:open="$emit('close')">
-    <UiDialogContent class="sm:max-w-lg">
-      <UiDialogHeader>
-        <UiDialogTitle>Bulk Schedule</UiDialogTitle>
-      </UiDialogHeader>
+  <AdaptiveModal :open="showModal" dialog-class="sm:max-w-lg" @update:open="$emit('close')">
+    <template #title>Bulk Schedule</template>
 
       <div class="gap-4 space-y-4">
         <!-- Title -->
@@ -88,18 +85,18 @@
       </div>
 
       <!-- Actions -->
-      <UiDialogFooter>
+    <template #footer>
         <div class="flex gap-3 w-full">
-          <UiButton @click="$emit('close')" variant="outline" class="flex-1"> Close </UiButton>
-          <UiButton @click="handleBulkSchedule" class="flex-1"> Schedule </UiButton>
+          <UiButton @click="$emit('close')" variant="outline" class="flex-1 min-h-[44px]"> Close </UiButton>
+          <UiButton @click="handleBulkSchedule" class="flex-1 min-h-[44px]"> Schedule </UiButton>
         </div>
-      </UiDialogFooter>
-    </UiDialogContent>
-  </UiDialog>
+    </template>
+  </AdaptiveModal>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import AdaptiveModal from './AdaptiveModal.vue'
 import { useEventsStore } from '@/stores/event'
 import { useAuthStore } from '@/stores/auth'
 import { useTagsStore } from '@/stores/tag'

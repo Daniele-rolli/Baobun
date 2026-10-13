@@ -2,8 +2,8 @@
 
 Baobun is a shared calendar for groups. Members can create groups, invite people, schedule
 recurring events and email reminders, import or export `.ics` calendars, tag events, and
-publish subscribable calendar feeds. Owner, admin, member, and viewer roles control who can
-change shared data.
+publish subscribable calendar feeds. Owner, admin, member, editor, and viewer roles control
+who can change shared data: editors can change any existing event but cannot add new ones.
 
 ## Run with Docker Compose
 
@@ -41,13 +41,14 @@ yarn watch
 ```
 
 The Vite development server runs at http://localhost:4173 and proxies API requests to
-http://localhost:3001.
+http://localhost:3001. Point it at another backend with
+`API_PROXY_TARGET=http://host:port yarn watch`.
 
 ## Quality checks
 
 ```sh
 yarn build
-yarn eslint .
+yarn lint
 ```
 
 With the Docker Compose stack running, execute the responsive browser and single-origin API

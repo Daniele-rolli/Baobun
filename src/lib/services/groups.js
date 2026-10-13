@@ -19,3 +19,10 @@ export const updateMemberRole = (id, memberId, role) =>
     json: true,
     body: { role },
   })
+export const updateGroupImage = (id, file) => {
+  const form = new FormData()
+  form.append('file', file)
+  return apiFetch(`/api/groups/${id}/image`, { method: 'PUT', body: form })
+}
+export const removeGroupImage = (id) =>
+  apiFetch(`/api/groups/${id}/image`, { method: 'DELETE' })

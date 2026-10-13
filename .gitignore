@@ -32,3 +32,6 @@ apps/api/data/
 *.sw?
 
 *.tsbuildinfo
+
+# Agent scratch (SDD workspaces, ledgers, briefs — never commit)
+.superpowers/

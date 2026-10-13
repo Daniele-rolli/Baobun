@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen">
-    <div class="max-w-3xl mx-auto p-4 sm:p-6 space-y-5">
+    <div class="max-w-3xl mx-auto space-y-5">
       <router-link
         to="/settings"
         class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -53,7 +53,7 @@
       </transition>
 
       <UiCard v-if="!selectedGroupId">
-        <UiCardContent class="p-12 text-center">
+        <UiCardContent class="p-8 text-center">
           <Users class="mx-auto h-12 w-12 text-muted-foreground" />
           <h3 class="mt-4 text-lg font-medium">No group selected</h3>
           <p class="mt-2 text-muted-foreground">
@@ -64,7 +64,7 @@
 
       <div v-else class="space-y-6">
         <!-- Group Info & Invite -->
-        <UiCard class="p-6">
+        <UiCard class="p-5">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Group Info Section -->
             <div>
@@ -114,6 +114,61 @@
                       />
                     </div>
                   </div>
+
+                  <div>
+                    <UiLabel for="group-icon" class="mb-2 block">Icon (emoji)</UiLabel>
+                    <div class="flex items-center gap-3">
+                      <GroupBadge
+                        :group="{
+                          name: selectedGroup.name,
+                          color: selectedGroup.color,
+                          icon: groupForm.icon,
+                        }"
+                        size="md"
+                        class="shrink-0"
+                      />
+                      <UiInput
+                        id="group-icon"
+                        v-model="groupForm.icon"
+                        @input="dirty = true"
+                        placeholder="e.g. 🌴 🎲"
+                        class="flex-1"
+                        :disabled="!canEditGroup"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <UiLabel class="mb-2 block">Group Image</UiLabel>
+                    <div class="flex items-center gap-3">
+                      <GroupBadge
+                        :group="{
+                          name: selectedGroup.name,
+                          color: selectedGroup.color,
+                          imageUrl: groupForm.imageUrl,
+                        }"
+                        size="md"
+                        class="shrink-0"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        @change="handleGroupImageUpload"
+                        class="flex-1 min-w-0 text-xs file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-muted file:text-foreground hover:file:bg-muted transition-colors"
+                        :disabled="!canManageMembers"
+                      />
+                      <UiButton
+                        v-if="groupForm.imageUrl"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Remove group image"
+                        :disabled="!canManageMembers || uploadingImage"
+                        @click="removeGroupImage"
+                      >
+                        <Trash2 class="w-5 h-5" />
+                      </UiButton>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -156,7 +211,7 @@
                   >
                   <div class="flex gap-2">
                     <div
-                      class="flex-1 p-2 bg-muted rounded-xl text-sm text-muted-foreground truncate"
+                      class="min-w-0 flex-1 p-2 bg-muted rounded-xl text-sm text-muted-foreground truncate"
                     >
                       {{ inviteLink }}
                     </div>
@@ -181,7 +236,7 @@
         </UiCard>
 
         <!-- Members & Tags -->
-        <UiCard class="p-6">
+        <UiCard class="p-5">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Members Section -->
             <div>
@@ -190,6 +245,10 @@
                 <h2 class="text-lg font-semibold">Members</h2>
                 <span class="ml-auto text-sm text-muted-foreground">{{ members.length }}</span>
               </div>
+              <p class="text-xs text-muted-foreground mb-3">
+                Owner: everything · Admin: members + events · Member: add events, edit own ·
+                Editor: edit any event, can't add · Viewer: view only.
+              </p>
 
               <div
                 v-if="members.length > 0"
@@ -198,22 +257,19 @@
                 <div
                   v-for="m in members"
                   :key="m.id"
-                  class="flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted  transition-colors group"
+                  class="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted  transition-colors group"
                 >
-                  <div class="flex items-center gap-3">
-                    <img
-                      :src="
-                        m.avatarUrl ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || m.userId)}&background=f1f5f9&color=64748b`
-                      "
+                  <div class="min-w-0 flex-1 flex items-center gap-3">
+                    <AvatarImg
+                      :src="m.avatarUrl"
+                      :name="m.name || m.userId"
                       class="w-8 h-8 rounded-full border-2 border shadow-sm"
-                      :alt="m.name"
                     />
-                    <span class="font-medium">{{
+                    <span class="font-medium truncate">{{
                       m.name || m.userId
                     }}</span>
                   </div>
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-2 shrink-0">
                     <UiSelect
                       v-if="canManageRoles && m.role !== 'OWNER'"
                       :model-value="m.role"
@@ -226,6 +282,7 @@
                       <UiSelectContent>
                         <UiSelectItem value="ADMIN">Admin</UiSelectItem>
                         <UiSelectItem value="MEMBER">Member</UiSelectItem>
+                        <UiSelectItem value="EDITOR">Editor</UiSelectItem>
                         <UiSelectItem value="VIEWER">Viewer</UiSelectItem>
                       </UiSelectContent>
                     </UiSelect>
@@ -235,7 +292,7 @@
                       variant="ghost"
                       size="sm"
                       class="text-destructive hover:text-destructive"
-                      @click="removeMember(m.id)"
+                      @click="removeMember(m)"
                       :disabled="memberBusy === m.id"
                     >
                       {{ memberBusy === m.id ? 'Removing…' : 'Remove' }}
@@ -363,7 +420,7 @@
                   <input
                     :id="`tag-name-${t.id}`"
                     v-model="t.name"
-                    class="flex-1 decoration-none bg-transparent border-0 border-dashed border-border focus:border-solid focus:ring-0 focus:outline-none"
+                    class="min-w-0 flex-1 decoration-none bg-transparent border-0 border-dashed border-border focus:border-solid focus:ring-0 focus:outline-none"
                     @change="updateTag(t)"
                     :disabled="!canEditContent"
                   />
@@ -373,7 +430,7 @@
                     variant="ghost"
                     size="icon"
                     class="text-destructive hover:text-destructive"
-                    @click="removeTag(t.id)"
+                    @click="removeTag(t)"
                     :disabled="tagBusy === t.id"
                     aria-label="Remove tag"
                   >
@@ -415,13 +472,15 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useGroupsStore } from '@/stores/group'
 import { useTagsStore } from '@/stores/tag'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useToastStore } from '@/stores/toast'
 import { formatTime } from '@/lib/dateTimePreferences'
+import AvatarImg from '@/components/AvatarImg.vue'
+import GroupBadge from '@/components/GroupBadge.vue'
 import {
   Users,
   BadgeInfo,
@@ -445,12 +504,13 @@ const toastStore = useToastStore()
 
 // --- reactive state ---
 const selectedGroupId = ref('')
-const groupForm = ref({ name: '', color: '#4f46e5' })
-const original = ref({ name: '', color: '#4f46e5' })
+const groupForm = ref({ name: '', color: '#4f46e5', icon: '', imageUrl: null })
+const original = ref({ name: '', color: '#4f46e5', icon: '' })
 const dirty = ref(false)
 const saving = ref(false)
 const savedAt = ref('')
 const error = ref('')
+const uploadingImage = ref(false)
 
 const inviteCode = ref('')
 const inviteLink = ref('')
@@ -471,6 +531,7 @@ const addingTag = ref(false)
 const tagError = ref('')
 
 const router = useRouter()
+const route = useRoute()
 
 // --- computed ---
 const groups = computed(() => groupStore.items)
@@ -483,16 +544,19 @@ const canEditContent = computed(() => selectedGroup.value?.role !== 'VIEWER')
 const canManageRoles = computed(() => selectedGroup.value?.role === 'OWNER')
 const canManageMembers = computed(() => ['OWNER', 'ADMIN'].includes(selectedGroup.value?.role))
 const formatRole = (role) =>
-  ({ OWNER: 'Owner', ADMIN: 'Admin', MEMBER: 'Member', VIEWER: 'Viewer' })[role] || 'Member'
+  ({ OWNER: 'Owner', ADMIN: 'Admin', MEMBER: 'Member', EDITOR: 'Editor', VIEWER: 'Viewer' })[
+    role
+  ] || 'Member'
 
 // Watch for changes to groupForm
 watch(
-  () => [groupForm.value.name, groupForm.value.color],
+  () => [groupForm.value.name, groupForm.value.color, groupForm.value.icon],
   () => {
     if (
       original.value.name &&
       (groupForm.value.name !== original.value.name ||
-        groupForm.value.color !== original.value.color)
+        groupForm.value.color !== original.value.color ||
+        groupForm.value.icon !== original.value.icon)
     ) {
       dirty.value = true
     }
@@ -507,7 +571,12 @@ const loadGroup = async (id) => {
     savedAt.value = ''
     const g = groupStore.items.find((x) => x.id === id)
     if (!g) return
-    groupForm.value = { name: g.name, color: g.color || '#4f46e5' }
+    groupForm.value = {
+      name: g.name,
+      color: g.color || '#4f46e5',
+      icon: g.icon || '',
+      imageUrl: g.imageUrl || null,
+    }
     original.value = { ...groupForm.value }
     dirty.value = false
 
@@ -551,6 +620,40 @@ const saveGroup = async () => {
   }
 }
 
+const handleGroupImageUpload = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file || !selectedGroupId.value) return
+  uploadingImage.value = true
+  error.value = ''
+  try {
+    const g = await groupStore.updateGroupImage(selectedGroupId.value, file)
+    groupForm.value.imageUrl = g.imageUrl
+    toastStore.success('Group image updated.')
+  } catch (err) {
+    console.error(err)
+    toastStore.error('Could not upload the group image.')
+  } finally {
+    uploadingImage.value = false
+    e.target.value = ''
+  }
+}
+
+const removeGroupImage = async () => {
+  if (!selectedGroupId.value) return
+  if (!confirm('Remove this group image?')) return
+  uploadingImage.value = true
+  try {
+    await groupStore.removeGroupImage(selectedGroupId.value)
+    groupForm.value.imageUrl = null
+    toastStore.success('Group image removed.')
+  } catch (err) {
+    console.error(err)
+    toastStore.error('Could not remove the group image.')
+  } finally {
+    uploadingImage.value = false
+  }
+}
+
 // --- Invite ---
 const copyInviteCode = async () => {
   try {
@@ -581,7 +684,10 @@ const copyInviteLink = async () => {
 }
 
 // --- Members ---
-const removeMember = async (id) => {
+const removeMember = async (member) => {
+  const label = member.name || member.email || 'this member'
+  if (!confirm(`Remove ${label} from the group? They will lose access immediately.`)) return
+  const id = member.id
   memberBusy.value = id
   memberError.value = ''
   try {
@@ -662,7 +768,9 @@ const updateTag = async (tag) => {
   }
 }
 
-const removeTag = async (id) => {
+const removeTag = async (tag) => {
+  if (!confirm(`Delete the tag "${tag.name}"? Events using it will become untagged.`)) return
+  const id = tag.id
   tagBusy.value = id
   tagError.value = ''
   try {
@@ -700,9 +808,12 @@ const confirmDeleteGroup = async () => {
 // --- initial fetch ---
 onMounted(async () => {
   await groupStore.fetchAll()
-  if (groups.value.length && !selectedGroupId.value) {
-    selectedGroupId.value = groups.value[0].id
-    await loadGroup(selectedGroupId.value)
+  const requested = route.query.group
+  const match = requested && groups.value.find((g) => g.id === requested)
+  const initial = match ? match.id : groups.value[0]?.id
+  if (initial) {
+    selectedGroupId.value = initial
+    await loadGroup(initial)
   }
 })
 </script>
@@ -719,7 +830,7 @@ onMounted(async () => {
 
 .expand-enter-active,
 .expand-leave-active {
-  transition: all 0.3s ease;
+  transition: max-height 250ms ease-out, opacity 250ms ease-out;
   max-height: 500px;
   overflow: hidden;
 }

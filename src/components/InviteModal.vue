@@ -1,29 +1,29 @@
 <template>
-  <UiDialog :open="showModal" @update:open="$emit('close')">
-    <UiDialogContent class="sm:max-w-md">
-      <UiDialogHeader>
-        <UiDialogTitle class="flex items-center gap-2">
-          <Share2 class="w-5 h-5" />
-          <span>Share Invite Link</span>
-        </UiDialogTitle>
-        <UiDialogDescription> Anyone with this link can join the group. </UiDialogDescription>
-      </UiDialogHeader>
+  <AdaptiveModal :open="showModal" dialog-class="sm:max-w-md" @update:open="$emit('close')">
+    <template #title>
+      <span class="flex items-center gap-2">
+        <Share2 class="w-5 h-5" />
+        <span>Share Invite Link</span>
+      </span>
+    </template>
+
+    <p class="text-sm text-muted-foreground">Anyone with this link can join the group.</p>
 
       <div class="flex items-center gap-2">
         <UiInput :model-value="inviteLink" readonly ref="linkInput" class="flex-1" />
       </div>
 
-      <UiDialogFooter>
-        <UiButton variant="outline" class="flex-1" @click="$emit('close')"> Close </UiButton>
-        <UiButton class="flex-1" @click="copyLink"> {{ copied ? 'Copied' : 'Copy' }} </UiButton>
-      </UiDialogFooter>
-    </UiDialogContent>
-  </UiDialog>
+    <template #footer>
+        <UiButton variant="outline" class="flex-1 min-h-[44px]" @click="$emit('close')"> Close </UiButton>
+        <UiButton class="flex-1 min-h-[44px]" @click="copyLink"> {{ copied ? 'Copied' : 'Copy' }} </UiButton>
+    </template>
+  </AdaptiveModal>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
 import { Share2 } from 'lucide-vue-next'
+import AdaptiveModal from './AdaptiveModal.vue'
 
 const props = defineProps(['inviteCode'])
 defineEmits(['close'])

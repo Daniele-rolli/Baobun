@@ -8,7 +8,7 @@ import { config } from '../config.js'
 import { avatarUrlFor } from './auth.js'
 import { eventToJson, eventSchema } from './events.js'
 import { tagToJson } from './tags.js'
-import { putObject, BUCKETS } from '../storage.js'
+import { putObject, deleteObject, publicUrl, BUCKETS } from '../storage.js'
 import { expandRecurrence } from '../recurrence.js'
 import { randomUUID } from 'crypto'
 import { parseIcsEvents } from '../icsImport.js'
@@ -22,6 +22,10 @@ export const groupToJson = (group, memberCount = 0, role = null) => ({
   id: group.id,
   name: group.name,
   color: group.color,
+  icon: group.icon ?? null,
+  imageUrl: group.imageObjectKey
+    ? publicUrl(BUCKETS.groupImages, group.imageObjectKey)
+    : null,
   inviteCode: group.inviteCode,
   ownerId: group.ownerUserId,
   memberCount,
@@ -149,9 +153,45 @@ groups.patch('/:id', requireOwner('id'), async (c) => {
   const data = {}
   if (typeof body.name === 'string' && body.name.trim()) data.name = body.name.trim()
   if (typeof body.color === 'string' && body.color) data.color = body.color
+  if (typeof body.icon === 'string') {
+    const icon = body.icon.trim()
+    if (icon.length > 8) throw validationError('Icon must be 8 characters or fewer.')
+    data.icon = icon || null
+  }
   const updated = await prisma.group.update({ where: { id: group.id }, data })
   const count = await prisma.groupMember.count({ where: { groupId: group.id } })
   return c.json({ group: groupToJson(updated, count) })
+})
+
+groups.put('/:id/image', requireGroupRole('ADMIN', 'id'), async (c) => {
+  const group = await prisma.group.findUnique({ where: { id: c.req.param('id') } })
+  const form = await c.req.formData().catch(() => null)
+  const file = form?.get('file')
+  if (!(file instanceof File) || file.size === 0) {
+    throw validationError('Please provide an image file.')
+  }
+  const ext = (file.name.split('.').pop() || 'bin').toLowerCase()
+  const key = `group-${group.id}-${Date.now()}.${ext}`
+  const buf = Buffer.from(await file.arrayBuffer())
+  await putObject(BUCKETS.groupImages, key, buf, file.type || 'application/octet-stream')
+
+  if (group.imageObjectKey) {
+    await deleteObject(BUCKETS.groupImages, group.imageObjectKey).catch(() => {})
+  }
+  const updated = await prisma.group.update({
+    where: { id: group.id },
+    data: { imageObjectKey: key },
+  })
+  return c.json({ group: groupToJson(updated) })
+})
+
+groups.delete('/:id/image', requireGroupRole('ADMIN', 'id'), async (c) => {
+  const group = await prisma.group.findUnique({ where: { id: c.req.param('id') } })
+  if (group.imageObjectKey) {
+    await deleteObject(BUCKETS.groupImages, group.imageObjectKey).catch(() => {})
+    await prisma.group.update({ where: { id: group.id }, data: { imageObjectKey: null } })
+  }
+  return c.json({ ok: true })
 })
 
 groups.delete('/:id', requireOwner('id'), async (c) => {
@@ -183,7 +223,7 @@ groups.get('/:id/members', requireMember('id'), async (c) => {
 })
 
 groups.post('/:id/members', requireGroupRole('ADMIN', 'id'), async (c) => {
-  const group = c.get('group')
+  const group = await prisma.group.findUnique({ where: { id: c.req.param('id') } })
   const body = await c.req.json().catch(() => ({}))
   const parsed = z.object({ email: z.string().trim().email() }).safeParse(body)
   if (!parsed.success) throw validationError('A valid email is required.')
@@ -207,8 +247,8 @@ groups.post('/:id/members', requireGroupRole('ADMIN', 'id'), async (c) => {
 groups.patch('/:id/members/:memberId/role', requireOwner('id'), async (c) => {
   const { id: groupId, memberId } = c.req.param()
   const body = await c.req.json().catch(() => ({}))
-  const parsed = z.enum(['ADMIN', 'MEMBER', 'VIEWER']).safeParse(body.role)
-  if (!parsed.success) throw validationError('Role must be admin, member, or viewer.')
+  const parsed = z.enum(['ADMIN', 'MEMBER', 'EDITOR', 'VIEWER']).safeParse(body.role)
+  if (!parsed.success) throw validationError('Role must be admin, member, editor, or viewer.')
   const member = await prisma.groupMember.findFirst({ where: { id: memberId, groupId } })
   if (!member) throw notFound('Member not found.')
   if (member.userId === c.get('group').ownerUserId) {
@@ -339,7 +379,7 @@ groups.get('/:id/tags', requireMember('id'), async (c) => {
   return c.json({ tags: await Promise.all(items.map(tagToJson)) })
 })
 
-groups.post('/:id/tags', requireGroupRole('MEMBER', 'id'), async (c) => {
+groups.post('/:id/tags', requireGroupRole('EDITOR', 'id'), async (c) => {
   const groupId = c.req.param('id')
   const form = await c.req.formData().catch(() => null)
   const name = String(form?.get('name') ?? '').trim()

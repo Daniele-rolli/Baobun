@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-2xl space-y-5 p-4 sm:p-6">
+  <div class="mx-auto max-w-2xl space-y-5">
     <router-link
       to="/settings"
       class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -135,6 +135,7 @@ const createToken = async () => {
 }
 
 const revokeToken = async (token) => {
+  if (!confirm(`Revoke the token "${token.name}"? Anything using it will stop working.`)) return
   busy.value = true
   try {
     await apiFetch(`/api/tokens/${token.id}`, { method: 'DELETE' })

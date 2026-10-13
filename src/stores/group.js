@@ -40,6 +40,19 @@ export const useGroupsStore = defineStore('groups', () => {
     items.value = items.value.filter((g) => g.id !== id)
   }
 
+  async function updateGroupImage(id, file) {
+    const res = await groupService.updateGroupImage(id, file)
+    const ix = items.value.findIndex((x) => x.id === id)
+    if (ix !== -1) items.value[ix] = res.group
+    return res.group
+  }
+
+  async function removeGroupImage(id) {
+    await groupService.removeGroupImage(id)
+    const ix = items.value.findIndex((x) => x.id === id)
+    if (ix !== -1) items.value[ix] = { ...items.value[ix], imageUrl: null }
+  }
+
   async function listMembers(groupId) {
     const res = await groupService.listMembers(groupId)
     return res.members
@@ -84,6 +97,8 @@ export const useGroupsStore = defineStore('groups', () => {
     getMembers,
     updateGroup,
     deleteGroup,
+    updateGroupImage,
+    removeGroupImage,
     listMembers,
     addMember,
     removeMember,

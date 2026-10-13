@@ -1,6 +1,6 @@
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-    <div class="w-full max-w-sm space-y-4">
+  <div class="w-full px-4 py-8">
+    <div class="w-full max-w-sm mx-auto space-y-4">
       <transition
         enter-active-class="transition duration-200 ease-out"
         enter-from-class="opacity-0 -translate-y-1"
@@ -17,9 +17,9 @@
       </transition>
 
       <UiCard>
-        <UiCardHeader class="items-center text-center">
+        <UiCardHeader class="items-center justify-items-center text-center">
           <img
-            class="mb-2 h-16 w-16"
+            class="h-16 w-16 rounded-2xl"
             src="/icons/icon_128x128.png"
             alt="Baobun"
             width="64"
