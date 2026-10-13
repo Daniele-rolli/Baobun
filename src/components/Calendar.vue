@@ -95,7 +95,7 @@
               v-if="canAdd"
               size="icon"
               class="touch-exempt shadow-sm"
-              aria-label="Add event"
+              aria-label="New event"
               @click="$emit('add-event', selectedDate)"
             >
               <Plus class="w-4 h-4" />
