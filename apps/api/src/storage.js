@@ -7,6 +7,7 @@ export const BUCKETS = {
   avatars: 'avatars',
   tagIcons: 'tag-icons',
   calendarFeeds: 'calendar-feeds',
+  groupImages: 'group-images',
 }
 
 const root = resolve(config.storagePath)

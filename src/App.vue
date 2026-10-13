@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground">
-    <div v-if="isAuthRoute" class="min-h-screen w-full flex items-center justify-center p-4">
+  <div class="min-h-dvh bg-background text-foreground">
+    <div v-if="isAuthRoute" class="min-h-dvh w-full flex items-center justify-center p-4">
       <router-view />
     </div>
 
-    <div v-else class="relative min-h-screen">
+    <div v-else class="relative min-h-dvh">
       <Navigator
         v-if="isLoggedIn"
         :collapsed="isCollapsed"
@@ -13,10 +13,10 @@
       />
 
       <main
-        class="transition-all duration-300 min-h-screen flex flex-col"
+        class="transition-all duration-300 min-h-dvh flex flex-col"
         :class="[isLoggedIn ? (isCollapsed ? 'md:ml-24' : 'md:ml-72') : 'ml-0']"
       >
-        <div class="p-4 md:p-8 flex-1">
+        <div class="px-4 sm:px-6 pt-4 sm:pt-6 pb-28 md:pb-10 flex-1 w-full">
           <router-view v-slot="{ Component, route }">
             <transition name="page" mode="out-in">
               <component :is="Component" :key="route.path" />
@@ -24,7 +24,7 @@
           </router-view>
         </div>
 
-        <footer class="p-4 text-center text-xs text-muted-foreground">&copy; 2026 Baobun</footer>
+        <footer class="px-4 pb-8 pt-2 text-center text-xs text-muted-foreground">&copy; 2026 Baobun</footer>
       </main>
 
       <ToastViewport />
@@ -159,6 +159,12 @@ onMounted(() => {
   theme.value = localStorage.getItem('theme') || 'system'
   applyTheme(theme.value)
   platform.value = detectPlatform()
+
+  window
+    .matchMedia('(prefers-color-scheme: dark)')
+    .addEventListener('change', () => {
+      if (theme.value === 'system') applyTheme(theme.value)
+    })
 })
 </script>
 

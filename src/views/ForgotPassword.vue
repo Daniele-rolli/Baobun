@@ -1,8 +1,8 @@
 <template>
-  <div class="flex min-h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+  <div class="w-full px-4 py-8">
+    <div class="w-full max-w-sm mx-auto">
       <!-- Forgot Password Form -->
-      <UiCard v-if="!successMessage" class="rounded-3xl">
+      <UiCard v-if="!successMessage">
         <UiCardContent class="p-6">
           <form @submit.prevent="handleSubmit" class="space-y-6">
             <div class="flex justify-center">
@@ -56,7 +56,7 @@
         </UiCardContent>
       </UiCard>
 
-      <UiCard v-else class="rounded-3xl">
+      <UiCard v-else>
         <UiCardContent class="space-y-6 p-6">
           <div class="flex justify-center">
             <div class="flex items-center justify-center rounded-xl border bg-muted/40 p-3">

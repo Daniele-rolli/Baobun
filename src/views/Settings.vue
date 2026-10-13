@@ -1,17 +1,15 @@
 <template>
   <div class="min-h-screen">
-    <div class="max-w-xl mx-auto px-4 py-6 space-y-6">
+    <div class="max-w-xl mx-auto space-y-4">
       <!-- ── Profile card ── -->
-      <UiCard class="p-5">
-        <UiCardContent>
+      <UiCard>
+        <UiCardContent class="p-5">
           <div class="flex items-center gap-4">
-            <img
-              :src="
-                authStore.user?.avatarUrl ||
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'U')}&background=random&size=96`
-              "
+            <AvatarImg
+              :src="authStore.user?.avatarUrl"
+              :name="authStore.user?.name || 'U'"
               alt="Avatar"
-              class="w-16 h-16 rounded-2xl object-cover flex-shrink-0 shadow-sm"
+              class="w-16 h-16 rounded-2xl flex-shrink-0 shadow-sm"
             />
             <div class="flex-1 min-w-0">
               <p class="font-semibold truncate">
@@ -38,14 +36,14 @@
         </p>
         <UiCard class="overflow-hidden">
           <!-- Theme row -->
-          <div class="px-4 py-3.5 border-b">
+          <div class="px-4 py-3 border-b">
             <p class="text-sm font-medium mb-3">Theme</p>
             <div class="grid grid-cols-3 gap-2">
               <button
                 v-for="theme in themes"
                 :key="theme.value"
                 @click="setTheme(theme.value)"
-                class="flex flex-col items-center gap-1.5 py-3 rounded-xl border text-sm font-medium transition-all touch-exempt"
+                class="flex flex-col items-center gap-1.5 py-3 rounded-xl border text-sm font-medium transition-colors touch-exempt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-ring"
                 style="min-height: 0; min-width: 0"
                 :class="
                   selectedTheme === theme.value
@@ -70,11 +68,11 @@
             >
               <CalendarDays class="w-[1.125rem] h-[1.125rem]" />
             </span>
-            <div class="flex-1">
-              <p class="text-sm font-medium">Week starts on</p>
-            </div>
-            <UiSelect v-model="weekStartsOnModel">
-              <UiSelectTrigger class="w-auto text-xs sm:text-sm">
+<div class="min-w-0 flex-1">
+                <label for="week-starts" class="text-sm font-medium">Week starts on</label>
+              </div>
+              <UiSelect v-model="weekStartsOnModel">
+                <UiSelectTrigger id="week-starts" class="w-auto text-xs sm:text-sm">
                 <UiSelectValue />
               </UiSelectTrigger>
               <UiSelectContent>
@@ -91,11 +89,11 @@
             >
               <Calendar class="w-[1.125rem] h-[1.125rem]" />
             </span>
-            <div class="flex-1">
-              <p class="text-sm font-medium">Date format</p>
-            </div>
-            <UiSelect v-model="dateFormatModel">
-              <UiSelectTrigger class="w-auto text-xs sm:text-sm">
+<div class="min-w-0 flex-1">
+                <label for="date-format" class="text-sm font-medium">Date format</label>
+              </div>
+              <UiSelect v-model="dateFormatModel">
+                <UiSelectTrigger id="date-format" class="w-auto text-xs sm:text-sm">
                 <UiSelectValue />
               </UiSelectTrigger>
               <UiSelectContent>
@@ -112,11 +110,11 @@
             >
               <Clock3 class="w-[1.125rem] h-[1.125rem]" />
             </span>
-            <div class="flex-1">
-              <p class="text-sm font-medium">Time format</p>
-            </div>
-            <UiSelect v-model="timeFormatModel">
-              <UiSelectTrigger class="w-auto text-xs sm:text-sm">
+<div class="min-w-0 flex-1">
+                <label for="time-format" class="text-sm font-medium">Time format</label>
+              </div>
+              <UiSelect v-model="timeFormatModel">
+                <UiSelectTrigger id="time-format" class="w-auto text-xs sm:text-sm">
                 <UiSelectValue />
               </UiSelectTrigger>
               <UiSelectContent>
@@ -136,58 +134,41 @@
         </p>
         <UiCard class="overflow-hidden">
           <router-link
-            to="/groupSettings"
+            v-for="(group, idx) in myGroups"
+            :key="group.id"
+            :to="{ path: '/groupSettings', query: { group: group.id } }"
             class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
+            :class="idx > 0 ? 'border-t' : ''"
           >
-            <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-            >
-              <Users class="w-[1.125rem] h-[1.125rem]" />
-            </span>
-            <div class="flex-1">
-              <p class="text-sm font-medium">Manage Groups</p>
-              <p class="text-xs text-muted-foreground mt-0.5">Settings, members &amp; tags</p>
+            <GroupBadge :group="group" size="md" />
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium truncate">{{ group.name }}</p>
+              <p class="text-xs text-muted-foreground mt-0.5">
+                {{ roleLabel(group.role) }}
+                <template v-if="isAdminRole(group.role)"> · Manage members &amp; tags</template>
+              </p>
             </div>
-            <ChevronRightIcon
-              class="w-4 h-4 text-muted-foreground flex-shrink-0"
-            />
+            <ChevronRightIcon class="w-4 h-4 text-muted-foreground flex-shrink-0" />
           </router-link>
 
           <router-link
             to="/dashboard"
-            class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
+            class="flex min-h-16 items-center gap-3 px-4 py-3 border-t transition-colors hover:bg-muted/60"
           >
             <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground"
             >
-              <LayoutDashboard class="w-[1.125rem] h-[1.125rem]" />
+              <Plus class="w-[1.125rem] h-[1.125rem]" />
             </span>
-            <div class="flex-1">
-              <p class="text-sm font-medium">Dashboard</p>
-              <p class="text-xs text-muted-foreground mt-0.5">Create or join a group</p>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium">Create or join a group</p>
+              <p class="text-xs text-muted-foreground mt-0.5">Start a new group from the dashboard</p>
             </div>
             <ChevronRightIcon
               class="w-4 h-4 text-muted-foreground flex-shrink-0"
             />
           </router-link>
 
-          <router-link
-            to="/settings/migration"
-            class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
-          >
-            <span
-              class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-            >
-              <Database class="w-[1.125rem] h-[1.125rem]" />
-            </span>
-            <div class="flex-1">
-              <p class="text-sm font-medium">Migration</p>
-              <p class="text-xs text-muted-foreground mt-0.5">Appwrite import report</p>
-            </div>
-            <ChevronRightIcon
-              class="w-4 h-4 text-muted-foreground flex-shrink-0"
-            />
-          </router-link>
         </UiCard>
       </div>
 
@@ -203,7 +184,7 @@
             >
               <Bell class="w-[1.125rem] h-[1.125rem]" />
             </span>
-            <div class="flex-1">
+            <div class="min-w-0 flex-1">
               <p class="text-sm font-medium">Push Notifications</p>
               <p class="text-xs text-muted-foreground mt-0.5">
                 {{
@@ -226,7 +207,7 @@
             >
               <Clock3 class="w-[1.125rem] h-[1.125rem]" />
             </span>
-            <div class="flex-1">
+            <div class="min-w-0 flex-1">
               <p class="text-sm font-medium">Remind me before</p>
             </div>
             <UiSelect v-model="notificationLeadModel" :disabled="!notificationsStore.enabled">
@@ -258,7 +239,7 @@
             >
               <UserCircle class="w-[1.125rem] h-[1.125rem]" />
             </span>
-            <div class="flex-1">
+            <div class="min-w-0 flex-1">
               <p class="text-sm font-medium">Edit Profile</p>
               <p class="text-xs text-muted-foreground mt-0.5">Name, email, password, avatar</p>
             </div>
@@ -276,7 +257,7 @@
             >
               <KeyRound class="h-[1.125rem] w-[1.125rem]" />
             </span>
-            <div class="flex-1">
+            <div class="min-w-0 flex-1">
               <p class="text-sm font-medium">API Access</p>
               <p class="mt-0.5 text-xs text-muted-foreground">Read-only integration tokens</p>
             </div>
@@ -294,7 +275,7 @@
             >
               <Download class="w-[1.125rem] h-[1.125rem]" />
             </span>
-            <div class="flex-1">
+            <div class="min-w-0 flex-1">
               <p class="text-sm font-medium">Install app</p>
               <p class="mt-0.5 text-xs text-muted-foreground">Add Baobun to your home screen</p>
             </div>
@@ -328,52 +309,68 @@ import { computed, ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useNotificationsStore } from '@/stores/notifications'
+import { useGroupsStore } from '@/stores/group'
 import { useRouter } from 'vue-router'
 import { useInstallPrompt } from '@/composable/useInstallPrompt'
+import AvatarImg from '@/components/AvatarImg.vue'
+import GroupBadge from '@/components/GroupBadge.vue'
 import { formatDateNumeric, formatTime } from '@/lib/dateTimePreferences'
 import {
   ChevronRightIcon,
-  Users,
   Sun,
   Moon,
   Monitor,
   Bell,
   LogOut,
   UserCircle,
-  LayoutDashboard,
   CalendarDays,
   Calendar,
   Clock3,
   KeyRound,
-  Database,
   Download,
+  Plus,
 } from 'lucide-vue-next'
 
 export default {
   name: 'Settings',
   components: {
+    AvatarImg,
+    GroupBadge,
     ChevronRightIcon,
-    Users,
     Sun,
     Moon,
     Monitor,
     Bell,
     LogOut,
     UserCircle,
-    LayoutDashboard,
     CalendarDays,
     Calendar,
     Clock3,
     KeyRound,
-    Database,
     Download,
+    Plus,
   },
   setup() {
     const authStore = useAuthStore()
     const preferencesStore = usePreferencesStore()
     const notificationsStore = useNotificationsStore()
+    const groupsStore = useGroupsStore()
     const router = useRouter()
     const { openInstall } = useInstallPrompt()
+
+    const myGroups = computed(() =>
+      [...groupsStore.items].sort((a, b) => a.name.localeCompare(b.name)),
+    )
+    const isAdminRole = (role) => role === 'OWNER' || role === 'ADMIN'
+    const roleLabel = (role) =>
+      ({ OWNER: 'Owner', ADMIN: 'Admin', MEMBER: 'Member' })[role] || 'Member'
+    const loadGroups = async () => {
+      try {
+        await groupsStore.fetchAll()
+      } catch (err) {
+        console.error('Failed to load groups:', err)
+      }
+    }
 
     const themes = [
       { label: 'Light', value: 'light', icon: Sun, iconClass: 'text-primary' },
@@ -453,10 +450,14 @@ export default {
       applyTheme(saved)
       notificationsStore.syncPermission()
       notificationsStore.normalizeLeadMinutes()
+      loadGroups()
     })
 
     return {
       authStore,
+      myGroups,
+      isAdminRole,
+      roleLabel,
       themes,
       selectedTheme,
       setTheme,

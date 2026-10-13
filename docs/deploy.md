@@ -160,10 +160,6 @@ The app applies compatible Prisma schema updates before starting. If that update
 container stops rather than running against an incompatible database; inspect
 `docker compose logs app`, correct the database issue, and restart it.
 
-## Migrating from Appwrite
-
-If you are migrating an existing Appwrite dataset, run the one-shot ETL before going live — see `docs/runbooks/cutover.md` and `apps/api/migrate-README.md`.
-
 ## Useful commands
 
 ```sh

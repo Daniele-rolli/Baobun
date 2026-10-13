@@ -64,7 +64,7 @@ const requireEventMember = async (c, next) => {
 const requireEventWrite = (c, event) => {
   const user = c.get('user')
   const membership = c.get('eventMembership')
-  if ((ROLE_LEVEL[membership.role] ?? -1) < ROLE_LEVEL.MEMBER) {
+  if ((ROLE_LEVEL[membership.role] ?? -1) < ROLE_LEVEL.EDITOR) {
     throw forbidden('Viewers cannot change events.')
   }
   if (membership.role === 'MEMBER' && event.userId !== user.id) {

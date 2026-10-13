@@ -1,7 +1,6 @@
 <template>
-  <div class="min-h-screen">
-    <div class="p-4 sm:p-6 overflow-y-auto">
-      <div class="max-w-4xl mx-auto space-y-5">
+<div class="pb-2">
+  <div class="max-w-4xl mx-auto space-y-4">
         <!-- ── Welcome header ── -->
         <div class="flex items-center gap-3 sm:gap-4 mb-2">
           <img
@@ -18,7 +17,7 @@
             {{ initials }}
           </div>
           <div>
-            <h2 class="text-xl sm:text-2xl font-bold leading-tight">
+            <h2 class="font-display text-2xl sm:text-3xl font-bold leading-tight">
               {{ daypart }}, <span class="text-primary">{{ firstName }}!</span>
             </h2>
             <p class="text-sm text-muted-foreground mt-0.5">
@@ -27,35 +26,69 @@
           </div>
         </div>
 
+        <!-- ── At a glance ── -->
+        <div v-if="userGroups.length > 0" class="grid grid-cols-2 gap-3">
+          <div class="rounded-2xl border border-border bg-card p-4 flex flex-col gap-2">
+            <span class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Users class="w-4 h-4" />
+            </span>
+            <span class="text-2xl font-bold leading-none">{{ userGroups.length }}</span>
+            <span class="text-xs text-muted-foreground">Group{{ userGroups.length !== 1 ? 's' : '' }}</span>
+          </div>
+          <div class="rounded-2xl border border-border bg-card p-4 flex flex-col gap-2">
+            <span class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <CalendarClock class="w-4 h-4" />
+            </span>
+            <span class="text-2xl font-bold leading-none">{{ upcomingEvents.length }}</span>
+            <span class="text-xs text-muted-foreground">Upcoming</span>
+          </div>
+        </div>
+
+        <!-- ── Upcoming events ── -->
+        <div v-if="userGroups.length > 0" class="space-y-2">
+          <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Upcoming
+          </p>
+          <UiCard>
+            <UiCardContent class="p-0">
+              <ul v-if="upcomingEvents.length" class="divide-y divide-border">
+                <li
+                  v-for="ev in upcomingEvents.slice(0, 5)"
+                  :key="ev.id"
+                  class="flex items-center gap-3 px-5 py-3"
+                >
+                  <GroupBadge :group="ev.group" size="sm" class="flex-shrink-0" />
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium truncate">{{ ev.title }}</p>
+                    <p class="text-xs text-muted-foreground truncate">{{ ev.group.name }}</p>
+                  </div>
+                  <span class="text-xs text-muted-foreground flex-shrink-0">
+                    {{ relativeDay(ev.start) }}
+                  </span>
+                </li>
+              </ul>
+              <p v-else class="px-5 py-6 text-center text-sm text-muted-foreground">
+                Nothing scheduled in the next 30 days.
+              </p>
+            </UiCardContent>
+          </UiCard>
+        </div>
+
         <!-- ── Your groups ── -->
         <div v-if="userGroups.length > 0" class="space-y-2">
           <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Your Groups
           </p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <button
               v-for="group in userGroups"
               :key="group.id"
               @click="$router.push('/group/' + group.id)"
-              class="group flex items-center gap-3 p-4 text-left rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-sm active:scale-[0.99] transition-all"
+              class="group flex items-center gap-3 p-4 text-left rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md hover:-translate-y-px active:scale-[0.99] transition-all duration-150 ease-out"
             >
-              <div
-                class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-sm"
-                :style="{ backgroundColor: colorToRgba(group.color, 0.15), color: group.color }"
-              >
-                {{ group.name.charAt(0).toUpperCase() }}
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="font-semibold text-sm truncate">
-                  {{ group.name }}
-                </p>
-                <p class="text-xs text-muted-foreground mt-0.5">
-                  {{ counts[group.id] || 0 }} member{{ counts[group.id] !== 1 ? 's' : '' }}
-                </p>
-              </div>
-              <ChevronRight
-                class="w-4 h-4 text-muted-foreground/60 flex-shrink-0"
-              />
+              <GroupBadge :group="group" size="md" />
+              <p class="flex-1 min-w-0 font-semibold text-sm truncate">{{ group.name }}</p>
+              <ChevronRight class="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
             </button>
           </div>
         </div>
@@ -130,7 +163,7 @@
                   id="invite-code"
                   v-model="inviteCode"
                   type="text"
-                  placeholder="Enter code (e.g. ABC123)"
+                  placeholder="Enter code or invite link"
                   required
                 />
                 <p v-if="joinError" class="text-destructive text-xs -mt-1">{{ joinError }}</p>
@@ -144,7 +177,6 @@
         </div>
       </div>
     </div>
-  </div>
 </template>
 
 <script setup>
@@ -152,13 +184,15 @@ import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useGroupsStore } from '@/stores/group'
 import * as groupService from '@/lib/services/groups'
-import { Users, Mail, ChevronRight, Plus, LoaderCircle } from 'lucide-vue-next'
+import * as eventsService from '@/lib/services/events'
+import GroupBadge from '@/components/GroupBadge.vue'
+import { Users, Mail, ChevronRight, Plus, LoaderCircle, CalendarClock } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const groupsStore = useGroupsStore()
 
 const userGroups = ref([])
-const counts = ref({})
+const upcomingEvents = ref([])
 const newGroupName = ref('')
 const newGroupColor = ref('#f43f5e')
 const inviteCode = ref('')
@@ -194,6 +228,35 @@ const stringToColor = (str) => {
   return `hsl(${Math.abs(hash) % 360}, 90%, 55%)`
 }
 
+const relativeDay = (start) => {
+  const d = new Date(start)
+  const today = new Date()
+  const day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate())
+  const diff = Math.round((day(d) - day(today)) / 86400000)
+  if (diff === 0) return 'Today'
+  if (diff === 1) return 'Tomorrow'
+  if (diff > 1 && diff < 7) return d.toLocaleDateString(undefined, { weekday: 'long' })
+  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+}
+
+const loadUpcoming = async () => {
+  const from = new Date()
+  const to = new Date(Date.now() + 30 * 86400000)
+  const all = []
+  await Promise.all(
+    userGroups.value.map(async (g) => {
+      try {
+        const res = await eventsService.listByGroup(g.id, { from, to })
+        for (const ev of res?.events || []) all.push({ ...ev, group: g })
+      } catch (err) {
+        console.error('Failed to load events for group', g.id, err)
+      }
+    }),
+  )
+  all.sort((a, b) => new Date(a.start) - new Date(b.start))
+  upcomingEvents.value = all
+}
+
 const loadGroups = async () => {
   if (!authStore.user) return
   try {
@@ -202,9 +265,7 @@ const loadGroups = async () => {
       ...g,
       color: g.color || stringToColor(g.id),
     }))
-    const countMap = {}
-    for (const g of userGroups.value) countMap[g.id] = g.memberCount ?? 0
-    counts.value = countMap
+    await loadUpcoming()
   } catch (err) {
     console.error('Failed to load groups:', err)
   }
@@ -228,11 +289,17 @@ const createGroup = async () => {
   }
 }
 
+const normalizeInviteCode = (raw) => {
+  const trimmed = (raw || '').trim()
+  const lastSegment = trimmed.split('/').filter(Boolean).pop() || ''
+  return decodeURIComponent(lastSegment).toUpperCase()
+}
+
 const joinGroup = async () => {
   loadingJoin.value = true
   joinError.value = ''
   try {
-    await groupService.joinByCode(inviteCode.value.toUpperCase())
+    await groupService.joinByCode(normalizeInviteCode(inviteCode.value))
     inviteCode.value = ''
     await loadGroups()
   } catch (err) {
@@ -241,18 +308,6 @@ const joinGroup = async () => {
   } finally {
     loadingJoin.value = false
   }
-}
-
-const colorToRgba = (color, alpha = 1) => {
-  if (!color) return `rgba(244,63,94,${alpha})`
-  if (color.startsWith('#')) {
-    const r = parseInt(color.slice(1, 3), 16)
-    const g = parseInt(color.slice(3, 5), 16)
-    const b = parseInt(color.slice(5, 7), 16)
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`
-  }
-  if (color.startsWith('hsl')) return color.replace('hsl', 'hsla').replace(')', `, ${alpha})`)
-  return color
 }
 
 onMounted(async () => {

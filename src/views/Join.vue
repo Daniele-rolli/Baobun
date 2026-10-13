@@ -58,7 +58,8 @@ const joinGroup = async (inviteCode) => {
 }
 
 onMounted(async () => {
-  const inviteCode = route.params.id
+  const rawParam = route.params.id || ''
+  const inviteCode = decodeURIComponent(String(rawParam).split('/').filter(Boolean).pop() || '')
   const authStore = useAuthStore()
 
   if (!authStore.user) {

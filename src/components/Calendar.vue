@@ -4,36 +4,38 @@
     <div class="flex-1 min-w-0 space-y-4">
       <div
         ref="calendarEl"
-        class="bg-card border rounded-2xl overflow-hidden touch-pan-y"
+        class="bg-card border rounded-3xl overflow-hidden touch-pan-y"
       >
         <!-- Toolbar -->
         <div
-          class="px-3 py-2 flex items-center justify-between gap-2 border-b"
+          class="px-4 py-3 flex items-center justify-between gap-2 border-b"
         >
           <!-- Left: title + view toggle -->
           <div class="flex items-center gap-2 min-w-0">
-            <h3 class="text-base font-semibold truncate">{{ headerTitle }}</h3>
+            <h3 class="text-lg font-bold truncate">{{ headerTitle }}</h3>
             <div
-              class="flex rounded-lg overflow-hidden border text-xs flex-shrink-0"
+              class="flex rounded-full overflow-hidden border-2 text-xs flex-shrink-0"
             >
               <button
-                class="touch-exempt px-2.5 py-1 font-medium transition-colors"
+                class="touch-exempt px-2.5 py-1 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 :class="
                   viewMode === 'month'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-card text-muted-foreground hover:bg-muted'
                 "
+                aria-label="Month view"
                 @click="viewMode = 'month'"
               >
                 Mo
               </button>
               <button
-                class="touch-exempt px-2.5 py-1 font-medium transition-colors"
+                class="touch-exempt px-2.5 py-1 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 :class="
                   viewMode === 'week'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-card text-muted-foreground hover:bg-muted'
                 "
+                aria-label="Week view"
                 @click="viewMode = 'week'"
               >
                 Wk
@@ -45,17 +47,19 @@
           <div class="flex items-center gap-1.5 flex-shrink-0">
             <!-- Prev/Next -->
             <div
-              class="flex items-center border rounded-xl overflow-hidden bg-card"
+              class="flex items-center border-2 rounded-full overflow-hidden bg-card"
             >
               <button
-                class="touch-exempt px-2 py-1 hover:bg-muted transition-colors"
+                class="touch-exempt px-2 py-1 hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label="Previous"
                 @click="prev"
               >
                 <ChevronLeft class="w-4 h-4" />
               </button>
               <div class="w-px h-4 bg-border"></div>
               <button
-                class="touch-exempt px-2 py-1 hover:bg-muted transition-colors"
+                class="touch-exempt px-2 py-1 hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label="Next"
                 @click="next"
               >
                 <ChevronRight class="w-4 h-4" />
@@ -64,20 +68,22 @@
 
             <!-- Bulk + Spin (desktop only) -->
             <div
-              v-if="canEdit"
-              class="hidden sm:flex items-center border rounded-xl overflow-hidden bg-card"
+              v-if="canAdd"
+              class="hidden sm:flex items-center border-2 rounded-full overflow-hidden bg-card"
             >
               <button
-                class="touch-exempt px-2 py-1 hover:bg-muted transition-colors"
+                class="touch-exempt px-2 py-1 hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 title="Bulk Schedule"
+                aria-label="Bulk Schedule"
                 @click="$emit('bulk-schedule')"
               >
                 <calendar-check class="w-4 h-4" />
               </button>
               <div class="w-px h-4 bg-border"></div>
               <button
-                class="touch-exempt px-2 py-1 hover:bg-muted transition-colors"
+                class="touch-exempt px-2 py-1 hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 title="Spin Scheduler"
+                aria-label="Spin Scheduler"
                 @click="$emit('spin-schedule')"
               >
                 <Shuffle class="w-4 h-4" />
@@ -86,9 +92,10 @@
 
             <!-- Add event -->
             <UiButton
-              v-if="canEdit"
+              v-if="canAdd"
               size="icon"
               class="touch-exempt shadow-sm"
+              aria-label="Add event"
               @click="$emit('add-event', selectedDate)"
             >
               <Plus class="w-4 h-4" />
@@ -112,7 +119,7 @@
           <div
             v-for="day in daysInMonth"
             :key="day.date.getTime()"
-            class="hidden sm:block min-h-14 md:min-h-24 overflow-y-auto border-r border-b p-1 text-xs transition-all hover:bg-muted"
+            class="hidden sm:block min-h-14 md:min-h-24 overflow-y-auto border-r border-b p-1 text-xs transition-colors hover:bg-muted"
             :class="{
               'bg-muted/50  text-muted-foreground': !day.currentMonth,
               'bg-muted/50 ': isToday(day.date),
@@ -123,12 +130,12 @@
             @drop="onDrop(day.date, $event)"
           >
             <!-- Day Number -->
-            <div class="font-medium mb-1 leading-none inline-flex items-center gap-2">
+            <div class="font-semibold mb-1 leading-none inline-flex items-center gap-2">
               <span
-                class=""
+                class="flex items-center justify-center min-w-6 h-6 px-0.5"
                 :class="{
-                  'bg-foreground text-background w-fit p-1 px-1.5 rounded-full': isToday(day.date),
-                  'bg-primary text-primary-foreground w-fit p-1 px-1.5 rounded-full': isSelected(day.date),
+                  'bg-foreground text-background rounded-full': isToday(day.date),
+                  'bg-primary text-primary-foreground rounded-full': isSelected(day.date),
                 }"
               >
                 {{ day.day }}
@@ -167,22 +174,30 @@
             @click="selectDate(day.date)"
           >
             <div
-              class="text-xl font-semibold flex items-center justify-center w-10 h-10 rounded-full"
+              class="text-xl font-bold flex items-center justify-center py-1"
               :class="{
-                'bg-primary text-primary-foreground': isToday(day.date),
-                'bg-primary text-primary-foreground': isSelected(day.date),
+                'bg-primary text-primary-foreground w-8 h-8 rounded-full mx-auto': isToday(day.date),
+                'bg-primary text-primary-foreground w-8 h-8 rounded-full mx-auto': isSelected(day.date),
               }"
             >
               {{ day.day }}
             </div>
 
-            <div class="flex items-center justify-center mt-2 space-x-1">
+            <div class="flex flex-col items-center gap-0.5 mt-1 w-full px-1">
               <span
-                v-for="event in getEventsForDate(day.date)"
+                v-for="event in getEventsForDate(day.date).slice(0, 2)"
                 :key="event.id"
-                class="w-2 h-2 rounded-full"
+                class="w-full max-w-[3.5rem] truncate rounded px-1 text-[10px] leading-3.5 text-auto text-center"
                 :style="{ backgroundColor: getTagColor(event.tagId) }"
-              ></span>
+              >
+                {{ event.title }}
+              </span>
+              <span
+                v-if="getEventsForDate(day.date).length > 2"
+                class="text-[10px] text-muted-foreground leading-none"
+              >
+                +{{ getEventsForDate(day.date).length - 2 }}
+              </span>
             </div>
           </div>
         </div>
@@ -197,18 +212,16 @@
             <div
               v-for="day in daysInWeek"
               :key="day.getTime()"
-              class="text-center p-2 border-r last:border-r-0"
+              class="text-center p-1 sm:p-2 border-r last:border-r-0"
             >
               <div class="text-xs text-muted-foreground uppercase tracking-wide">
                 {{ weekdayLabelsByIndex[day.getDay()].slice(0, 3) }}
               </div>
               <div
-                class="text-lg font-semibold mt-1"
+                class="text-lg font-bold mt-1 mx-auto w-8 h-8 rounded-full flex items-center justify-center"
                 :class="{
-                  'bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center mx-auto':
-                    isToday(day),
-                  'bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center mx-auto':
-                    isSelected(day),
+                  'bg-primary text-primary-foreground': isToday(day),
+                  'bg-primary text-primary-foreground': isSelected(day),
                 }"
                 @click="selectDate(day)"
               >
@@ -224,7 +237,7 @@
               <div
                 v-for="hour in timeSlots"
                 :key="hour"
-                class="h-12 border-b p-1 text-xs text-muted-foreground text-right pr-2"
+                class="h-12 border-b p-1 text-xs text-muted-foreground text-right pr-2 tabular-nums"
               >
                 <div class="relative">{{ formatHour(hour) }}</div>
               </div>
@@ -236,7 +249,7 @@
               :key="day.getTime()"
               class="relative border-r last:border-r-0"
               :class="{
-                'ring-2 ring-rose-600 ring-inset': isSelected(day),
+                'ring-2 ring-primary ring-inset': isSelected(day),
               }"
               @click="selectDate(day)"
               @dragover.prevent
@@ -265,7 +278,7 @@
                 title="Drag to move • Click to edit"
               >
                 <div class="font-medium truncate">{{ segment.event.title }}</div>
-                <div class="text-xs opacity-75 truncate">
+                <div class="text-xs opacity-75 truncate tabular-nums">
                   {{ formatEventTime(segment.start, segment.end) }}
                 </div>
               </div>
@@ -275,7 +288,7 @@
       </div>
 
       <div
-        class="bg-card border rounded-2xl p-4 lg:hidden"
+        class="bg-card border rounded-3xl p-5 lg:hidden"
       >
         <UpcomingEvents
           :events="events"
@@ -289,7 +302,7 @@
     </div>
     <!-- Right Sidebar (Desktop) -->
     <div v-if="showDesktopSidebar" class="hidden lg:block w-72 xl:w-80 flex-shrink-0">
-      <UiCard class="sticky top-4 max-h-[calc(100vh-2rem)] overflow-hidden p-4">
+      <UiCard class="sticky top-4 max-h-[calc(100vh-2rem)] overflow-hidden p-5">
         <UpcomingEvents
           :events="events"
           :tags="tags"
@@ -333,6 +346,7 @@ const props = defineProps({
   dateFormat: { type: String, default: 'mdy' },
   timeFormat: { type: String, default: '12h' },
   canEdit: { type: Boolean, default: true },
+  canAdd: { type: Boolean, default: true },
 })
 const emit = defineEmits([
   'add-event',

@@ -3,7 +3,7 @@ import { prisma } from '../db.js'
 import { unauthorized, forbidden, notFound } from '../errors.js'
 import { createHash } from 'crypto'
 
-export const ROLE_LEVEL = { VIEWER: 0, MEMBER: 1, ADMIN: 2, OWNER: 3 }
+export const ROLE_LEVEL = { VIEWER: 0, EDITOR: 1, MEMBER: 2, ADMIN: 3, OWNER: 4 }
 
 export const requireAuth = async (c, next) => {
   const user = await getSessionUser(c)

@@ -52,20 +52,17 @@
 
         <!-- People (multi-select) -->
         <div class="space-y-1.5">
-          <UiLabel>People</UiLabel>
+          <UiLabel for="event-people">People</UiLabel>
           <UiSelect v-model="people" multiple autocomplete="both">
-            <UiSelectTrigger class="w-full">
+            <UiSelectTrigger id="event-people" class="w-full">
               <UiSelectValue placeholder="Select people..." />
             </UiSelectTrigger>
             <UiSelectContent>
               <UiSelectItem v-for="m in members" :key="m.id" :value="m.id" :text-value="m.name">
-                <img
-                  :src="
-                    m.avatarUrl ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || m.userId)}&background=f1f5f9&color=64748b`
-                  "
-                  class="w-6 h-6 rounded-full border flex-shrink-0"
-                  :alt="m.name || m.userId"
+                <AvatarImg
+                  :src="m.avatarUrl"
+                  :name="m.name || m.userId"
+                  class="w-6 h-6 rounded-full border"
                 />
                 {{ m.name }}
               </UiSelectItem>
@@ -75,9 +72,9 @@
 
         <!-- Tag (single-select with create option) -->
         <div class="space-y-1.5">
-          <UiLabel>Tag</UiLabel>
+          <UiLabel for="event-tag">Tag</UiLabel>
           <UiSelect v-model="tagId" autocomplete="both">
-            <UiSelectTrigger class="w-full">
+            <UiSelectTrigger id="event-tag" class="w-full">
               <UiSelectValue placeholder="Select or create tag..." />
             </UiSelectTrigger>
             <UiSelectContent>
@@ -163,9 +160,9 @@
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="space-y-1.5">
-            <UiLabel>Reminder</UiLabel>
+            <UiLabel for="event-reminder">Reminder</UiLabel>
             <UiSelect v-model="reminder">
-              <UiSelectTrigger class="w-full">
+              <UiSelectTrigger id="event-reminder" class="w-full">
                 <UiSelectValue />
               </UiSelectTrigger>
               <UiSelectContent>
@@ -180,9 +177,9 @@
           </div>
 
           <div v-if="!event" class="space-y-1.5">
-            <UiLabel>Repeat</UiLabel>
+            <UiLabel for="event-repeat">Repeat</UiLabel>
             <UiSelect v-model="recurrenceFrequency">
-              <UiSelectTrigger class="w-full">
+              <UiSelectTrigger id="event-repeat" class="w-full">
                 <UiSelectValue />
               </UiSelectTrigger>
               <UiSelectContent>
@@ -251,6 +248,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import AdaptiveModal from './AdaptiveModal.vue'
+import AvatarImg from './AvatarImg.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useEventsStore } from '@/stores/event'
 import { useTagsStore } from '@/stores/tag'

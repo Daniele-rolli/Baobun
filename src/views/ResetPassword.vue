@@ -1,7 +1,7 @@
 <template>
-  <div class="flex min-h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-      <UiCard class="rounded-3xl">
+  <div class="w-full px-4 py-8">
+    <div class="w-full max-w-sm mx-auto">
+      <UiCard>
         <UiCardContent class="p-6">
           <div v-if="successMessage" class="space-y-6 text-center">
             <div class="flex justify-center">

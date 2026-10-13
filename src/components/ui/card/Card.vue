@@ -13,7 +13,7 @@ const props = defineProps({
     :data-size="size"
     :class="
       cn(
-        'bg-card text-card-foreground ring-foreground/5 dark:ring-foreground/10 gap-6 overflow-hidden rounded-xl py-6 text-sm shadow-md ring-1 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl group/card flex flex-col',
+        'bg-card text-card-foreground border-border gap-6 overflow-hidden rounded-3xl border text-sm shadow-md has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 *:[img:first-child]:rounded-t-3xl *:[img:last-child]:rounded-b-3xl group/card flex flex-col',
         props.class,
       )
     "

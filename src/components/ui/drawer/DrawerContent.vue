@@ -52,7 +52,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
       "
     >
       <DrawerHandle
-        class="bg-muted mt-4 h-1.5 w-[100px] rounded-full mx-auto hidden shrink-0 group-data-[swipe-direction=down]/drawer-content:block"
+        class="bg-muted mt-4 h-1.5 w-10 rounded-full mx-auto hidden shrink-0 group-data-[swipe-direction=down]/drawer-content:block"
       />
       <slot />
     </DrawerContent>

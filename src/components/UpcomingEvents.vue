@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex items-center justify-between gap-3 mb-3">
-      <h3 class="text-base font-semibold">
+      <h3 class="min-w-0 truncate text-base font-semibold">
         {{ selectedDate ? 'Events from ' + formatDateShort(selectedDate) : 'Upcoming Events' }}
       </h3>
       <div class="flex items-center gap-2 flex-shrink-0">

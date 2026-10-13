@@ -79,7 +79,7 @@
 
         <!-- ─── STEP 1: Date Range / Interval ─── -->
         <div v-if="currentStep === 1" class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
               <UiLabel for="spin-start">Start Date</UiLabel>
               <UiInput id="spin-start" type="date" v-model="dateStart" class="min-h-[44px]" />
@@ -174,7 +174,7 @@
                   class="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[20px] border-l-transparent border-r-transparent border-b-primary drop-shadow-sm"
                 />
               </div>
-              <canvas ref="wheelCanvas" width="280" height="280" class="rounded-full shadow-lg" />
+              <canvas ref="wheelCanvas" width="280" height="280" class="max-w-full h-auto rounded-full shadow-lg" />
             </div>
 
             <UiButton
@@ -223,7 +223,7 @@
             />
             <p class="text-xs text-muted-foreground">Group name will be appended automatically.</p>
           </div>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
               <UiLabel for="spin-time">Start Time</UiLabel>
               <UiInput id="spin-time" type="time" v-model="eventStartTime" class="min-h-[44px]" />
@@ -504,23 +504,31 @@ async function spinWheel() {
     ;[groups[i], groups[j]] = [groups[j], groups[i]]
   }
 
-  // Animate the wheel
+  // Animate the wheel (skip the 3s animation under reduced motion)
   const totalRotation = 360 * 5 + Math.random() * 360
   const duration = 3000
   const start = performance.now()
 
-  await new Promise((resolve) => {
-    function frame(now) {
-      const elapsed = now - start
-      const progress = Math.min(elapsed / duration, 1)
-      // Ease out cubic
-      const eased = 1 - Math.pow(1 - progress, 3)
-      drawWheel(eased * totalRotation)
-      if (progress < 1) requestAnimationFrame(frame)
-      else resolve()
-    }
-    requestAnimationFrame(frame)
-  })
+  if (
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) {
+    drawWheel(totalRotation)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  } else {
+    await new Promise((resolve) => {
+      function frame(now) {
+        const elapsed = now - start
+        const progress = Math.min(elapsed / duration, 1)
+        // Ease out cubic
+        const eased = 1 - Math.pow(1 - progress, 3)
+        drawWheel(eased * totalRotation)
+        if (progress < 1) requestAnimationFrame(frame)
+        else resolve()
+      }
+      requestAnimationFrame(frame)
+    })
+  }
 
   // Build assignments: cycle through dates, assign each group a slot
   const result = []

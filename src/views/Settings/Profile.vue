@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen">
-    <div class="max-w-xl mx-auto px-4 py-6 space-y-6">
+    <div class="max-w-xl mx-auto space-y-6">
       <div class="space-y-2">
         <router-link
           to="/settings"
@@ -66,23 +66,19 @@
           Profile
         </p>
         <UiCard class="p-5">
-          <UiCardContent>
+          <UiCardContent class="p-0">
             <div class="flex items-center gap-4">
               <div class="relative group flex-shrink-0">
-                <img
-                  :src="
-                    previewAvatar ||
-                    avatarUrl ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.user?.name || 'User')}&background=random`
-                  "
-                  alt="Profile Avatar"
-                  class="h-20 w-20 rounded-2xl object-cover border shadow-sm"
+                <AvatarImg
+                  :src="previewAvatar || avatarUrl"
+                  :name="authStore.user?.name || 'User'"
+                  class="h-20 w-20 rounded-2xl border shadow-sm"
                 />
                 <UiButton
                   @click="triggerAvatarUpload"
                   variant="secondary"
                   size="sm"
-                  class="absolute inset-x-4 bottom-4 w-auto opacity-0 group-hover:opacity-100 transition-opacity touch-exempt"
+                  class="absolute inset-x-4 bottom-4 w-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity touch-exempt"
                 >
                   Change
                 </UiButton>
@@ -128,7 +124,7 @@
           Account
         </p>
         <UiCard class="p-5">
-          <UiCardContent class="space-y-4">
+          <UiCardContent class="space-y-4 p-0">
             <div>
               <UiLabel class="text-sm font-medium">Full Name</UiLabel>
               <UiInput v-model="form.name" type="text" placeholder="Your full name" class="mt-1.5" />
@@ -152,7 +148,7 @@
           Security
         </p>
         <UiCard class="p-5">
-          <UiCardContent class="space-y-4">
+          <UiCardContent class="space-y-4 p-0">
             <div>
               <UiLabel class="text-sm font-medium">
                 Current Password
@@ -199,8 +195,8 @@
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Actions
         </p>
-        <UiCard class="p-4">
-          <UiCardContent class="space-y-2">
+        <UiCard class="p-5">
+          <UiCardContent class="space-y-2 p-0">
             <UiButton @click="submitProfile" :disabled="authStore.loading" class="w-full">
               {{ authStore.loading ? 'Saving…' : 'Save Changes' }}
             </UiButton>
@@ -217,6 +213,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import AvatarImg from '@/components/AvatarImg.vue'
 import { X, ChevronLeft } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
