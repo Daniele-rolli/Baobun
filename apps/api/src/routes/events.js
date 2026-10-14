@@ -82,10 +82,11 @@ events.patch('/:id', requireEventMember, async (c) => {
   if (typeof body.title === 'string' && body.title.trim()) data.title = body.title.trim()
   if (typeof body.notes === 'string') data.notes = body.notes
   if (typeof body.start === 'string' && body.start) {
-    data.start = new Date(body.start)
-    if (Number.isNaN(data.start.getTime()))
+    const next = new Date(body.start)
+    if (Number.isNaN(next.getTime()))
       throw validationError('Event start must be a valid date.')
-    data.remindedAt = null
+    data.start = next
+    if (next.getTime() !== event.start.getTime()) data.remindedAt = null
   }
   if (typeof body.end === 'string' && body.end) {
     data.end = new Date(body.end)
@@ -100,7 +101,7 @@ events.patch('/:id', requireEventMember, async (c) => {
       body.reminderMinutes <= 10080)
   ) {
     data.reminderMinutes = body.reminderMinutes
-    data.remindedAt = null
+    if (body.reminderMinutes !== event.reminderMinutes) data.remindedAt = null
   }
   if ((data.end ?? event.end) <= (data.start ?? event.start)) {
     throw validationError('Event end must be after its start.')

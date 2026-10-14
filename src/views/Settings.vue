@@ -34,9 +34,9 @@
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Appearance
         </p>
-        <UiCard class="overflow-hidden">
+        <UiCard class="divide-y divide-border overflow-hidden">
           <!-- Theme row -->
-          <div class="px-4 py-3 border-b">
+          <div class="px-4 py-3">
             <p class="text-sm font-medium mb-3">Theme</p>
             <div class="grid grid-cols-3 gap-2">
               <button
@@ -132,13 +132,12 @@
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Groups
         </p>
-        <UiCard class="overflow-hidden">
+        <UiCard class="divide-y divide-border overflow-hidden">
           <router-link
-            v-for="(group, idx) in myGroups"
+            v-for="group in myGroups"
             :key="group.id"
             :to="{ path: '/groupSettings', query: { group: group.id } }"
             class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
-            :class="idx > 0 ? 'border-t' : ''"
           >
             <GroupBadge :group="group" size="md" />
             <div class="min-w-0 flex-1">
@@ -153,7 +152,7 @@
 
           <router-link
             to="/dashboard"
-            class="flex min-h-16 items-center gap-3 px-4 py-3 border-t transition-colors hover:bg-muted/60"
+            class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
           >
             <span
               class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground"
@@ -177,7 +176,7 @@
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Notifications
         </p>
-        <UiCard class="overflow-hidden">
+        <UiCard class="divide-y divide-border overflow-hidden">
           <div class="flex min-h-16 items-center gap-3 px-4 py-3">
             <span
               class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
@@ -229,7 +228,7 @@
         <p class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Account
         </p>
-        <UiCard class="overflow-hidden">
+        <UiCard class="divide-y divide-border overflow-hidden">
           <router-link
             to="/profile"
             class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"

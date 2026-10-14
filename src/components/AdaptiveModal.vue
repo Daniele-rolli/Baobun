@@ -23,7 +23,7 @@ const isMobile = useMediaQuery('(max-width: 640px)')
         <UiDrawerTitle><slot name="title" /></UiDrawerTitle>
       </UiDrawerHeader>
       <div
-        class="overflow-y-auto overscroll-contain"
+        class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain"
         :style="{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }"
       >
         <slot />

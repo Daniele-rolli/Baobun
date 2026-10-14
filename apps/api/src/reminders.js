@@ -38,12 +38,18 @@ export const sendDueReminders = async (now = new Date()) => {
     const dueAt = new Date(event.start.getTime() - event.reminderMinutes * 60 * 1000)
     if (dueAt > now) continue
 
+    const claimed = await prisma.event.updateMany({
+      where: { id: event.id, remindedAt: null },
+      data: { remindedAt: now },
+    })
+    if (claimed.count !== 1) continue
+
     const emails = [...new Set(recipientEmails(event).filter(Boolean))]
     const eventUrl = config.publicUrl
       ? `${config.publicUrl.replace(/\/$/, '')}/group/${event.groupId}`
       : ''
     const when = event.start.toLocaleString()
-    await Promise.all(
+    const results = await Promise.allSettled(
       emails.map((to) =>
         sendMail({
           to,
@@ -54,20 +60,30 @@ export const sendDueReminders = async (now = new Date()) => {
         }),
       ),
     )
-    await prisma.event.update({
-      where: { id: event.id },
-      data: { remindedAt: now },
-    })
+    for (const result of results) {
+      if (result.status === 'rejected') {
+        console.error('[reminders] send failed:', result.reason)
+      }
+    }
     sent += 1
   }
   return sent
 }
 
 export const startReminderWorker = () => {
-  const run = () =>
-    sendDueReminders().catch((error) => {
+  let running = false
+  const run = async () => {
+    // A slow poll (e.g. slow SMTP) must not overlap the next 60s tick.
+    if (running) return
+    running = true
+    try {
+      await sendDueReminders()
+    } catch (error) {
       console.error('[reminders] worker failed:', error)
-    })
+    } finally {
+      running = false
+    }
+  }
   run()
   const timer = setInterval(run, POLL_INTERVAL_MS)
   timer.unref()
